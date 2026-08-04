@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #E8E3DA; }
+  * { box-sizing: border-box; }
+  a { color: #4A5A3C; text-decoration: none; }
+  a:hover { color: #A8543A; }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; gap: 40px; padding: 40px; background: #E8E3DA; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #211E1A; flex-wrap: wrap;">
+
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="393px,852px">
+    <div style="display: flex; flex-direction: column; height: 100%; min-height: 740px; background: #F6F3EE; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #211E1A;">
+
+      <div style="flex: 1; min-height: 0; overflow-y: auto;">
+
+        <sc-if value="{{ isInicio }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <div style="padding: 62px 20px 22px; background: #211E1A; color: #F3EFE9;">
+              <div style="font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #8B857A;">Caribbean Paradise Homes</div>
+              <div style="font-family: Newsreader, Georgia, serif; font-size: 25px; margin-top: 12px;">Villa Cajuiles 12</div>
+              <div style="font-size: 12.5px; color: #A8A196; margin-top: 6px;">Hola, Sra. Aldrich · agosto 2026</div>
+              <div style="display: flex; gap: 10px; margin-top: 16px;">
+                <div style="flex: 1; background: #2E2A25; border-radius: 10px; padding: 12px 13px;">
+                  <div style="font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #8B857A;">Solicitudes</div>
+                  <div style="font-family: Newsreader, Georgia, serif; font-size: 22px; margin-top: 6px;">4</div>
+                </div>
+                <div style="flex: 1; background: #2E2A25; border-radius: 10px; padding: 12px 13px;">
+                  <div style="font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #8B857A;">Por aprobar</div>
+                  <div style="font-family: Newsreader, Georgia, serif; font-size: 22px; margin-top: 6px;">1</div>
+                </div>
+                <div style="flex: 1; background: #2E2A25; border-radius: 10px; padding: 12px 13px;">
+                  <div style="font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #8B857A;">Visitas</div>
+                  <div style="font-family: Newsreader, Georgia, serif; font-size: 22px; margin-top: 6px;">13</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="padding: 18px 20px 26px; display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; gap: 10px;">
+                <span onClick="{{ goCalendario }}" style="flex: 1; min-height: 46px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 13.5px; border-radius: 10px; background: #4A5A3C; color: #F3EFE9; cursor: pointer;">Ver agenda</span>
+                <span onClick="{{ goServicios }}" style="flex: 1; min-height: 46px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 13.5px; border-radius: 10px; background: #FFFDFA; border: 1px solid #E3DDD3; color: #4C463F; cursor: pointer;">Solicitar servicio</span>
+              </div>
+
+              <div style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8378;">Requiere su atención</div>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <sc-for list="{{ pendientes }}" as="p" hint-placeholder-count="3">
+                  <div onClick="{{ p.go }}" style="background: #FFFDFA; border: 1px solid {{ p.border }}; border-radius: 12px; padding: 14px 15px; cursor: pointer;" style-hover="background: #FBF8F3;">
+                    <div style="display: flex; align-items: baseline; gap: 10px;">
+                      <span style="flex: 1; font-size: 14.5px;">{{ p.title }}</span>
+                      <span style="font-size: 10px; padding: 3px 8px; border-radius: 20px; background: {{ p.chipBg }}; color: {{ p.chipFg }}; white-space: nowrap;">{{ p.chip }}</span>
+                    </div>
+                    <div style="font-size: 12.5px; color: #8A8378; margin-top: 6px; line-height: 1.45;">{{ p.body }}</div>
+                    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 10px;">
+                      <span style="font-family: Newsreader, Georgia, serif; font-size: 20px;">{{ p.amount }}</span>
+                      <span style="font-size: 12.5px; color: #4A5A3C;">{{ p.cta }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8378; margin-top: 4px;">Este mes en la casa</div>
+              <div style="background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; padding: 15px;">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  <sc-for list="{{ resumenCasa }}" as="r" hint-placeholder-count="4">
+                    <div style="display: flex; align-items: baseline; gap: 12px;">
+                      <span style="flex: 1; font-size: 13px;">{{ r.label }}</span>
+                      <span style="font-size: 13px; color: {{ r.color }}; font-variant-numeric: tabular-nums;">{{ r.value }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isCalendario }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 62px 20px 26px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between;">
+              <h1 style="margin: 0; font-family: Newsreader, Georgia, serif; font-weight: 400; font-size: 24px;">Agenda</h1>
+              <span style="font-size: 12.5px; color: #8A8378;">Agosto 2026</span>
+            </div>
+
+            <div style="background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; padding: 15px; margin-top: 14px;">
+              <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;">
+                <sc-for list="{{ weekdays }}" as="w" hint-placeholder-count="7">
+                  <span style="font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #A09A8F; text-align: center; padding-bottom: 3px;">{{ w }}</span>
+                </sc-for>
+                <sc-for list="{{ mini }}" as="m" hint-placeholder-count="42">
+                  <span style="aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 7px; font-size: 12px; background: {{ m.bg }}; color: {{ m.fg }};">{{ m.num }}</span>
+                </sc-for>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; font-size: 11px; color: #8A8378;">
+                <span style="display: flex; align-items: center; gap: 5px;"><span style="width: 9px; height: 9px; border-radius: 2px; background: #4A5A3C;"></span>Personal fijo</span>
+                <span style="display: flex; align-items: center; gap: 5px;"><span style="width: 9px; height: 9px; border-radius: 2px; background: #211E1A;"></span>Servicio programado</span>
+                <span style="display: flex; align-items: center; gap: 5px;"><span style="width: 9px; height: 9px; border-radius: 2px; background: #C9CDB9;"></span>Revisión / trabajos</span>
+              </div>
+              <div onClick="{{ toggleBlock }}" style="min-height: 48px; margin-top: 14px; display: flex; align-items: center; justify-content: center; font-size: 14px; border-radius: 10px; background: {{ blockBtnBg }}; color: {{ blockBtnFg }}; cursor: pointer;">{{ blockBtnLabel }}</div>
+              <div style="font-size: 11px; color: #A09A8F; margin-top: 9px; text-align: center; line-height: 1.45;">{{ blockNote }}</div>
+            </div>
+
+            <div style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8378; margin-top: 20px;">Próximas visitas</div>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
+              <sc-for list="{{ estancias }}" as="e" hint-placeholder-count="4">
+                <div style="background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; padding: 13px 15px; display: flex; align-items: center; gap: 12px;">
+                  <span style="width: 4px; align-self: stretch; border-radius: 4px; flex: none; background: {{ e.color }};"></span>
+                  <div style="flex: 1;">
+                    <div style="font-size: 13.5px;">{{ e.dates }}</div>
+                    <div style="font-size: 12px; color: #8A8378; margin-top: 4px;">{{ e.who }}</div>
+                  </div>
+                  <span style="font-size: 10px; padding: 3px 8px; border-radius: 20px; background: {{ e.chipBg }}; color: {{ e.chipFg }};">{{ e.state }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isServicios }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 62px 20px 26px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between;">
+              <h1 style="margin: 0; font-family: Newsreader, Georgia, serif; font-weight: 400; font-size: 24px;">Servicios</h1>
+              <span style="font-size: 12.5px; color: #8A8378;">4 activos</span>
+            </div>
+
+            <div style="background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; padding: 15px; margin-top: 14px;">
+              <div style="font-size: 14.5px;">Solicitar un servicio</div>
+              <div style="font-size: 12.5px; color: #8A8378; margin-top: 5px; line-height: 1.45;">Escriba lo que necesita o elija una tarea frecuente.</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px;">
+                <sc-for list="{{ chips }}" as="c" hint-placeholder-count="5">
+                  <span onClick="{{ c.pick }}" style="font-size: 12px; min-height: 34px; display: flex; align-items: center; padding: 0 12px; border-radius: 20px; cursor: pointer; border: 1px solid {{ c.border }}; background: {{ c.bg }}; color: {{ c.fg }};">{{ c.label }}</span>
+                </sc-for>
+              </div>
+              <div style="min-height: 48px; margin-top: 13px; display: flex; align-items: center; justify-content: center; font-size: 14px; border-radius: 10px; background: #211E1A; color: #F3EFE9; cursor: pointer;">{{ crearLabel }}</div>
+            </div>
+
+            <div style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8378; margin-top: 20px;">Presupuesto por aprobar</div>
+            <div style="background: #FFFDFA; border: 1px solid #E4C9A8; border-radius: 12px; padding: 15px; margin-top: 12px;">
+              <div style="display: flex; align-items: baseline; justify-content: space-between;">
+                <span style="font-size: 14.5px;">SR-208</span>
+                <span style="font-size: 10px; padding: 3px 8px; border-radius: 20px; background: {{ quoteChipBg }}; color: {{ quoteChipFg }};">{{ quoteState }}</span>
+              </div>
+              <div style="font-size: 13px; color: #4C463F; margin-top: 8px; line-height: 1.45;">Limpiar la parte superior de los gabinetes de cocina y desengrasar la parrilla</div>
+              <div style="display: flex; align-items: baseline; gap: 9px; margin-top: 12px;">
+                <span style="font-family: Newsreader, Georgia, serif; font-size: 25px;">{{ quoteAmount }}</span>
+                <span style="font-size: 12px; color: #6E6862;">Marisol Reyes · 6 h</span>
+              </div>
+              <div style="font-size: 11.5px; color: #A09A8F; margin-top: 6px;">Incluye desengrasante y esponjas · sin cargo de gestión</div>
+              <div style="display: flex; gap: 8px; margin-top: 13px;">
+                <span onClick="{{ approveQuote }}" style="flex: 1; min-height: 46px; display: flex; align-items: center; justify-content: center; font-size: 13.5px; border-radius: 10px; background: {{ approveBg }}; color: {{ approveFg }}; cursor: pointer;">{{ approveLabel }}</span>
+                <span style="min-height: 46px; display: flex; align-items: center; justify-content: center; padding: 0 16px; font-size: 13.5px; border-radius: 10px; border: 1px solid #E3DDD3; color: #6E6862; cursor: pointer;">Preguntar</span>
+              </div>
+            </div>
+
+            <div style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8378; margin-top: 20px;">Trabajo realizado</div>
+            <div style="background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; padding: 15px; margin-top: 12px;">
+              <div style="display: flex; align-items: baseline; justify-content: space-between;">
+                <span style="font-size: 14.5px;">SR-201 · limpieza de terraza</span>
+                <span style="font-size: 11px; color: #8A8378;">30 jul</span>
+              </div>
+              <div style="font-size: 12.5px; color: #8A8378; margin-top: 5px;">Limpieza Bávaro SRL · {{ terraceAmount }}</div>
+              <div style="display: flex; gap: 7px; margin-top: 12px;">
+                <sc-for list="{{ fotos }}" as="f" hint-placeholder-count="3">
+                  <div style="flex: 1; height: 74px; border-radius: 8px; border: 1px solid #E3DDD3; background: repeating-linear-gradient(45deg, #EDE7DE 0 5px, #F7F3EC 5px 10px); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; font-family: ui-monospace, Menlo, monospace; font-size: 9px; color: #8A8378;">{{ f }}</div>
+                </sc-for>
+              </div>
+              <div onClick="{{ confirmWork }}" style="min-height: 48px; margin-top: 13px; display: flex; align-items: center; justify-content: center; font-size: 14px; border-radius: 10px; background: {{ confirmBg }}; color: {{ confirmFg }}; cursor: pointer;">{{ confirmLabel }}</div>
+              <div style="font-size: 11px; color: #A09A8F; margin-top: 9px; text-align: center; line-height: 1.45;">{{ confirmNote }}</div>
+            </div>
+
+            <div style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8378; margin-top: 20px;">Historial</div>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
+              <sc-for list="{{ historial }}" as="h" hint-placeholder-count="3">
+                <div style="background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; padding: 13px 15px; display: flex; align-items: center; gap: 12px;">
+                  <div style="flex: 1;">
+                    <div style="font-size: 13px;">{{ h.title }}</div>
+                    <div style="font-size: 11.5px; color: #A09A8F; margin-top: 4px;">{{ h.meta }}</div>
+                  </div>
+                  <span style="font-size: 12.5px; font-variant-numeric: tabular-nums; color: #4C463F;">{{ h.amount }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isCuenta }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 62px 20px 26px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between;">
+              <h1 style="margin: 0; font-family: Newsreader, Georgia, serif; font-weight: 400; font-size: 24px;">Cuenta</h1>
+              <span style="font-size: 12.5px; color: #8A8378;">Julio 2026</span>
+            </div>
+
+            <div style="background: #211E1A; border-radius: 14px; padding: 18px; margin-top: 14px; color: #E8E3DA;">
+              <div style="display: flex; align-items: baseline; justify-content: space-between;">
+                <span style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8B857A;">{{ balanceLabel }}</span>
+                <span style="font-size: 10px; padding: 3px 8px; border-radius: 20px; background: #4A4438; color: #E8E3DA;">{{ balanceChip }}</span>
+              </div>
+              <div style="font-family: Newsreader, Georgia, serif; font-size: 34px; color: #F3EFE9; margin-top: 10px; letter-spacing: -0.015em;">{{ balanceAmount }}</div>
+              <div style="font-size: 12px; color: #A8A196; margin-top: 6px;">Factura F-2607 · administración, servicios y personal</div>
+              <div onClick="{{ payNow }}" style="min-height: 50px; margin-top: 15px; display: flex; align-items: center; justify-content: center; font-size: 14.5px; border-radius: 11px; background: {{ payBg }}; color: #F3EFE9; cursor: pointer;">{{ payLabel }}</div>
+              <div style="min-height: 46px; margin-top: 9px; display: flex; align-items: center; justify-content: center; font-size: 13.5px; border-radius: 11px; border: 1px solid #4A4438; color: #E8E3DA; cursor: pointer;">Ver factura completa</div>
+              <div style="font-size: 11px; color: #A8A196; margin-top: 11px; line-height: 1.5;">{{ payNote }}</div>
+            </div>
+
+            <div style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8378; margin-top: 20px;">Detalle de la factura</div>
+            <div style="background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; padding: 15px; margin-top: 12px;">
+              <div style="display: flex; flex-direction: column; gap: 11px;">
+                <sc-for list="{{ invoiceLines }}" as="l" hint-placeholder-count="6">
+                  <div style="display: flex; align-items: baseline; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid #F1ECE4;">
+                    <div style="flex: 1;">
+                      <div style="font-size: 13px;">{{ l.label }}</div>
+                      <div style="font-size: 11px; color: #A09A8F; margin-top: 3px; line-height: 1.4;">{{ l.detail }}</div>
+                    </div>
+                    <span style="font-size: 13px; font-variant-numeric: tabular-nums;">{{ l.amount }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 12px;">
+                <span style="font-size: 13.5px;">Total</span>
+                <span style="font-family: Newsreader, Georgia, serif; font-size: 22px;">{{ balanceAmount }}</span>
+              </div>
+            </div>
+
+            <div style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8378; margin-top: 20px;">Formas de pago</div>
+            <div style="background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; padding: 15px; margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+              <sc-for list="{{ payMethods }}" as="p" hint-placeholder-count="4">
+                <div style="display: flex; align-items: baseline; gap: 10px;">
+                  <span style="width: 7px; height: 7px; border-radius: 7px; flex: none; background: {{ p.color }};"></span>
+                  <span style="flex: 1; font-size: 12.5px;">{{ p.method }}</span>
+                  <span style="font-size: 11.5px; color: #8A8378;">{{ p.note }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8378; margin-top: 20px;">Pagos anteriores</div>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
+              <sc-for list="{{ pagos }}" as="p" hint-placeholder-count="3">
+                <div style="background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; padding: 13px 15px; display: flex; align-items: center; gap: 12px;">
+                  <div style="flex: 1;">
+                    <div style="font-size: 13px;">{{ p.label }}</div>
+                    <div style="font-size: 11.5px; color: #A09A8F; margin-top: 4px;">{{ p.meta }}</div>
+                  </div>
+                  <span style="font-size: 12.5px; font-variant-numeric: tabular-nums;">{{ p.amount }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isCasa }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 62px 20px 26px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between;">
+              <h1 style="margin: 0; font-family: Newsreader, Georgia, serif; font-weight: 400; font-size: 24px;">La casa</h1>
+              <span style="font-size: 12.5px; color: #8A8378;">Cajuiles 12</span>
+            </div>
+
+            <div style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8378; margin-top: 16px;">Recordatorios</div>
+            <div style="background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; padding: 15px; margin-top: 12px; display: flex; flex-direction: column; gap: 13px;">
+              <sc-for list="{{ recordatorios }}" as="r" hint-placeholder-count="5">
+                <div style="display: flex; align-items: center; gap: 11px;">
+                  <span style="width: 18px; height: 18px; border-radius: 5px; flex: none; border: 1px solid {{ r.border }}; background: {{ r.box }};"></span>
+                  <div style="flex: 1;">
+                    <div style="font-size: 13px;">{{ r.label }}</div>
+                    <div style="font-size: 11px; color: #A09A8F; margin-top: 3px;">{{ r.who }}</div>
+                  </div>
+                  <span style="font-size: 11.5px; color: {{ r.whenColor }};">{{ r.when }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8378; margin-top: 20px;">Consumo del mes</div>
+            <div style="display: flex; gap: 10px; margin-top: 12px;">
+              <div style="flex: 1; background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; padding: 14px;">
+                <div style="font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #8A8378;">Agua</div>
+                <div style="font-family: Newsreader, Georgia, serif; font-size: 23px; margin-top: 7px;">31.400</div>
+                <div style="font-size: 11px; color: #A8543A; margin-top: 5px;">galones · +6% vs. junio</div>
+              </div>
+              <div style="flex: 1; background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; padding: 14px;">
+                <div style="font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #8A8378;">Electricidad</div>
+                <div style="font-family: Newsreader, Georgia, serif; font-size: 23px; margin-top: 7px;">9.120</div>
+                <div style="font-size: 11px; color: #4A5A3C; margin-top: 5px;">kWh · −3% vs. junio</div>
+              </div>
+            </div>
+
+            <div style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8378; margin-top: 20px;">Seguro y claves</div>
+            <div style="background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; padding: 15px; margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+              <sc-for list="{{ casaDatos }}" as="d" hint-placeholder-count="6">
+                <div style="display: flex; align-items: baseline; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid #F1ECE4;">
+                  <span style="width: 96px; flex: none; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A8378;">{{ d.k }}</span>
+                  <span style="flex: 1; font-size: 12.5px; overflow-wrap: anywhere;">{{ d.v }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="background: #F1F3EC; border-radius: 12px; padding: 15px; margin-top: 14px;">
+              <div style="font-size: 9.5px; letter-spacing: 0.15em; text-transform: uppercase; color: #5A6A4A;">Su administrador</div>
+              <div style="font-size: 13px; color: #2E3327; margin-top: 8px; line-height: 1.55;">Jan van Welie · Caribbean Paradise Homes<br />+1 809 555 0100 · jan@caribbeanparadisehomes.com</div>
+              <div style="min-height: 46px; margin-top: 13px; display: flex; align-items: center; justify-content: center; font-size: 13.5px; border-radius: 10px; background: #FFFDFA; border: 1px solid #D3DCC7; color: #4A5A3C; cursor: pointer;">Escribir un mensaje</div>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+
+      <div style="flex: none; display: flex; background: #FFFDFA; border-top: 1px solid #E3DDD3; padding: 8px 6px 6px;">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+          <div onClick="{{ t.go }}" style="flex: 1; min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border-radius: 9px; cursor: pointer; color: {{ t.fg }};" style-hover="background: #F6F2EB;">
+            <span style="width: 9px; height: 9px; border-radius: 3px; background: {{ t.dot }};"></span>
+            <span style="font-size: 10.5px;">{{ t.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+    </div>
+  </x-import>
+
+  <div style="width: 330px; display: flex; flex-direction: column; gap: 16px;">
+    <div style="background: #FFFDFA; border: 1px solid #D8D0C4; border-radius: 12px; padding: 18px 20px;">
+      <div style="font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #8A8378;">App del propietario</div>
+      <h2 style="margin: 9px 0 0; font-family: Newsreader, Georgia, serif; font-weight: 400; font-size: 21px; line-height: 1.2;">Versión móvil, en español</h2>
+      <div style="font-size: 12.5px; color: #6E6862; line-height: 1.6; margin-top: 9px;">Cinco pestañas, todas tocables: pruebe programar días de trabajo, aprobar el presupuesto, confirmar el trabajo recibido y transferir el pago.</div>
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
+        <sc-for list="{{ notas }}" as="n" hint-placeholder-count="5">
+          <div style="display: flex; gap: 11px; align-items: baseline; padding-bottom: 11px; border-bottom: 1px solid #F1ECE4;">
+            <span style="font-family: Newsreader, Georgia, serif; font-size: 15px; color: #A8543A; width: 16px; flex: none;">{{ n.n }}</span>
+            <div style="flex: 1;">
+              <div style="font-size: 13px;">{{ n.title }}</div>
+              <div style="font-size: 11.5px; color: #8A8378; margin-top: 4px; line-height: 1.45;">{{ n.body }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="background: #211E1A; border-radius: 12px; padding: 18px 20px; color: #E8E3DA;">
+      <div style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8B857A;">Lo que no aparece aquí</div>
+      <p style="margin: 9px 0 0; font-size: 12.5px; line-height: 1.6; color: #E8E3DA;">El programa de mantenimiento preventivo, el directorio de proveedores, las tarifas de nuestros oficios y los expedientes del personal permanecen en la consola interna.</p>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 900, &quot;height&quot;: 980}, &quot;currency&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;DOP&quot;, &quot;USD&quot;], &quot;default&quot;: &quot;DOP&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Datos&quot;}, &quot;balanceInOwnerFavour&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Datos&quot;}}">
+class Component extends DCLogic {
+  state = { tab: 'inicio', blocked: false, approved: false, confirmed: false, paid: false, chip: -1 };
+
+  goTab(tab) { return () => this.setState({ tab }); }
+
+  fmt(usd) {
+    const dop = (this.props.currency ?? 'DOP') === 'DOP';
+    const n = dop ? usd * 60.5 : usd;
+    return (dop ? 'RD$' : 'US$') + n.toLocaleString('es-DO', { maximumFractionDigits: 0 });
+  }
+
+  renderVals() {
+    const S = this.state.tab;
+    const owes = !(this.props.balanceInOwnerFavour ?? false);
+    const balance = owes ? 894 : 1240;
+
+    const tabs = [
+      ['inicio', 'Inicio'], ['calendario', 'Agenda'], ['servicios', 'Servicios'], ['cuenta', 'Cuenta'], ['casa', 'La casa']
+    ].map(([id, label]) => ({
+      label, go: this.goTab(id),
+      fg: S === id ? '#211E1A' : '#A09A8F',
+      dot: S === id ? '#4A5A3C' : '#DDD5C9'
+    }));
+
+    const pendientes = [
+      {
+        title: 'Presupuesto por aprobar', chip: 'SR-208', chipBg: '#F5EFDF', chipFg: '#8A6A1F', border: '#E4C9A8',
+        body: 'Limpiar la parte superior de los gabinetes y desengrasar la parrilla · Marisol Reyes, 6 h',
+        amount: this.fmt(120), cta: this.state.approved ? 'Aprobado ✓' : 'Revisar y aprobar', go: this.goTab('servicios')
+      },
+      {
+        title: 'Trabajo por confirmar', chip: 'SR-201', chipBg: '#E9EEF2', chipFg: '#2F4A5A', border: '#E3DDD3',
+        body: 'Limpieza profunda de muebles de terraza · fotos de antes y después adjuntas',
+        amount: this.fmt(180), cta: this.state.confirmed ? 'Confirmado ✓' : 'Ver fotos y confirmar', go: this.goTab('servicios')
+      },
+      {
+        title: owes ? 'Factura por pagar' : 'Reembolso a su favor', chip: 'F-2607', chipBg: '#F6E9E3', chipFg: '#A8543A', border: '#E8D3C8',
+        body: owes ? 'Vence el 10 de agosto · administración, servicios y personal de julio' : 'Le transferimos el saldo a su cuenta registrada',
+        amount: this.fmt(balance), cta: this.state.paid ? (owes ? 'Pagado ✓' : 'Aprobado ✓') : (owes ? 'Transferir ahora' : 'Aprobar reembolso'), go: this.goTab('cuenta')
+      }
+    ];
+
+    const resumenCasa = [
+      { label: 'Agua', value: '31.400 gal', color: '#A8543A' },
+      { label: 'Electricidad', value: '9.120 kWh', color: '#4A5A3C' },
+      { label: 'Horas de personal', value: '248 h', color: '#4C463F' },
+      { label: 'Servicios realizados', value: '6', color: '#4C463F' }
+    ];
+
+    const weekdays = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+    const map = {};
+    const paint = (from, to, bg, fg) => { for (let d = from; d <= to; d++) map[d] = [bg, fg]; };
+    // días de personal fijo (lunes, miércoles, viernes)
+    [3, 5, 7, 10, 12, 14, 17, 19, 21, 24, 26, 28, 31].forEach(d => paint(d, d, '#EDF0E7', '#3E4B32'));
+    // servicios programados
+    [5, 12, 24].forEach(d => paint(d, d, '#211E1A', '#F3EFE9'));
+    // revisión trimestral de la casa
+    paint(20, 20, '#C9CDB9', '#2E3327');
+    if (this.state.blocked) paint(29, 31, '#C9CDB9', '#2E3327');
+    const mini = Array.from({ length: 42 }, (_, i) => {
+      const day = i - 5;
+      const inMonth = day >= 1 && day <= 31;
+      const m = inMonth && map[day];
+      return { num: inMonth ? day : '', bg: m ? m[0] : (inMonth ? '#F6F2EB' : 'transparent'), fg: m ? m[1] : '#A09A8F' };
+    });
+
+    const estancias = [
+      { dates: 'Miércoles 5 de agosto', who: 'SR-208 · gabinetes de cocina y parrilla · Marisol R.', state: 'Programado', color: '#211E1A', chipBg: '#EDE9E2', chipFg: '#4C463F' },
+      { dates: 'Miércoles 12 de agosto', who: 'Mantenimiento de aire acondicionado · Clima Este', state: 'Programado', color: '#211E1A', chipBg: '#EDE9E2', chipFg: '#4C463F' },
+      { dates: 'Jueves 20 de agosto', who: 'Revisión trimestral de la casa · Jan van Welie', state: 'Revisión', color: '#C9CDB9', chipBg: '#F1EDE6', chipFg: '#6E6862' },
+      { dates: 'Lunes 24 de agosto', who: 'Fertilización del jardín · Freddy N.', state: 'Programado', color: '#211E1A', chipBg: '#EDE9E2', chipFg: '#4C463F' },
+      { dates: 'Lunes, miércoles y viernes', who: 'Personal fijo · ama de llaves y encargado', state: 'Fijo', color: '#4A5A3C', chipBg: '#EDF0E7', chipFg: '#4A5A3C' }
+    ];
+
+    const chipLabels = ['Limpiar gabinetes de cocina', 'Desengrasar la parrilla', 'Lavar ventanas', 'Pulir pisos', 'Revisar el aire acondicionado'];
+    const chips = chipLabels.map((label, i) => ({
+      label,
+      pick: () => this.setState({ chip: i }),
+      bg: this.state.chip === i ? '#211E1A' : '#F9F6F1',
+      fg: this.state.chip === i ? '#F3EFE9' : '#4C463F',
+      border: this.state.chip === i ? '#211E1A' : '#E3DDD3'
+    }));
+
+    const invoiceLines = [
+      ['Honorario de administración', 'Julio 2026 · administración completa', 640],
+      ['Solicitudes aprobadas', 'SR-207 parrilla y SR-201 terraza', 225],
+      ['Servicios reembolsables', 'Electricidad, agua y gas de julio', 2121],
+      ['Personal de la casa', '248 horas · ama de llaves, encargado, jardín', 2480],
+      ['Menos anticipo recibido', 'Transferencia del 8 de julio', -4572]
+    ].map(([label, detail, amount]) => ({ label, detail, amount: amount < 0 ? '−' + this.fmt(-amount) : this.fmt(amount) }));
+
+    const payMethods = [
+      { method: 'Transferencia local · Popular', note: 'mismo día', color: '#A9C08C' },
+      { method: 'Transferencia local · Banreservas', note: 'mismo día', color: '#A9C08C' },
+      { method: 'ACH desde cuenta en EE. UU.', note: '2 a 3 días', color: '#A9C08C' },
+      { method: 'Tarjeta de crédito', note: 'recargo 3%', color: '#D9A87C' }
+    ];
+
+    const pagos = [
+      { label: 'Factura F-2606 · junio', meta: 'Transferencia Popular · 9 de julio', amount: this.fmt(5140) },
+      { label: 'Anticipo de servicios', meta: 'Transferencia Popular · 8 de julio', amount: this.fmt(4572) },
+      { label: 'Factura F-2605 · mayo', meta: 'ACH · 11 de junio', amount: this.fmt(4980) }
+    ];
+
+    const recordatorios = [
+      { label: 'Tanque de gas de la casa', who: 'Luis A.', when: 'hoy', whenColor: '#A8543A', box: '#4A5A3C', border: '#4A5A3C' },
+      { label: 'Tanque pequeño de la parrilla', who: 'Freddy N.', when: 'hoy', whenColor: '#A8543A', box: 'transparent', border: '#D6CFC4' },
+      { label: 'Baterías de controles TV y A/A', who: 'Marisol R.', when: '12 ago', whenColor: '#8A8378', box: 'transparent', border: '#D6CFC4' },
+      { label: 'Fertilizar el jardín', who: 'Freddy N.', when: '24 ago', whenColor: '#8A8378', box: 'transparent', border: '#D6CFC4' },
+      { label: 'Control de plagas', who: 'Fumigadora RD', when: '19 oct', whenColor: '#8A8378', box: 'transparent', border: '#D6CFC4' }
+    ];
+
+    const casaDatos = [
+      ['Aseguradora', 'Seguros Universal · Multirriesgo Residencial Premium'],
+      ['Póliza', 'MR-118-2026-04477 · renueva 14 nov 2026'],
+      ['Corredor', 'Corredores Del Este · Alberto Sosa'],
+      ['Wifi de la casa', 'CajuilesGuest · palmera2026'],
+      ['Portón', 'Teclado en la entrada · 4 4 8 1 #'],
+      ['Caja fuerte', 'Clóset principal · 6 2 7 1 4']
+    ].map(([k, v]) => ({ k, v }));
+
+    const notas = [
+      { n: '1', title: 'Agenda de la casa', body: 'Días de personal fijo, servicios programados y revisiones, en un solo mes.' },
+      { n: '2', title: 'Solicitar y aprobar', body: 'Monto y proveedor a la vista; la aprobación queda sellada con hora.' },
+      { n: '3', title: 'Confirmar el trabajo', body: 'Las fotos se eliminan 45 días después de su confirmación.' },
+      { n: '4', title: 'Pagar o cobrar', body: 'Transferencia, ACH o tarjeta; si el saldo es a su favor, se lo transferimos.' },
+      { n: '5', title: 'Recordatorios de la casa', body: 'Gas, baterías, jardín y plagas, con el responsable de cada revisión.' }
+    ];
+
+    return {
+      tabs,
+      isInicio: S === 'inicio', isCalendario: S === 'calendario', isServicios: S === 'servicios',
+      isCuenta: S === 'cuenta', isCasa: S === 'casa',
+      goCalendario: this.goTab('calendario'), goServicios: this.goTab('servicios'),
+      pendientes, resumenCasa, weekdays, mini, estancias, chips,
+      crearLabel: this.state.chip >= 0 ? 'Crear solicitud · ' + chipLabels[this.state.chip] : 'Crear solicitud',
+      toggleBlock: () => this.setState(s => ({ blocked: !s.blocked })),
+      blockBtnLabel: this.state.blocked ? 'Trabajos programados · 29 al 31 de agosto' : 'Programar días de trabajo',
+      blockBtnBg: this.state.blocked ? '#EDF0E7' : '#4A5A3C',
+      blockBtnFg: this.state.blocked ? '#3E4B32' : '#F3EFE9',
+      blockNote: this.state.blocked ? 'Personal y proveedores avisados · confirmado hace un momento' : 'Para pintura, mudanzas o trabajos que ocupan la casa varios días',
+      quoteAmount: this.fmt(120), terraceAmount: this.fmt(180),
+      quoteState: this.state.approved ? 'Aprobado' : 'Por aprobar',
+      quoteChipBg: this.state.approved ? '#EDF0E7' : '#F5EFDF',
+      quoteChipFg: this.state.approved ? '#4A5A3C' : '#8A6A1F',
+      approveQuote: () => this.setState({ approved: true }),
+      approveLabel: this.state.approved ? 'Aprobado · programado miércoles 5' : 'Aprobar ' + this.fmt(120),
+      approveBg: this.state.approved ? '#EDF0E7' : '#4A5A3C',
+      approveFg: this.state.approved ? '#3E4B32' : '#F3EFE9',
+      fotos: ['antes', 'después', 'cojines'],
+      confirmWork: () => this.setState({ confirmed: true }),
+      confirmLabel: this.state.confirmed ? 'Recibido confirmado ✓' : 'Confirmar recibido',
+      confirmBg: this.state.confirmed ? '#EDF0E7' : '#4A5A3C',
+      confirmFg: this.state.confirmed ? '#3E4B32' : '#F3EFE9',
+      confirmNote: this.state.confirmed ? 'Las fotos se eliminarán el 17 de septiembre' : 'Al confirmar, las fotos se eliminan 45 días después',
+      historial: [
+        { title: 'Reemplazo de toallas de piscina', meta: 'SR-198 · confirmado 21 jul', amount: this.fmt(210) },
+        { title: 'Desengrase de parrilla', meta: 'SR-207 · aprobado 2 ago', amount: this.fmt(45) },
+        { title: 'Mezcladora del baño principal', meta: 'Orden #418 · piezas pedidas', amount: this.fmt(148) }
+      ],
+      balanceLabel: owes ? 'Saldo por pagar' : 'Saldo a su favor',
+      balanceChip: owes ? 'Vence 10 ago' : 'Reembolso',
+      balanceAmount: this.fmt(balance),
+      payNow: () => this.setState({ paid: true }),
+      payLabel: this.state.paid ? (owes ? 'Pago enviado · recibo en la app' : 'Reembolso aprobado') : (owes ? 'Transferir ahora' : 'Aprobar reembolso'),
+      payBg: this.state.paid ? '#3A4630' : '#4A5A3C',
+      payNote: this.state.paid
+        ? 'Recibo disponible en la app y en su correo. El asiento quedó marcado como pagado en el libro mayor.'
+        : (owes ? 'Al transferir, el asiento se marca pagado y recibe el recibo en la app.' : 'Al aprobar, transferimos a su cuenta registrada en un plazo de 48 horas.'),
+      invoiceLines, payMethods, pagos, recordatorios, casaDatos, notas
+    };
+  }
+}
+
+</script>
+</body>
+</html>

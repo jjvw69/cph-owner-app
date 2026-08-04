@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Meter readings · Meridian Estate Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&display=swap" rel="stylesheet" />
+<style>
+  :root{ --ink:#2b2723; --soft:#6e6862; --faint:#a09a8f; --line:#e7e1d8; --bg:#f3efe9;
+         --card:#ffffff; --green:#4a5a3c; --greenbg:#edf0e7; --red:#a8543a; --redbg:#f6e9e3; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink);
+        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  h1,h2,.serif{ font-family:Newsreader,Georgia,serif; font-weight:400; }
+  .wrap{ max-width:900px; margin:0 auto; padding:26px 20px 60px; }
+  .brand{ letter-spacing:.22em; font-size:12px; color:var(--soft); text-transform:uppercase; }
+  h1{ font-size:30px; margin:6px 0 2px; }
+  .sub{ color:var(--soft); font-size:14px; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-top:18px; }
+  label{ display:block; font-size:12px; color:var(--soft); text-transform:uppercase; letter-spacing:.06em; margin:0 0 6px; }
+  input,select,textarea{ width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:9px;
+        font-size:15px; background:#fff; color:var(--ink); font-family:inherit; }
+  textarea{ resize:vertical; min-height:44px; }
+  .row{ display:flex; gap:14px; flex-wrap:wrap; }
+  .row > div{ flex:1; min-width:150px; }
+  button{ background:var(--ink); color:#fff; border:0; border-radius:10px; padding:12px 18px;
+        font-size:15px; cursor:pointer; font-family:inherit; }
+  button.ghost{ background:transparent; color:var(--soft); border:1px solid var(--line); padding:7px 12px; font-size:13px; }
+  button:disabled{ opacity:.5; cursor:default; }
+  .top{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .who{ text-align:right; font-size:13px; color:var(--soft); }
+  .msg{ margin-top:12px; font-size:14px; }
+  .msg.ok{ color:var(--green); }
+  .msg.err{ color:var(--red); }
+  table{ width:100%; border-collapse:collapse; margin-top:6px; font-size:14px; }
+  th{ text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint);
+      border-bottom:1px solid var(--line); padding:8px 8px; font-weight:400; }
+  td{ padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.num{ text-align:right; font-variant-numeric:tabular-nums; }
+  .pill{ display:inline-block; font-size:11px; padding:2px 8px; border-radius:20px; background:var(--greenbg); color:var(--green); }
+  .empty{ color:var(--faint); padding:16px 8px; }
+  .hidden{ display:none; }
+  a.navlink{ color:var(--green); text-decoration:none; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="brand">Meridian · Estate Operations</div>
+      <h1>Meter readings</h1>
+      <div class="sub">Casa de Campo · water &amp; electricity per villa</div>
+    </div>
+    <div class="who">
+      <div id="whoName"></div>
+      <button id="logout" class="ghost hidden" style="margin-top:6px;">Log out</button>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="loginCard" class="card hidden">
+    <h2 style="margin:0 0 12px; font-size:19px;">Sign in</h2>
+    <div class="row">
+      <div>
+        <label>Name</label>
+        <select id="loginName">
+          <option value="">Choose…</option>
+          <option value="ivonna">Ivonna</option>
+          <option value="jan">Jan</option>
+          <option value="maria">Maria</option>
+        </select>
+      </div>
+      <div>
+        <label>Access code</label>
+        <input id="loginCode" type="password" autocomplete="off" placeholder="••••••" />
+      </div>
+    </div>
+    <div style="margin-top:14px;"><button id="loginBtn">Sign in</button></div>
+    <div id="loginMsg" class="msg"></div>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="hidden">
+    <div class="card">
+      <h2 style="margin:0 0 12px; font-size:19px;">Submit a reading</h2>
+      <div class="row">
+        <div>
+          <label>Villa</label>
+          <select id="villa"></select>
+        </div>
+        <div>
+          <label>Electricity (kWh)</label>
+          <input id="elec" inputmode="decimal" placeholder="e.g. 9120" />
+        </div>
+        <div>
+          <label>Water (gallons)</label>
+          <input id="water" inputmode="decimal" placeholder="e.g. 31400" />
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <label>Note (optional)</label>
+        <textarea id="note" placeholder="Anything worth flagging"></textarea>
+      </div>
+      <div style="margin-top:14px;"><button id="saveBtn">Save reading</button></div>
+      <div id="saveMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 4px; font-size:19px;">Reading log</h2>
+      <div class="sub" style="margin-bottom:6px;">Shared across Ivonna, Jan and Maria</div>
+      <div id="logWrap"></div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <a class="navlink" href="/property-console">← Back to the operations console</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  var $ = function(id){ return document.getElementById(id); };
+  var VILLAS = [];
+
+  function fmt(n){ return n==null ? '—' : Number(n).toLocaleString('en-US'); }
+  function when(iso){ try{ return new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return iso; } }
+  function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
+
+  async function api(path, opts){
+    var r = await fetch(path, Object.assign({ headers:{'Content-Type':'application/json'} }, opts||{}));
+    var body = {}; try{ body = await r.json(); }catch(e){}
+    return { status:r.status, body:body };
+  }
+
+  function show(el, on){ el.classList[on?'remove':'add']('hidden'); }
+
+  async function boot(){
+    var me = await api('/api/me');
+    if(me.status === 200){
+      VILLAS = me.body.villas || [];
+      $('whoName').textContent = 'Signed in as ' + cap(me.body.user);
+      show($('logout'), true);
+      show($('loginCard'), false);
+      show($('app'), true);
+      var sel = $('villa'); sel.innerHTML='';
+      VILLAS.forEach(function(v){ var o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+      loadLog();
+    } else {
+      show($('loginCard'), true);
+      show($('app'), false);
+      show($('logout'), false);
+      $('whoName').textContent = '';
+    }
+  }
+
+  async function loadLog(){
+    var wrap = $('logWrap');
+    wrap.innerHTML = '<div class="empty">Loading…</div>';
+    var r = await api('/api/readings');
+    if(r.status !== 200){ wrap.innerHTML = '<div class="empty">Could not load.</div>'; return; }
+    var rows = r.body.readings || [];
+    if(!rows.length){ wrap.innerHTML = '<div class="empty">No readings yet. Add the first one above.</div>'; return; }
+    var html = '<table><thead><tr><th>Villa</th><th style="text-align:right">Electricity</th><th style="text-align:right">Water</th><th>Note</th><th>By</th><th>When</th></tr></thead><tbody>';
+    rows.forEach(function(x){
+      html += '<tr><td>'+esc(x.villa)+'</td>'
+           + '<td class="num">'+(x.electricity_kwh==null?'—':fmt(x.electricity_kwh)+' <span style="color:#a09a8f">kWh</span>')+'</td>'
+           + '<td class="num">'+(x.water_gal==null?'—':fmt(x.water_gal)+' <span style="color:#a09a8f">gal</span>')+'</td>'
+           + '<td>'+esc(x.note||'')+'</td>'
+           + '<td><span class="pill">'+esc(cap(x.user))+'</span></td>'
+           + '<td style="color:#6e6862">'+esc(when(x.ts))+'</td></tr>';
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  $('loginBtn').onclick = async function(){
+    var msg = $('loginMsg'); msg.textContent=''; msg.className='msg';
+    var name = $('loginName').value, code = $('loginCode').value;
+    if(!name || !code){ msg.textContent='Choose your name and enter your code.'; msg.className='msg err'; return; }
+    $('loginBtn').disabled = true;
+    var r = await api('/api/login', { method:'POST', body: JSON.stringify({ name:name, code:code }) });
+    $('loginBtn').disabled = false;
+    if(r.status === 200){ $('loginCode').value=''; boot(); }
+    else { msg.textContent = (r.body && r.body.error) || 'Sign-in failed.'; msg.className='msg err'; }
+  };
+  $('loginCode').addEventListener('keydown', function(e){ if(e.key==='Enter') $('loginBtn').click(); });
+
+  $('logout').onclick = async function(){ await api('/api/logout',{method:'POST'}); boot(); };
+
+  $('saveBtn').onclick = async function(){
+    var msg = $('saveMsg'); msg.textContent=''; msg.className='msg';
+    var payload = { villa:$('villa').value, electricity_kwh:$('elec').value.trim(), water_gal:$('water').value.trim(), note:$('note').value.trim() };
+    if(!payload.electricity_kwh && !payload.water_gal){ msg.textContent='Enter at least one reading.'; msg.className='msg err'; return; }
+    $('saveBtn').disabled = true;
+    var r = await api('/api/readings', { method:'POST', body: JSON.stringify(payload) });
+    $('saveBtn').disabled = false;
+    if(r.status === 200){
+      msg.textContent = 'Saved.'; msg.className='msg ok';
+      $('elec').value=''; $('water').value=''; $('note').value='';
+      loadLog();
+    } else {
+      msg.textContent = (r.body && r.body.error) || 'Could not save.'; msg.className='msg err';
+    }
+  };
+
+  boot();
+</script>
+</body>
+</html>
