@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<!--
+  Caribbean Paradise Homes — App del Propietario
+  Deploy: repo jjvw69/cph-my-stay ROOT as owner.html
+  Route:  server.js  ->  app.get('/owner', (req,res) => res.sendFile(__dirname + '/owner.html'));
+  Auth:   reference code + last name, same shape as the guest app login.
+          Replace the OWNERS array below with a server lookup
+          (POST /api/owner/login {code, lastName} -> {token, owner}) before real use.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>App del Propietario · Caribbean Paradise Homes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #F3EFE9; color: #211E1A;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; text-wrap: pretty;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+  a { color: #4A5A3C; }
+  a:hover { color: #3A4630; }
+  input, button { font: inherit; color: inherit; }
+  .serif { font-family: Newsreader, Georgia, serif; font-weight: 400; }
+  .wrap { max-width: 480px; margin: 0 auto; }
+  .card { background: #FFFDFA; border: 1px solid #E3DDD3; border-radius: 12px; }
+  .eyebrow { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8378; }
+  .btn { min-height: 48px; width: 100%; display: flex; align-items: center; justify-content: center;
+         border: 0; border-radius: 11px; background: #4A5A3C; color: #F3EFE9; font-size: 14.5px; cursor: pointer; }
+  .btn.dark { background: #211E1A; }
+  .btn.done { background: #EDF0E7; color: #3E4B32; }
+  .btn.ghost { background: #FFFDFA; border: 1px solid #E3DDD3; color: #4C463F; }
+  .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+            background: #FFFDFAF2; backdrop-filter: blur(10px); border-top: 1px solid #E3DDD3;
+            padding-bottom: env(safe-area-inset-bottom); }
+  .tabbar > div { max-width: 480px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
+  .tab { min-height: 56px; display: flex; align-items: center; justify-content: center;
+         background: none; border: 0; font-size: 11.5px; color: #A09A8F; cursor: pointer; }
+  .tab[aria-current="true"] { color: #211E1A; }
+  .row { display: flex; align-items: baseline; gap: 12px; }
+  .chip { font-size: 10px; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .cal span { aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+              border-radius: 7px; font-size: 12px; }
+  .hd { padding: calc(20px + env(safe-area-inset-top)) 20px 22px; }
+  .pad { padding: 18px 20px 26px; display: flex; flex-direction: column; gap: 14px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// ——— datos de demostración; reemplazar por el API ———
+var OWNERS = [
+  { code: 'CDC-OWN-0012', lastName: 'Aldrich', name: 'Sra. Aldrich', villa: 'Villa Cajuiles 12', lang: 'es' }
+];
+
+var DATA = {
+  month: 'Agosto 2026',
+  stats: [['Solicitudes', '4'], ['Por aprobar', '1'], ['Visitas', '13']],
+  staffDays: [3, 7, 10, 14, 17, 19, 21, 26, 28, 31],
+  serviceDays: [5, 12, 24],
+  reviewDays: [20],
+  workDays: [29, 30, 31],
+  agenda: [
+    ['Miércoles 5 de agosto', 'SR-208 · gabinetes de cocina y parrilla · Marisol R.', 'Programado', '#211E1A'],
+    ['Miércoles 12 de agosto', 'Mantenimiento de aire acondicionado · Clima Este', 'Programado', '#211E1A'],
+    ['Jueves 20 de agosto', 'Revisión trimestral de la casa · Jan van Welie', 'Revisión', '#C9CDB9'],
+    ['Lunes 24 de agosto', 'Fertilización del jardín · Freddy N.', 'Programado', '#211E1A'],
+    ['Lunes, miércoles y viernes', 'Personal fijo · ama de llaves y encargado', 'Fijo', '#4A5A3C']
+  ],
+  tasks: ['Limpiar gabinetes de cocina', 'Desengrasar la parrilla', 'Lavar ventanas', 'Pulir pisos', 'Revisar el aire acondicionado'],
+  quote: { id: 'SR-208', detail: 'Limpiar la parte superior de los gabinetes de cocina y desengrasar la parrilla', amount: 120, who: 'Marisol Reyes · 6 h' },
+  house: [['Agua', '31.400 gal'], ['Electricidad', '9.120 kWh'], ['Horas de personal', '248 h'], ['Servicios realizados', '6']],
+  invoice: {
+    id: 'F-2607', due: 'Vence 10 ago', balance: 894,
+    lines: [
+      ['Honorario de administración', 'Julio 2026 · administración completa', 640],
+      ['Solicitudes aprobadas', 'SR-207 parrilla y SR-201 terraza', 225],
+      ['Servicios reembolsables', 'Electricidad, agua y gas de julio', 2121],
+      ['Personal de la casa', '248 horas · ama de llaves, encargado, jardín', 2480],
+      ['Menos anticipo recibido', 'Transferencia del 8 de julio', -4572]
+    ],
+    payments: [
+      ['Factura F-2606 · junio', 'Transferencia Popular · 9 de julio', 5140],
+      ['Anticipo de servicios', 'Transferencia Popular · 8 de julio', 4572]
+    ]
+  },
+  reminders: [
+    ['Tanque de gas de la casa', 'Luis A.', 'hoy'],
+    ['Tanque pequeño de la parrilla', 'Freddy N.', 'hoy'],
+    ['Baterías de controles TV y A/A', 'Marisol R.', '12 ago'],
+    ['Fertilizar el jardín', 'Freddy N.', '24 ago'],
+    ['Control de plagas', 'Fumigadora RD', '19 oct']
+  ],
+  facts: [
+    ['Wifi de la casa', 'CajuilesGuest · palmera2026'],
+    ['Portón', 'Teclado en la entrada · 4 4 8 1 #'],
+    ['Caja fuerte', 'Clóset principal · 6 2 7 1 4'],
+    ['Póliza', 'MR-118-2026-04477 · renueva 14 nov 2026'],
+    ['Administrador', 'Jan van Welie · +1 809 555 0100']
+  ]
+};
+
+var S = { owner: null, tab: 'inicio', task: -1, approved: false, workScheduled: false, paid: false, err: '', code: '', last: '' };
+
+function fmt(n) { return 'RD$' + Math.round(n * 60.5).toLocaleString('es-DO'); }
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function set(patch) { Object.assign(S, patch); render(); }
+
+function login(e) {
+  e.preventDefault();
+  var code = document.getElementById('code').value;
+  var last = document.getElementById('last').value;
+  var hit = OWNERS.filter(function (o) {
+    return o.code.toUpperCase() === code.trim().toUpperCase() && o.lastName.toLowerCase() === last.trim().toLowerCase();
+  })[0];
+  if (!hit) return set({ code: code, last: last, err: 'No encontramos esa combinación. Revise el código y el apellido.' });
+  try { localStorage.setItem('cph-owner', hit.code); } catch (x) {}
+  set({ owner: hit, err: '' });
+}
+
+function calendar() {
+  var m = {};
+  DATA.staffDays.forEach(function (d) { m[d] = ['#EDF0E7', '#3E4B32']; });
+  DATA.reviewDays.forEach(function (d) { m[d] = ['#C9CDB9', '#2E3327']; });
+  DATA.serviceDays.forEach(function (d) { m[d] = ['#211E1A', '#F3EFE9']; });
+  if (S.workScheduled) DATA.workDays.forEach(function (d) { m[d] = ['#F6EEE2', '#8A6A1F']; });
+  var out = ['D', 'L', 'M', 'M', 'J', 'V', 'S'].map(function (w) {
+    return '<span style="aspect-ratio:auto;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#A09A8F">' + w + '</span>';
+  }).join('');
+  for (var i = 0; i < 42; i++) {
+    var d = i - 5, inM = d >= 1 && d <= 31, c = inM && m[d];
+    out += '<span style="background:' + (c ? c[0] : (inM ? '#F6F2EB' : 'transparent')) + ';color:' + (c ? c[1] : '#A09A8F') + '">' + (inM ? d : '') + '</span>';
+  }
+  return '<div class="cal">' + out + '</div>';
+}
+
+function legend(items) {
+  return '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;font-size:11px;color:#8A8378">' + items.map(function (it) {
+    return '<span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:' + it[1] + '"></span>' + it[0] + '</span>';
+  }).join('') + '</div>';
+}
+
+function screenInicio(o) {
+  return '<div class="hd" style="background:#211E1A;color:#F3EFE9">' +
+    '<div class="eyebrow" style="color:#8B857A">Caribbean Paradise Homes</div>' +
+    '<div class="serif" style="font-size:25px;margin-top:12px">' + esc(o.villa) + '</div>' +
+    '<div style="font-size:12.5px;color:#A8A196;margin-top:6px">Hola, ' + esc(o.name) + ' · ' + DATA.month.toLowerCase() + '</div>' +
+    '<div style="display:flex;gap:10px;margin-top:16px">' + DATA.stats.map(function (s) {
+      return '<div style="flex:1;background:#2E2A25;border-radius:10px;padding:12px 13px">' +
+        '<div class="eyebrow" style="font-size:9.5px;color:#8B857A">' + s[0] + '</div>' +
+        '<div class="serif" style="font-size:22px;margin-top:6px">' + s[1] + '</div></div>';
+    }).join('') + '</div></div>' +
+
+    '<div class="pad">' +
+      '<div style="display:flex;gap:10px">' +
+        '<button class="btn" onclick="set({tab:\'agenda\'})">Ver agenda</button>' +
+        '<button class="btn ghost" onclick="set({tab:\'servicios\'})">Solicitar servicio</button>' +
+      '</div>' +
+      '<div class="eyebrow">Requiere su atención</div>' +
+      '<div class="card" style="padding:14px 15px">' +
+        '<div class="row"><span style="flex:1;font-size:14.5px">Presupuesto por aprobar</span>' +
+        '<span class="chip" style="background:#F5EFDF;color:#8A6A1F">' + DATA.quote.id + '</span></div>' +
+        '<div style="font-size:12.5px;color:#8A8378;margin-top:6px;line-height:1.45">' + esc(DATA.quote.detail) + '</div>' +
+        '<div class="row" style="justify-content:space-between;margin-top:10px">' +
+          '<span class="serif" style="font-size:20px">' + fmt(DATA.quote.amount) + '</span>' +
+          '<a href="#" onclick="set({tab:\'servicios\'});return false" style="font-size:12.5px">Revisar y aprobar</a></div>' +
+      '</div>' +
+      '<div class="card" style="padding:14px 15px">' +
+        '<div class="row"><span style="flex:1;font-size:14.5px">Factura por pagar</span>' +
+        '<span class="chip" style="background:#F6E9E3;color:#A8543A">' + DATA.invoice.id + '</span></div>' +
+        '<div style="font-size:12.5px;color:#8A8378;margin-top:6px;line-height:1.45">' + DATA.invoice.due + ' · administración, servicios y personal de julio</div>' +
+        '<div class="row" style="justify-content:space-between;margin-top:10px">' +
+          '<span class="serif" style="font-size:20px">' + fmt(DATA.invoice.balance) + '</span>' +
+          '<a href="#" onclick="set({tab:\'cuenta\'});return false" style="font-size:12.5px">' + (S.paid ? 'Pagado ✓' : 'Transferir ahora') + '</a></div>' +
+      '</div>' +
+      '<div class="eyebrow">Este mes en la casa</div>' +
+      '<div class="card" style="padding:15px;display:flex;flex-direction:column;gap:12px">' + DATA.house.map(function (h) {
+        return '<div class="row"><span style="flex:1;font-size:13px">' + h[0] + '</span><span style="font-size:13px;color:#4C463F;font-variant-numeric:tabular-nums">' + h[1] + '</span></div>';
+      }).join('') + '</div>' +
+    '</div>';
+}
+
+function screenAgenda() {
+  return '<div class="hd" style="padding-bottom:0"><div class="row" style="justify-content:space-between">' +
+    '<h1 class="serif" style="margin:0;font-size:24px">Agenda</h1><span style="font-size:12.5px;color:#8A8378">' + DATA.month + '</span></div></div>' +
+    '<div class="pad">' +
+      '<div class="card" style="padding:15px">' + calendar() +
+        legend([['Personal fijo', '#4A5A3C'], ['Servicio programado', '#211E1A'], ['Revisión', '#C9CDB9'], ['Días de trabajo', '#E4C9A8']]) +
+        '<div style="margin-top:14px"><button class="btn ' + (S.workScheduled ? 'done' : '') + '" onclick="set({workScheduled:!S.workScheduled})">' +
+          (S.workScheduled ? 'Trabajos programados · 29 al 31 de agosto' : 'Programar días de trabajo') + '</button></div>' +
+        '<div style="font-size:11px;color:#A09A8F;margin-top:9px;text-align:center;line-height:1.45">' +
+          (S.workScheduled ? 'Personal y proveedores avisados · confirmado hace un momento' : 'Para pintura, mudanzas o trabajos que ocupan la casa varios días') + '</div>' +
+      '</div>' +
+      '<div class="eyebrow">Próximas visitas</div>' +
+      DATA.agenda.map(function (a) {
+        return '<div class="card" style="padding:13px 15px;display:flex;align-items:center;gap:12px">' +
+          '<span style="width:4px;align-self:stretch;border-radius:4px;flex:none;background:' + a[3] + '"></span>' +
+          '<div style="flex:1"><div style="font-size:13.5px">' + esc(a[0]) + '</div>' +
+          '<div style="font-size:12px;color:#8A8378;margin-top:4px">' + esc(a[1]) + '</div></div>' +
+          '<span class="chip" style="background:#EDE9E2;color:#4C463F">' + a[2] + '</span></div>';
+      }).join('') +
+    '</div>';
+}
+
+function screenServicios() {
+  var q = DATA.quote;
+  return '<div class="hd" style="padding-bottom:0"><div class="row" style="justify-content:space-between">' +
+    '<h1 class="serif" style="margin:0;font-size:24px">Servicios</h1><span style="font-size:12.5px;color:#8A8378">4 activos</span></div></div>' +
+    '<div class="pad">' +
+      '<div class="card" style="padding:15px">' +
+        '<div style="font-size:14.5px">Solicitar un servicio</div>' +
+        '<div style="font-size:12.5px;color:#8A8378;margin-top:5px;line-height:1.45">Elija una tarea frecuente o escríbanos lo que necesita.</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px">' + DATA.tasks.map(function (t, i) {
+          var on = S.task === i;
+          return '<button onclick="set({task:' + i + '})" style="font-size:12px;min-height:34px;padding:0 12px;border-radius:20px;cursor:pointer;' +
+            'border:1px solid ' + (on ? '#211E1A' : '#E3DDD3') + ';background:' + (on ? '#211E1A' : '#F9F6F1') + ';color:' + (on ? '#F3EFE9' : '#4C463F') + '">' + t + '</button>';
+        }).join('') + '</div>' +
+        '<div style="margin-top:13px"><button class="btn dark">' + (S.task >= 0 ? 'Crear solicitud · ' + DATA.tasks[S.task] : 'Crear solicitud') + '</button></div>' +
+      '</div>' +
+      '<div class="eyebrow">Presupuesto por aprobar</div>' +
+      '<div class="card" style="padding:15px;border-color:#E4C9A8">' +
+        '<div class="row" style="justify-content:space-between"><span style="font-size:14.5px">' + q.id + '</span>' +
+        '<span class="chip" style="background:' + (S.approved ? '#EDF0E7' : '#F5EFDF') + ';color:' + (S.approved ? '#4A5A3C' : '#8A6A1F') + '">' + (S.approved ? 'Aprobado' : 'Por aprobar') + '</span></div>' +
+        '<div style="font-size:13px;color:#4C463F;margin-top:8px;line-height:1.45">' + esc(q.detail) + '</div>' +
+        '<div class="row" style="gap:9px;margin-top:12px"><span class="serif" style="font-size:25px">' + fmt(q.amount) + '</span>' +
+        '<span style="font-size:12px;color:#6E6862">' + esc(q.who) + '</span></div>' +
+        '<div style="font-size:11.5px;color:#A09A8F;margin-top:6px">Incluye materiales · sin cargo de gestión</div>' +
+        '<div style="display:flex;gap:8px;margin-top:13px">' +
+          '<button class="btn ' + (S.approved ? 'done' : '') + '" onclick="set({approved:true})">' + (S.approved ? 'Aprobado · programado miércoles 5' : 'Aprobar ' + fmt(q.amount)) + '</button>' +
+          '<button class="btn ghost" style="width:auto;padding:0 16px">Preguntar</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function screenCuenta() {
+  var inv = DATA.invoice;
+  return '<div class="hd" style="padding-bottom:0"><div class="row" style="justify-content:space-between">' +
+    '<h1 class="serif" style="margin:0;font-size:24px">Cuenta</h1><span style="font-size:12.5px;color:#8A8378">' + inv.id + '</span></div></div>' +
+    '<div class="pad">' +
+      '<div style="background:#211E1A;color:#F3EFE9;border-radius:12px;padding:16px 17px">' +
+        '<div class="row" style="justify-content:space-between"><span class="eyebrow" style="color:#8B857A">Saldo por pagar</span>' +
+        '<span class="chip" style="background:#3A352E;color:#E8E3DA">' + inv.due + '</span></div>' +
+        '<div class="serif" style="font-size:34px;margin-top:10px">' + fmt(inv.balance) + '</div>' +
+        '<div style="font-size:12px;color:#A8A196;margin-top:6px">Administración, servicios y personal</div>' +
+        '<div style="margin-top:15px"><button class="btn' + (S.paid ? ' done' : '') + '" onclick="set({paid:true})">' + (S.paid ? 'Pago enviado · recibo en la app' : 'Transferir ahora') + '</button></div>' +
+        '<div style="font-size:11.5px;color:#A8A196;margin-top:9px;line-height:1.5">' +
+          (S.paid ? 'Recibo disponible en la app y en su correo.' : 'Transferencia local el mismo día · ACH 2 a 3 días · tarjeta con 3% de recargo.') + '</div>' +
+      '</div>' +
+      '<div class="eyebrow">Detalle de la factura</div>' +
+      '<div class="card" style="padding:15px;display:flex;flex-direction:column;gap:12px">' + inv.lines.map(function (l) {
+        return '<div class="row"><div style="flex:1"><div style="font-size:13px">' + esc(l[0]) + '</div>' +
+          '<div style="font-size:11.5px;color:#A09A8F;margin-top:3px">' + esc(l[1]) + '</div></div>' +
+          '<span style="font-size:13px;color:#4C463F;font-variant-numeric:tabular-nums">' + (l[2] < 0 ? '−' + fmt(-l[2]) : fmt(l[2])) + '</span></div>';
+      }).join('') + '</div>' +
+      '<div class="eyebrow">Pagos recientes</div>' +
+      '<div class="card" style="padding:15px;display:flex;flex-direction:column;gap:12px">' + inv.payments.map(function (p) {
+        return '<div class="row"><div style="flex:1"><div style="font-size:13px">' + esc(p[0]) + '</div>' +
+          '<div style="font-size:11.5px;color:#A09A8F;margin-top:3px">' + esc(p[1]) + '</div></div>' +
+          '<span style="font-size:13px;color:#4A5A3C;font-variant-numeric:tabular-nums">' + fmt(p[2]) + '</span></div>';
+      }).join('') + '</div>' +
+    '</div>';
+}
+
+function screenCasa() {
+  return '<div class="hd" style="padding-bottom:0"><div class="row" style="justify-content:space-between">' +
+    '<h1 class="serif" style="margin:0;font-size:24px">La casa</h1><span style="font-size:12.5px;color:#8A8378">' + esc(S.owner.villa) + '</span></div></div>' +
+    '<div class="pad">' +
+      '<div class="eyebrow">Recordatorios</div>' +
+      '<div class="card" style="padding:15px;display:flex;flex-direction:column;gap:12px">' + DATA.reminders.map(function (r) {
+        return '<div class="row"><div style="flex:1"><div style="font-size:13px">' + esc(r[0]) + '</div>' +
+          '<div style="font-size:11.5px;color:#A09A8F;margin-top:3px">' + esc(r[1]) + '</div></div>' +
+          '<span style="font-size:12.5px;color:' + (r[2] === 'hoy' ? '#A8543A' : '#8A8378') + '">' + r[2] + '</span></div>';
+      }).join('') + '</div>' +
+      '<div class="eyebrow">Datos de la casa</div>' +
+      '<div class="card" style="padding:15px;display:flex;flex-direction:column;gap:12px">' + DATA.facts.map(function (f) {
+        return '<div class="row"><span style="flex:1;font-size:13px">' + esc(f[0]) + '</span>' +
+          '<span style="font-size:12.5px;color:#6E6862;text-align:right">' + esc(f[1]) + '</span></div>';
+      }).join('') + '</div>' +
+      '<button class="btn ghost" onclick="logout()">Cerrar sesión</button>' +
+    '</div>';
+}
+
+function logout() { try { localStorage.removeItem('cph-owner'); } catch (x) {} set({ owner: null, tab: 'inicio' }); }
+
+function screenLogin() {
+  return '<div class="wrap" style="padding:calc(60px + env(safe-area-inset-top)) 20px 40px">' +
+    '<div class="eyebrow">Caribbean Paradise Homes</div>' +
+    '<h1 class="serif" style="margin:12px 0 0;font-size:28px">App del Propietario</h1>' +
+    '<div style="font-size:13px;color:#6E6862;margin-top:8px;line-height:1.5">Agenda de la casa, servicios, facturas y datos de su villa.</div>' +
+    '<form class="card" style="padding:16px;margin-top:20px;display:flex;flex-direction:column;gap:12px" onsubmit="login(event)">' +
+      '<label style="font-size:12px;color:#6E6862">Código de propietario' +
+        '<input id="code" autocomplete="off" placeholder="CDC-OWN-0000" value="' + esc(S.code) + '" style="width:100%;min-height:46px;margin-top:6px;padding:0 12px;border:1px solid #E3DDD3;border-radius:10px;background:#FFFDFA;font-size:15px" /></label>' +
+      '<label style="font-size:12px;color:#6E6862">Apellido' +
+        '<input id="last" autocomplete="family-name" value="' + esc(S.last) + '" style="width:100%;min-height:46px;margin-top:6px;padding:0 12px;border:1px solid #E3DDD3;border-radius:10px;background:#FFFDFA;font-size:15px" /></label>' +
+      (S.err ? '<div style="font-size:12.5px;color:#A8543A;line-height:1.45">' + esc(S.err) + '</div>' : '') +
+      '<button class="btn dark" type="submit">Entrar</button>' +
+    '</form>' +
+    '<div style="font-size:11.5px;color:#A09A8F;margin-top:14px;line-height:1.5">¿No tiene su código? Escriba a jan@caribbeanparadisehomes.com</div>' +
+  '</div>';
+}
+
+function tabbar() {
+  var tabs = [['inicio', 'Inicio'], ['agenda', 'Agenda'], ['servicios', 'Servicios'], ['cuenta', 'Cuenta'], ['casa', 'La casa']];
+  return '<nav class="tabbar"><div>' + tabs.map(function (t) {
+    return '<button class="tab" aria-current="' + (S.tab === t[0]) + '" onclick="set({tab:\'' + t[0] + '\'})">' + t[1] + '</button>';
+  }).join('') + '</div></nav>';
+}
+
+function render() {
+  var root = document.getElementById('root');
+  if (!S.owner) { document.body.style.paddingBottom = '0'; root.innerHTML = screenLogin(); return; }
+  document.body.style.paddingBottom = 'calc(64px + env(safe-area-inset-bottom))';
+  var body = { inicio: screenInicio, agenda: screenAgenda, servicios: screenServicios, cuenta: screenCuenta, casa: screenCasa }[S.tab];
+  root.innerHTML = '<div class="wrap">' + body(S.owner) + '</div>' + tabbar();
+}
+
+try {
+  var saved = localStorage.getItem('cph-owner');
+  if (saved) S.owner = OWNERS.filter(function (o) { return o.code === saved; })[0] || null;
+} catch (x) {}
+render();
+</script>
+</body>
+</html>

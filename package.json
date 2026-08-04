@@ -1,0 +1,9 @@
+{
+  "name": "cph-owner-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Caribbean Paradise Homes — Owner App + Property Management Console (standalone, separate from cph-my-stay).",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}
