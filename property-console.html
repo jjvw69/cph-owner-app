@@ -956,8 +956,9 @@ class Component extends DCLogic {
     for(var i=0;i<spans.length;i++){
       var s=spans[i];
       if(s.children.length===0 && (s.textContent||"").trim().replace(/\s+/g," ")===lbl){
-        var row=s.parentElement;
-        if(row && row.children.length>=2) return row;
+        // the label span is wrapped; walk up to the clickable row (a DIV with dot+label+badge)
+        var n=s.parentElement;
+        for(var j=0;j<4&&n;j++){ if(n.tagName==="DIV" && n.children.length>=2) return n; n=n.parentElement; }
       }
     }
     return null;
