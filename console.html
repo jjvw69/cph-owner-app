@@ -50,7 +50,7 @@
   .submenu button{ text-align:left; background:none; border:0; color:#a8a196; font:inherit; font-size:14px; padding:8px 11px; border-radius:8px; cursor:pointer; }
   .submenu button:hover{ background:rgba(255,255,255,.06); color:#e3ded4; }
   .submenu button[aria-current="true"]{ background:rgba(255,255,255,.10); color:#fff; font-weight:500; }
-  .quickadd{ margin-top:14px; background:var(--btn); color:#fff; border:0; border-radius:10px; padding:11px 14px; font:inherit; font-size:14px; cursor:pointer; }
+  .quickadd{ margin:14px 0 4px; background:var(--btn); color:#fff; border:0; border-radius:10px; padding:11px 14px; font:inherit; font-size:14px; cursor:pointer; }
   .quickadd:hover{ filter:brightness(1.08); }
   /* quick-add modal */
   .modalWrap{ display:none; position:fixed; inset:0; background:rgba(20,18,15,.55); z-index:200; align-items:flex-start; justify-content:center; padding:7vh 20px; overflow:auto; }
@@ -72,7 +72,18 @@
   .eyebrow{ letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--soft); }
   h1{ font-size:30px; margin:4px 0 2px; }
   .sub{ color:var(--soft); font-size:14px; }
-  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-top:18px; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px; margin-top:18px;
+         box-shadow:0 1px 2px rgba(33,30,26,.04), 0 6px 18px rgba(33,30,26,.045); }
+  /* per-section accent tint (HINT-style): a soft colour band above the first card */
+  .main[data-sec] .head{ position:relative; padding-left:16px; }
+  .main[data-sec] .head:before{ content:""; position:absolute; left:0; top:4px; bottom:4px; width:4px; border-radius:4px; background:var(--accent,#4a5a3c); }
+  .main[data-sec="readings"]{ --accent:#2f4a5a; --tint:#e9eef2; }
+  .main[data-sec="workorders"]{ --accent:#8a6a1f; --tint:#f5efdf; }
+  .main[data-sec="invoices"]{ --accent:#4a5a3c; --tint:#edf0e7; }
+  .main[data-sec="manage"]{ --accent:#6e6862; --tint:#f1ede6; }
+  .main[data-sec="villa"]{ --accent:#2f7d4f; --tint:#e8f1ea; }
+  .main[data-sec] .eyebrow{ color:var(--accent,#6e6862); }
+  .main[data-sec] .stat{ background:linear-gradient(180deg,var(--tint,#fff) 0%,#fff 58%); }
   label{ display:block; font-size:12px; color:var(--soft); text-transform:uppercase; letter-spacing:.06em; margin:0 0 6px; }
   input,select,textarea{ width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:9px; font-size:15px; background:#fff; color:var(--ink); font-family:inherit; }
   textarea{ resize:vertical; min-height:44px; }
@@ -92,14 +103,17 @@
   .empty{ color:var(--faint); padding:16px 8px; }
   code.tag{ background:var(--greenbg); color:#3a6b2c; padding:2px 8px; border-radius:6px; font-size:13px; }
   .stats{ display:flex; gap:14px; flex-wrap:wrap; }
-  .stat{ flex:1; min-width:150px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; }
+  .stat{ flex:1; min-width:150px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px;
+         box-shadow:0 1px 2px rgba(33,30,26,.04), 0 6px 18px rgba(33,30,26,.045); }
   .stat .k{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--soft); }
   .stat .v{ font-family:Newsreader,Georgia,serif; font-size:30px; margin-top:4px; }
   .hidden{ display:none; }
   .chips{ display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 2px; }
   .chip{ background:#fff; border:1px solid var(--line); color:var(--soft); border-radius:20px; padding:7px 15px; font-size:13.5px; cursor:pointer; }
   .chip[aria-pressed="true"]{ background:#211e1a; color:#fff; border-color:#211e1a; }
-  .wocard{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-top:12px; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+  .wocard{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:17px 19px; margin-top:12px;
+           box-shadow:0 1px 2px rgba(33,30,26,.04), 0 6px 18px rgba(33,30,26,.045); transition:box-shadow .15s, border-color .15s, transform .15s; }
+  .wocard[data-open]:hover{ box-shadow:0 2px 4px rgba(33,30,26,.06), 0 10px 26px rgba(33,30,26,.08); transform:translateY(-1px); }
   .wocard .top{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
   .wocard h3{ margin:0; font-family:inherit; font-size:16px; font-weight:600; }
   .badges{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
@@ -142,6 +156,7 @@
       <img src="/cph-logo.png" alt="CPH" />
       <div><div class="bt">Property Console</div><div class="bs">Caribbean Paradise Homes</div></div>
     </div>
+    <button class="quickadd" id="quickAddBtn">+ Quick add</button>
     <nav class="nav" id="nav">
       <div class="navgroup">Dashboard</div>
       <div class="submenu open" id="dashSub">
@@ -160,7 +175,6 @@
       <button data-view="invoices">Invoices <span class="badge" id="invBadge"></span></button>
       <button data-view="manage" id="navManage">Manage</button>
     </nav>
-    <button class="quickadd" id="quickAddBtn">+ Quick add</button>
     <div class="sidefoot">
       <div id="whoName"></div>
       <button id="logout" style="margin-top:8px;">Log out</button>
@@ -242,6 +256,7 @@ function go(view){
   VIEW = view;
   [].forEach.call($('nav').querySelectorAll('button[data-view]'), function(b){ b.setAttribute('aria-current', b.getAttribute('data-view')===view ? 'true':'false'); });
   $('main').classList.toggle('full', view==='dashboard');
+  if(view==='dashboard') $('main').removeAttribute('data-sec'); else $('main').setAttribute('data-sec', view);
   /* Dashboard sections live in the submenu; highlight one only while on the dashboard */
   var sub=$('dashSub');
   if(sub){ [].forEach.call(sub.children, function(x){ x.setAttribute('aria-current', (view==='dashboard' && x.getAttribute('data-dash')===DASH_SECTION) ? 'true':'false'); }); }
@@ -543,7 +558,7 @@ function qaForm(kind){
 
 /* ---- VILLA PROFILE (opened from the dashboard villa table) ---- */
 async function viewVillaProfile(name){
-  var main=$('main'); main.classList.remove('full'); VIEW='villa';
+  var main=$('main'); main.classList.remove('full'); VIEW='villa'; main.setAttribute('data-sec','villa');
   [].forEach.call($('nav').querySelectorAll('button[data-view]'), function(b){ b.setAttribute('aria-current','false'); });
   var sub=$('dashSub'); if(sub){ [].forEach.call(sub.children, function(x){ x.setAttribute('aria-current','false'); }); }
   main.innerHTML='<div class="empty">Loading…</div>';
