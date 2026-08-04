@@ -158,21 +158,15 @@
     </div>
     <button class="quickadd" id="quickAddBtn">+ Quick add</button>
     <nav class="nav" id="nav">
-      <div class="navgroup">Dashboard</div>
-      <div class="submenu open" id="dashSub">
-        <button data-dash="overview" aria-current="true">Overview</button>
-        <button data-dash="utilities">Utilities</button>
-        <button data-dash="labour">Labour &amp; hours</button>
-        <button data-dash="maintenance">Maintenance</button>
-        <button data-dash="quotes">Quotes</button>
-        <button data-dash="payments">Payments</button>
-        <button data-dash="statement">Owner statement</button>
-        <button data-dash="field">Field app</button>
-      </div>
-      <div class="navgroup">Operations</div>
-      <button data-view="readings">Meter readings</button>
-      <button data-view="workorders">Work orders <span class="badge" id="woBadge"></span></button>
-      <button data-view="invoices">Invoices <span class="badge" id="invBadge"></span></button>
+      <button data-view="overview" aria-current="true">Overview</button>
+      <button data-view="utilities">Utilities</button>
+      <button data-view="labour">Labour &amp; hours</button>
+      <button data-view="maintenance">Maintenance <span class="badge" id="woBadge"></span></button>
+      <button data-view="quotes">Quotes <span class="badge" id="qtBadge"></span></button>
+      <button data-view="payments">Payments <span class="badge" id="invBadge"></span></button>
+      <button data-view="statement">Owner statement</button>
+      <button data-view="field">Field app</button>
+      <div class="navgroup">Admin</div>
       <button data-view="manage" id="navManage">Manage</button>
     </nav>
     <div class="sidefoot">
@@ -195,7 +189,7 @@
 
 <script>
 var $ = function(id){ return document.getElementById(id); };
-var ME = null, VILLAS = [], STATUSES = [], VIEW = 'dashboard', WO_FILTER = 'open', DASH_SECTION = 'overview';
+var ME = null, VILLAS = [], STATUSES = [], VIEW = 'overview', WO_FILTER = 'open';
 function stStyle(s){ var m={'Open':['#eee7dd','#8a8378'],'Quoting':['#f5efdf','#8a6a1f'],'Approved':['#edf0e7','#4a5a3c'],'Parts ordered':['#e9eef2','#2f4a5a'],'Scheduled':['#e9eef2','#2f4a5a'],'Done':['#edf0e7','#4a5a3c']}; var c=m[s]||['#eee7dd','#8a8378']; return 'background:'+c[0]+';color:'+c[1]; }
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
@@ -225,66 +219,96 @@ async function boot(){
 async function updateBadges(){
   try{ var w = await api('/api/workorders'); var open=(w.body.workorders||[]).filter(function(x){return x.status!=='Done';}).length; $('woBadge').textContent = open || ''; }catch(e){}
   try{ var i = await api('/api/invoices'); var un=(i.body.invoices||[]).filter(function(x){return x.status!=='Paid';}).length; $('invBadge').textContent = un || ''; }catch(e){}
+  try{ var q = await api('/api/quotes'); var pd=(q.body.quotes||[]).filter(function(x){return x.status==='Pending';}).length; $('qtBadge').textContent = pd || ''; }catch(e){}
 }
 
 /* ---- nav ---- */
 document.addEventListener('mousedown', function(e){
   var t=e.target;
-  var db=t.closest && t.closest('#dashSub button[data-dash]'); if(db){ e.preventDefault(); openDash(db.getAttribute('data-dash')); return; }
   var nb=t.closest && t.closest('.nav > button[data-view]'); if(nb){ e.preventDefault(); go(nb.getAttribute('data-view')); return; }
 }, true);
-/* villa clicked inside the dashboard iframe → open its profile */
-window.addEventListener('message', function(e){
-  var d=e.data; if(d && d.type==='cph-open-villa' && d.villa){ viewVillaProfile(String(d.villa)); }
-});
-function openDash(section){
-  var changedView = (VIEW!=='dashboard');
-  DASH_SECTION=section;
-  var sub=$('dashSub'); if(sub){ [].forEach.call(sub.children,function(x){ x.setAttribute('aria-current', x.getAttribute('data-dash')===section?'true':'false'); }); }
-  if(changedView){ go('dashboard'); return; }   // fresh iframe already opens on #section
-  var ifr=$('dashFrame');
-  if(!ifr){ go('dashboard'); return; }
-  try{
-    // set the hash AND re-trigger, so repeat clicks on the same section still work
-    ifr.contentWindow.location.hash=section;
-    if(ifr.contentWindow.dispatchEvent) ifr.contentWindow.dispatchEvent(new ifr.contentWindow.Event('hashchange'));
-  }catch(e){ ifr.src='/property-console#'+section; }
-}
 function resizeImage(file, cb){ var img=new Image(), url=URL.createObjectURL(file); img.onload=function(){ URL.revokeObjectURL(url); var max=1100,w=img.width,h=img.height; if(w>h&&w>max){h=Math.round(h*max/w);w=max;} else if(h>max){w=Math.round(w*max/h);h=max;} var c=document.createElement('canvas'); c.width=w;c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); cb(c.toDataURL('image/jpeg',0.6)); }; img.onerror=function(){ cb(null); }; img.src=url; }
 function go(view){
-  if(view==='manage' && (!ME || !ME.isAdmin)) view='dashboard';
+  if(view==='manage' && (!ME || !ME.isAdmin)) view='overview';
   VIEW = view;
   [].forEach.call($('nav').querySelectorAll('button[data-view]'), function(b){ b.setAttribute('aria-current', b.getAttribute('data-view')===view ? 'true':'false'); });
-  $('main').classList.toggle('full', view==='dashboard');
-  if(view==='dashboard') $('main').removeAttribute('data-sec'); else $('main').setAttribute('data-sec', view);
-  /* Dashboard sections live in the submenu; highlight one only while on the dashboard */
-  var sub=$('dashSub');
-  if(sub){ [].forEach.call(sub.children, function(x){ x.setAttribute('aria-current', (view==='dashboard' && x.getAttribute('data-dash')===DASH_SECTION) ? 'true':'false'); }); }
-  ({dashboard:viewDashboard, overview:viewOverview, readings:viewReadings, workorders:viewWorkorders, invoices:viewInvoices, manage:viewManage}[view] || viewDashboard)();
+  $('main').setAttribute('data-sec', view);
+  window.scrollTo(0,0);
+  ({ overview:viewOverview, utilities:viewReadings, labour:viewLabour,
+     maintenance:viewWorkorders, quotes:viewQuotes, payments:viewInvoices,
+     statement:viewStatement, field:viewField, manage:viewManage }[view] || viewOverview)();
 }
-function viewDashboard(){ $('main').innerHTML = '<iframe id="dashFrame" title="Caribbean Paradise Homes Dashboard" src="/property-console#'+DASH_SECTION+'" style="display:block;width:100%;height:100vh;border:0;background:#f3efe9"></iframe>'; }
 
-/* ---- OVERVIEW ---- */
+/* ---- OVERVIEW (live, from real data) ---- */
+function monthLabel(){ return new Date().toLocaleString('en-US',{month:'long',year:'numeric'}); }
+function thisMonth(){ return new Date().toISOString().slice(0,7); }
 async function viewOverview(){
-  var m=$('main'); m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Where things stand</h1><div class="sub">Estate operations · '+VILLAS.length+' villas</div></div><div class="stats" id="ovStats"></div><div class="card"><h2 style="margin:0 0 4px;font-size:19px">Open work orders</h2><div id="ovWo"></div></div><div class="card"><h2 style="margin:0 0 4px;font-size:19px">Recent meter readings</h2><div id="ovRd"></div></div>';
-  var r = await api('/api/readings'); var w = await api('/api/workorders');
-  var reads=r.body.readings||[]; var wos=w.body.workorders||[]; var open=wos.filter(function(x){return x.status!=='Done';});
+  var m=$('main');
+  m.innerHTML='<div class="head"><div class="eyebrow">Portfolio · '+esc(monthLabel())+'</div><h1>Where things stand</h1><div class="sub">Live figures from your own records · '+VILLAS.length+' villas</div></div>'
+   +'<div class="stats" id="ovStats"></div>'
+   +'<div class="card"><h2 style="margin:0 0 10px;font-size:19px">By villa <span class="muted" style="font-weight:400">· click a villa for its profile</span></h2><div id="ovTable"></div></div>'
+   +'<div class="row" style="gap:18px;align-items:flex-start"><div style="flex:1;min-width:280px"><div class="card"><h2 style="margin:0 0 4px;font-size:19px">Needs attention</h2><div id="ovAlerts"></div></div></div>'
+   +'<div style="flex:1;min-width:280px"><div class="card"><h2 style="margin:0 0 4px;font-size:19px">Latest activity</h2><div id="ovRecent"></div></div></div></div>';
+  var rr=await api('/api/readings'), ww=await api('/api/workorders'), ii=await api('/api/invoices'), hh=await api('/api/hours'), qq=await api('/api/quotes');
+  var reads=rr.body.readings||[], wos=ww.body.workorders||[], invs=ii.body.invoices||[], hrs=hh.body.hours||[], qts=qq.body.quotes||[];
+  var mk=thisMonth();
+  var mReads=reads.filter(function(x){return String(x.ts||'').slice(0,7)===mk;});
+  var mHours=hrs.filter(function(x){return String(x.date||'').slice(0,7)===mk;});
+  var mInv=invs.filter(function(x){return String(x.date||x.created_ts||'').slice(0,7)===mk;});
+  var sum=function(a,f){ return a.reduce(function(t,x){return t+(Number(f(x))||0);},0); };
+  var openWo=wos.filter(function(x){return x.status!=='Done';});
+  var unpaid=invs.filter(function(x){return x.status!=='Paid';});
   $('ovStats').innerHTML =
-    '<div class="stat"><div class="k">Villas</div><div class="v">'+VILLAS.length+'</div></div>'+
-    '<div class="stat"><div class="k">Readings logged</div><div class="v">'+reads.length+'</div></div>'+
-    '<div class="stat"><div class="k">Open work orders</div><div class="v">'+open.length+'</div></div>';
-  $('ovWo').innerHTML = open.length ? '<table><tbody>'+open.slice(0,6).map(function(x){ return '<tr><td style="font-weight:500">'+esc(x.title)+'<div class="muted">'+esc(x.villa)+'</div></td><td class="num">'+rd(x.cost)+'</td><td><span class="pill">'+esc(x.status)+'</span></td></tr>'; }).join('')+'</tbody></table>' : '<div class="empty">No open work orders.</div>';
-  $('ovRd').innerHTML = reads.length ? '<table><tbody>'+reads.slice(0,6).map(function(x){ return '<tr><td>'+esc(x.villa)+'</td><td class="num">'+(x.electricity_kwh==null?'—':nfmt(x.electricity_kwh)+' kWh')+'</td><td class="num">'+(x.water_gal==null?'—':nfmt(x.water_gal)+' gal')+'</td><td class="muted">'+esc(when(x.ts))+'</td></tr>'; }).join('')+'</tbody></table>' : '<div class="empty">No readings yet.</div>';
+    '<div class="stat"><div class="k">Water</div><div class="v">'+nfmt(sum(mReads,function(x){return x.water_gal;}))+'</div><div class="muted">gallons · this month</div></div>'+
+    '<div class="stat"><div class="k">Electricity</div><div class="v">'+nfmt(sum(mReads,function(x){return x.electricity_kwh;}))+'</div><div class="muted">kWh · this month</div></div>'+
+    '<div class="stat"><div class="k">Labour</div><div class="v">'+nfmt(sum(mHours,function(x){return x.hours;}))+'</div><div class="muted">hours · this month</div></div>'+
+    '<div class="stat"><div class="k">Invoiced</div><div class="v" style="font-size:24px">'+rd(sum(mInv,function(x){return x.amount;}))+'</div><div class="muted">this month</div></div>';
+  // per-villa roll-up
+  var rows=VILLAS.map(function(v){
+    return { villa:v,
+      gal:sum(mReads.filter(function(x){return x.villa===v;}),function(x){return x.water_gal;}),
+      kwh:sum(mReads.filter(function(x){return x.villa===v;}),function(x){return x.electricity_kwh;}),
+      hrs:sum(mHours.filter(function(x){return x.villa===v;}),function(x){return x.hours;}),
+      spend:sum(mInv.filter(function(x){return x.villa===v;}),function(x){return x.amount;}),
+      open:openWo.filter(function(x){return x.villa===v;}).length };
+  });
+  $('ovTable').innerHTML = rows.length ? '<table><thead><tr><th>Villa</th><th style="text-align:right">Gallons</th><th style="text-align:right">kWh</th><th style="text-align:right">Hours</th><th style="text-align:right">Spend</th><th style="text-align:right">Open jobs</th></tr></thead><tbody>'
+    +rows.map(function(r){ return '<tr data-villa="'+esc(r.villa)+'" style="cursor:pointer"><td style="font-weight:500">'+esc(r.villa)+'</td><td class="num">'+(r.gal?nfmt(r.gal):'—')+'</td><td class="num">'+(r.kwh?nfmt(r.kwh):'—')+'</td><td class="num">'+(r.hrs||'—')+'</td><td class="num">'+(r.spend?rd(r.spend):'—')+'</td><td class="num">'+(r.open||'—')+'</td></tr>'; }).join('')
+    +'</tbody></table>' : '<div class="empty">No villas yet — add them under Manage.</div>';
+  $('ovTable').querySelectorAll('[data-villa]').forEach(function(tr){ tr.onclick=function(){ viewVillaProfile(tr.getAttribute('data-villa')); }; });
+  // alerts built from real signals
+  var alerts=[];
+  openWo.filter(function(x){return x.scheduled_date && x.scheduled_date < new Date().toISOString().slice(0,10);})
+    .forEach(function(x){ alerts.push(['#a8543a', x.title+' — overdue', esc(x.villa)+' · was due '+esc(x.scheduled_date)]); });
+  invs.filter(function(x){ return x.status!=='Paid' && x.due_date && x.due_date < new Date().toISOString().slice(0,10); })
+    .forEach(function(x){ alerts.push(['#a8543a', x.vendor+' — invoice overdue', rd(x.amount)+' · was due '+esc(x.due_date)]); });
+  qts.filter(function(q){return q.status==='Pending';}).slice(0,3)
+    .forEach(function(q){ alerts.push(['#8a6a1f', q.title+' — quote awaiting decision', esc(q.vendor)+' · '+rd(q.amount)]); });
+  VILLAS.forEach(function(v){ if(!mReads.some(function(x){return x.villa===v;})) alerts.push(['#8a6a1f','No meter reading this month', esc(v)]); });
+  $('ovAlerts').innerHTML = alerts.length ? alerts.slice(0,8).map(function(a){
+    return '<div style="display:flex;gap:12px;align-items:flex-start;margin-top:12px"><span style="width:7px;height:7px;border-radius:7px;flex:none;margin-top:6px;background:'+a[0]+'"></span><div><div style="font-size:14px">'+esc(a[1])+'</div><div class="muted">'+a[2]+'</div></div></div>';
+  }).join('') : '<div class="empty">Nothing needs attention.</div>';
+  // recent activity across every store
+  var acts=[]
+    .concat(wos.map(function(x){return {ts:x.updated_ts||x.created_ts, t:'Work order · '+x.title, s:x.villa+' · '+x.status};}))
+    .concat(invs.map(function(x){return {ts:x.updated_ts||x.created_ts, t:'Invoice · '+x.vendor+' '+rd(x.amount), s:(x.villa||'')+' · '+x.status};}))
+    .concat(reads.map(function(x){return {ts:x.ts, t:'Reading · '+x.villa, s:(x.electricity_kwh!=null?nfmt(x.electricity_kwh)+' kWh ':'')+(x.water_gal!=null?nfmt(x.water_gal)+' gal':'')};}))
+    .concat(hrs.map(function(x){return {ts:x.ts, t:'Hours · '+x.staff_name+' '+x.hours+'h', s:x.villa||''};}))
+    .sort(function(a,b){ return String(b.ts||'').localeCompare(String(a.ts||'')); }).slice(0,8);
+  $('ovRecent').innerHTML = acts.length ? acts.map(function(a){
+    return '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:11px"><div><div style="font-size:14px">'+esc(a.t)+'</div><div class="muted">'+esc(a.s)+'</div></div><div class="muted" style="white-space:nowrap">'+esc(when(a.ts))+'</div></div>';
+  }).join('') : '<div class="empty">Nothing logged yet.</div>';
 }
 
 /* ---- METER READINGS ---- */
 function viewReadings(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Meter readings</h1><div class="sub">Water &amp; electricity per villa · shared log <span id="rdSum"></span></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Submit a reading</h2>'
+  m.innerHTML='<div class="head"><div class="eyebrow">Utilities</div><h1>Water &amp; electricity, metered</h1><div class="sub">Per villa · shared log <span id="rdSum"></span></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Add a reading</h2>'
    +'<div class="row"><div><label>Villa</label><select id="rVilla"></select></div><div><label>Electricity (kWh)</label><input id="rElec" inputmode="decimal" placeholder="e.g. 9120"/></div><div><label>Water (gallons)</label><input id="rWater" inputmode="decimal" placeholder="e.g. 31400"/></div></div>'
    +'<div style="margin-top:12px"><label>Note (optional)</label><textarea id="rNote" placeholder="Anything worth flagging"></textarea></div>'
    +'<div style="margin-top:14px"><button class="primary" id="rSave">Save reading</button></div><div id="rMsg" class="msg"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Consumption by villa <span class="muted" style="font-weight:400">· this month</span></h2><div id="rChart"></div></div>'
    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Reading log</h2><div id="rList"></div></div>';
   fillSelect($('rVilla'), VILLAS);
   $('rSave').onclick = async function(){
@@ -301,6 +325,7 @@ async function loadReadings(){
   var wrap=$('rList'); wrap.innerHTML='<div class="empty">Loading…</div>';
   var r=await api('/api/readings'); var rows=r.body.readings||[];
   var sumEl=$('rdSum'); if(sumEl){ sumEl.innerHTML='· '+rows.length+' logged'+deltaInline(monthDelta(rows,'ts')); }
+  drawConsumption(rows);
   if(!rows.length){ wrap.innerHTML='<div class="empty">No readings yet.</div>'; return; }
   wrap.innerHTML='<table><thead><tr><th>Villa</th><th style="text-align:right">Electricity</th><th style="text-align:right">Water</th><th>Note</th><th>By</th><th>When</th><th></th></tr></thead><tbody>'
     +rows.map(function(x){ return '<tr><td>'+esc(x.villa)+'</td><td class="num">'+(x.electricity_kwh==null?'—':nfmt(x.electricity_kwh)+' <span style="color:#a09a8f">kWh</span>')+'</td><td class="num">'+(x.water_gal==null?'—':nfmt(x.water_gal)+' <span style="color:#a09a8f">gal</span>')+'</td><td>'+esc(x.note||'')+'</td><td><span class="pill">'+esc(cap(x.user))+'</span></td><td style="color:#6e6862">'+esc(when(x.ts))+'</td><td><button class="link" data-del="'+esc(x.id)+'">Delete</button></td></tr>'; }).join('')
@@ -308,10 +333,235 @@ async function loadReadings(){
   wrap.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this reading?'))return; await api('/api/readings/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-del')})}); loadReadings(); }; });
 }
 
+/* consumption bars from real readings (this month, per villa) */
+function drawConsumption(rows){
+  var el=$('rChart'); if(!el) return;
+  var mk=thisMonth();
+  var mr=(rows||[]).filter(function(x){ return String(x.ts||'').slice(0,7)===mk; });
+  var data=VILLAS.map(function(v){
+    var f=mr.filter(function(x){return x.villa===v;});
+    return { villa:v,
+      kwh:f.reduce(function(t,x){return t+(Number(x.electricity_kwh)||0);},0),
+      gal:f.reduce(function(t,x){return t+(Number(x.water_gal)||0);},0) };
+  });
+  var maxK=Math.max.apply(null,data.map(function(d){return d.kwh;}).concat([1]));
+  var maxG=Math.max.apply(null,data.map(function(d){return d.gal;}).concat([1]));
+  if(!data.some(function(d){return d.kwh||d.gal;})){ el.innerHTML='<div class="empty">No readings logged this month yet — add one above and the chart fills in.</div>'; return; }
+  el.innerHTML='<div style="display:flex;gap:18px;margin:6px 0 14px;font-size:12.5px;color:var(--soft)"><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#4a5a3c;margin-right:6px"></span>Electricity (kWh)</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#2f4a5a;margin-right:6px"></span>Water (gal)</span></div>'
+   + data.map(function(d){
+      return '<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:13.5px"><span>'+esc(d.villa)+'</span><span class="muted">'+(d.kwh?nfmt(d.kwh)+' kWh':'')+(d.kwh&&d.gal?' · ':'')+(d.gal?nfmt(d.gal)+' gal':'')+'</span></div>'
+        +'<div style="display:flex;gap:4px;flex-direction:column;margin-top:5px">'
+        +'<div style="height:9px;border-radius:5px;background:#efe9df"><div style="height:9px;border-radius:5px;background:#4a5a3c;width:'+Math.round(d.kwh/maxK*100)+'%"></div></div>'
+        +'<div style="height:9px;border-radius:5px;background:#efe9df"><div style="height:9px;border-radius:5px;background:#2f4a5a;width:'+Math.round(d.gal/maxG*100)+'%"></div></div>'
+        +'</div></div>';
+    }).join('');
+}
+
+/* ---- LABOUR & HOURS ---- */
+var STAFF=[];
+function viewLabour(){
+  var m=$('main');
+  m.innerHTML='<div class="head"><div class="eyebrow">Labour</div><h1>Hours, shifts and payroll</h1><div class="sub">Staff and the hours they work per villa <span id="lbSum"></span></div></div>'
+   +'<div class="stats" id="lbStats"></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Log hours</h2>'
+   +'<div class="row"><div><label>Staff member</label><select id="hStaff"></select></div><div><label>Villa</label><select id="hVilla"></select></div><div><label>Hours</label><input id="hHours" inputmode="decimal" placeholder="e.g. 8"/></div><div><label>Date</label><input id="hDate" type="date"/></div></div>'
+   +'<div style="margin-top:12px"><label>Note (optional)</label><input id="hNote" placeholder="e.g. Deep clean after checkout"/></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="hSave">Log hours</button></div><div id="hMsg" class="msg"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Staff</h2>'
+   +'<div class="row"><div><label>Name</label><input id="sName" placeholder="e.g. Marisol R."/></div><div><label>Role</label><select id="sRole"></select></div><div><label>Villa (usual)</label><select id="sVilla"></select></div><div><label>Rate per hour (RD$)</label><input id="sRate" inputmode="decimal" placeholder="optional"/></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="sAdd">Add staff</button></div></div>'
+   +'<div id="sMsg" class="msg"></div><div id="sList"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Hours log</h2><div id="hList"></div></div>';
+  fillSelect($('hVilla'), ['All villas'].concat(VILLAS));
+  fillSelect($('sVilla'), ['—'].concat(VILLAS));
+  $('hDate').value=new Date().toISOString().slice(0,10);
+  $('sAdd').onclick=async function(){
+    var msg=$('sMsg'); msg.textContent=''; msg.className='msg';
+    var p={name:$('sName').value.trim(), role:$('sRole').value, villa:($('sVilla').value==='—'?'':$('sVilla').value), rate:$('sRate').value.trim()};
+    if(!p.name){ msg.textContent='Enter a name.'; msg.className='msg err'; return; }
+    var r=await api('/api/staff',{method:'POST',body:JSON.stringify(p)});
+    if(r.status===200){ $('sName').value='';$('sRate').value=''; msg.textContent='Staff added.'; msg.className='msg ok'; loadStaff(); }
+    else { msg.textContent=(r.body&&r.body.error)||'Could not add.'; msg.className='msg err'; }
+  };
+  $('hSave').onclick=async function(){
+    var msg=$('hMsg'); msg.textContent=''; msg.className='msg';
+    var p={staff_id:$('hStaff').value, villa:$('hVilla').value, hours:$('hHours').value.trim(), date:$('hDate').value, note:$('hNote').value.trim()};
+    if(!p.staff_id){ msg.textContent='Add a staff member first.'; msg.className='msg err'; return; }
+    if(!p.hours){ msg.textContent='How many hours?'; msg.className='msg err'; return; }
+    $('hSave').disabled=true; var r=await api('/api/hours',{method:'POST',body:JSON.stringify(p)}); $('hSave').disabled=false;
+    if(r.status===200){ $('hHours').value='';$('hNote').value=''; msg.textContent='Logged.'; msg.className='msg ok'; loadHours(); }
+    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+  };
+  loadStaff(); loadHours();
+}
+async function loadStaff(){
+  var r=await api('/api/staff'); STAFF=r.body.staff||[]; var roles=r.body.roles||[];
+  if($('sRole') && !$('sRole').options.length) fillSelect($('sRole'), roles);
+  var active=STAFF.filter(function(s){return s.active!==false;});
+  if($('hStaff')){ $('hStaff').innerHTML=active.map(function(s){ return '<option value="'+esc(s.id)+'">'+esc(s.name)+(s.role?' · '+esc(s.role):'')+'</option>'; }).join('') || '<option value="">No staff yet</option>'; }
+  $('sList').innerHTML = STAFF.length ? '<table><thead><tr><th>Name</th><th>Role</th><th>Usual villa</th><th style="text-align:right">Rate</th><th></th></tr></thead><tbody>'
+    +STAFF.map(function(s){ return '<tr><td style="font-weight:500">'+esc(s.name)+'</td><td>'+esc(s.role||'')+'</td><td class="muted">'+esc(s.villa||'—')+'</td><td class="num">'+(s.rate!=null?rd(s.rate)+'/h':'—')+'</td><td><button class="link" data-dels="'+esc(s.id)+'">Delete</button></td></tr>'; }).join('')
+    +'</tbody></table>' : '<div class="empty">No staff yet. Add your housekeepers, gardeners and pool crew above.</div>';
+  $('sList').querySelectorAll('[data-dels]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this staff member?'))return; await api('/api/staff/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-dels')})}); loadStaff(); }; });
+}
+async function loadHours(){
+  var wrap=$('hList'); if(!wrap) return;
+  var r=await api('/api/hours'); var rows=r.body.hours||[];
+  var mk=thisMonth(); var mrows=rows.filter(function(x){return String(x.date||'').slice(0,7)===mk;});
+  var totH=mrows.reduce(function(t,x){return t+(Number(x.hours)||0);},0);
+  var totC=mrows.reduce(function(t,x){return t+(Number(x.cost)||0);},0);
+  if($('lbStats')) $('lbStats').innerHTML=
+     '<div class="stat"><div class="k">Hours this month</div><div class="v">'+nfmt(totH)+'</div></div>'
+    +'<div class="stat"><div class="k">Labour cost</div><div class="v" style="font-size:24px">'+rd(totC)+'</div></div>'
+    +'<div class="stat"><div class="k">Active staff</div><div class="v">'+STAFF.filter(function(s){return s.active!==false;}).length+'</div></div>';
+  if($('lbSum')) $('lbSum').innerHTML='· '+rows.length+' entries'+deltaInline(monthDelta(rows,'date'));
+  wrap.innerHTML = rows.length ? '<table><thead><tr><th>Date</th><th>Staff</th><th>Villa</th><th style="text-align:right">Hours</th><th style="text-align:right">Cost</th><th>Note</th><th></th></tr></thead><tbody>'
+    +rows.slice(0,60).map(function(x){ return '<tr><td>'+esc(x.date)+'</td><td style="font-weight:500">'+esc(x.staff_name)+'</td><td class="muted">'+esc(x.villa||'—')+'</td><td class="num">'+x.hours+'</td><td class="num">'+(x.cost!=null?rd(x.cost):'—')+'</td><td class="muted">'+esc(x.note||'')+'</td><td><button class="link" data-delh="'+esc(x.id)+'">Delete</button></td></tr>'; }).join('')
+    +'</tbody></table>' : '<div class="empty">No hours logged yet.</div>';
+  wrap.querySelectorAll('[data-delh]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this entry?'))return; await api('/api/hours/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delh')})}); loadHours(); }; });
+}
+
+/* ---- QUOTES ---- */
+var QT_FILTER='pending';
+function qtStyle(s){ var m={'Pending':['#f5efdf','#8a6a1f'],'Approved':['#edf0e7','#4a5a3c'],'Rejected':['#f6e9e3','#a8543a']}; var c=m[s]||['#eee7dd','#8a8378']; return 'background:'+c[0]+';color:'+c[1]; }
+function viewQuotes(){
+  var m=$('main');
+  m.innerHTML='<div class="head"><div class="eyebrow">Procurement</div><h1>Quotes awaiting decision</h1><div class="sub">Compare vendor bids before you commit <span id="qtSum"></span></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">New quote</h2>'
+   +'<div class="row"><div style="flex:2"><label>Job</label><input id="qTitle" placeholder="e.g. Pool re-plaster"/></div><div><label>Vendor</label><input id="qVendor2" placeholder="e.g. Aqua Sur"/></div><div><label>Amount (RD$)</label><input id="qAmount2" inputmode="decimal"/></div></div>'
+   +'<div class="row" style="margin-top:12px"><div><label>Villa</label><select id="qVilla2"></select></div><div><label>Lead time</label><input id="qLead" placeholder="e.g. 3 weeks"/></div><div style="flex:2"><label>Notes</label><input id="qNote2" placeholder="What is included?"/></div></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="qSave2">Add quote</button></div><div id="qMsg2" class="msg"></div></div>'
+   +'<div class="chips" id="qtChips"></div><div id="qList"></div>';
+  fillSelect($('qVilla2'), ['All villas'].concat(VILLAS));
+  var f=[['pending','Pending'],['approved','Approved'],['all','All']];
+  $('qtChips').innerHTML=f.map(function(c){ return '<button class="chip" data-f="'+c[0]+'" aria-pressed="'+(QT_FILTER===c[0])+'">'+c[1]+'</button>'; }).join('');
+  [].forEach.call($('qtChips').children,function(b){ b.onclick=function(){ QT_FILTER=b.getAttribute('data-f'); [].forEach.call($('qtChips').children,function(x){x.setAttribute('aria-pressed', x===b);}); loadQuotes(); }; });
+  $('qSave2').onclick=async function(){
+    var msg=$('qMsg2'); msg.textContent=''; msg.className='msg';
+    var p={title:$('qTitle').value.trim(), vendor:$('qVendor2').value.trim(), amount:$('qAmount2').value.trim(), villa:$('qVilla2').value, lead_time:$('qLead').value.trim(), note:$('qNote2').value.trim()};
+    if(!p.title||!p.vendor||!p.amount){ msg.textContent='Job, vendor and amount are required.'; msg.className='msg err'; return; }
+    $('qSave2').disabled=true; var r=await api('/api/quotes',{method:'POST',body:JSON.stringify(p)}); $('qSave2').disabled=false;
+    if(r.status===200){ ['qTitle','qVendor2','qAmount2','qLead','qNote2'].forEach(function(k){$(k).value='';}); msg.textContent='Quote added.'; msg.className='msg ok'; loadQuotes(); updateBadges(); }
+    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+  };
+  loadQuotes();
+}
+async function loadQuotes(){
+  var wrap=$('qList'); wrap.innerHTML='<div class="empty">Loading…</div>';
+  var r=await api('/api/quotes'); var all=r.body.quotes||[]; var rows=all;
+  var pend=all.filter(function(x){return x.status==='Pending';});
+  if($('qtSum')) $('qtSum').innerHTML='· '+pend.length+' pending · '+rd(pend.reduce(function(t,x){return t+(Number(x.amount)||0);},0));
+  if(QT_FILTER==='pending') rows=all.filter(function(x){return x.status==='Pending';});
+  else if(QT_FILTER==='approved') rows=all.filter(function(x){return x.status==='Approved';});
+  if(!rows.length){ wrap.innerHTML='<div class="empty">Nothing here.</div>'; return; }
+  // group by job so competing bids sit together
+  var groups={}; rows.forEach(function(q){ (groups[q.title]=groups[q.title]||[]).push(q); });
+  wrap.innerHTML = Object.keys(groups).map(function(title){
+    var qs=groups[title].slice().sort(function(a,b){return (a.amount||0)-(b.amount||0);});
+    var low=qs[0];
+    return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><h3 style="margin:0;font-size:16px;font-weight:600">'+esc(title)+'</h3><span class="muted">'+esc(qs[0].villa||'')+(qs.length>1?' · '+qs.length+' bids':'')+'</span></div>'
+      + qs.map(function(q){
+        return '<div class="wocard" style="margin-top:10px"><div class="top"><h3>'+esc(q.vendor)+' · '+rd(q.amount)+(q===low&&qs.length>1?' <span class="badge2" style="background:#edf0e7;color:#4a5a3c">lowest</span>':'')+'</h3><span class="stpill" style="'+qtStyle(q.status)+'">'+esc(q.status)+'</span></div>'
+          + (q.note?'<div class="muted" style="margin-top:6px">'+esc(q.note)+'</div>':'')
+          + (q.lead_time?'<div class="badges"><span class="badge2">lead '+esc(q.lead_time)+'</span></div>':'')
+          + '<div class="foot"><div class="muted">'+esc(cap(q.created_by))+' · '+esc(when(q.created_ts))+'</div>'
+          + '<div style="display:flex;gap:8px"><button class="ghost" data-approve="'+esc(q.id)+'">Approve</button><button class="ghost" data-reject="'+esc(q.id)+'">Reject</button><button class="link" data-delq="'+esc(q.id)+'">Delete</button></div></div></div>';
+      }).join('') + '</div>';
+  }).join('');
+  wrap.querySelectorAll('[data-approve]').forEach(function(b){ b.onclick=async function(){ await api('/api/quotes/update',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-approve'),status:'Approved'})}); loadQuotes(); updateBadges(); }; });
+  wrap.querySelectorAll('[data-reject]').forEach(function(b){ b.onclick=async function(){ await api('/api/quotes/update',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-reject'),status:'Rejected'})}); loadQuotes(); updateBadges(); }; });
+  wrap.querySelectorAll('[data-delq]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this quote?'))return; await api('/api/quotes/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delq')})}); loadQuotes(); updateBadges(); }; });
+}
+
+/* ---- OWNER STATEMENT ---- */
+function viewStatement(){
+  var m=$('main');
+  m.innerHTML='<div class="head"><div class="eyebrow">Owner portal</div><h1>Monthly statement</h1><div class="sub">Built from this villa\'s real invoices, readings and labour</div></div>'
+   +'<div class="card"><div class="row"><div><label>Villa</label><select id="stVilla"></select></div><div><label>Month</label><input id="stMonth" type="month"/></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="stGo">Build statement</button></div><div style="flex:0 0 auto;align-self:flex-end"><button class="ghost" id="stPrint">Print / PDF</button></div></div></div>'
+   +'<div id="stOut"></div>';
+  fillSelect($('stVilla'), VILLAS);
+  $('stMonth').value=thisMonth();
+  $('stGo').onclick=loadStatement;
+  $('stPrint').onclick=function(){ window.print(); };
+  loadStatement();
+}
+async function loadStatement(){
+  var out=$('stOut'); if(!$('stVilla').value){ out.innerHTML='<div class="card"><div class="empty">Add a villa first.</div></div>'; return; }
+  out.innerHTML='<div class="card"><div class="empty">Building…</div></div>';
+  var r=await api('/api/statement?villa='+encodeURIComponent($('stVilla').value)+'&month='+encodeURIComponent($('stMonth').value));
+  if(r.status!==200){ out.innerHTML='<div class="card"><div class="msg err">'+esc((r.body&&r.body.error)||'Could not build.')+'</div></div>'; return; }
+  var d=r.body, t=d.totals;
+  out.innerHTML=
+    '<div class="stats" style="margin-top:18px">'
+     +'<div class="stat"><div class="k">Owner billable</div><div class="v" style="font-size:24px">'+rd(t.owner_billable)+'</div></div>'
+     +'<div class="stat"><div class="k">Labour</div><div class="v" style="font-size:24px">'+rd(t.labour_cost)+'</div><div class="muted">'+nfmt(t.labour_hours)+' hours</div></div>'
+     +'<div class="stat"><div class="k">Electricity</div><div class="v" style="font-size:24px">'+nfmt(t.electricity_kwh)+'</div><div class="muted">kWh</div></div>'
+     +'<div class="stat"><div class="k">Water</div><div class="v" style="font-size:24px">'+nfmt(t.water_gal)+'</div><div class="muted">gallons</div></div>'
+    +'</div>'
+    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Invoices</h2>'
+     +(d.invoices.length?'<table><thead><tr><th>Date</th><th>Vendor</th><th>Description</th><th>Charged</th><th style="text-align:right">Amount</th><th>Status</th></tr></thead><tbody>'
+      +d.invoices.map(function(i){ return '<tr><td>'+esc(i.date||String(i.created_ts||'').slice(0,10))+'</td><td style="font-weight:500">'+esc(i.vendor)+'</td><td class="muted">'+esc(i.description||'')+'</td><td>'+esc(i.charged||'Owner')+'</td><td class="num">'+rd(i.amount)+'</td><td><span class="stpill" style="'+invStyle(i.status)+'">'+esc(i.status)+'</span></td></tr>'; }).join('')
+      +'<tr><td colspan="4" style="font-weight:600">Total</td><td class="num" style="font-weight:600">'+rd(t.invoices_total)+'</td><td></td></tr>'
+      +'</tbody></table>':'<div class="empty">No invoices this month.</div>')
+    +'</div>'
+    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Labour</h2>'
+     +(d.hours.length?'<table><thead><tr><th>Date</th><th>Staff</th><th style="text-align:right">Hours</th><th style="text-align:right">Cost</th><th>Note</th></tr></thead><tbody>'
+      +d.hours.map(function(h){ return '<tr><td>'+esc(h.date)+'</td><td>'+esc(h.staff_name)+'</td><td class="num">'+h.hours+'</td><td class="num">'+(h.cost!=null?rd(h.cost):'—')+'</td><td class="muted">'+esc(h.note||'')+'</td></tr>'; }).join('')
+      +'</tbody></table>':'<div class="empty">No hours logged this month.</div>')
+    +'</div>'
+    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Meter readings</h2>'
+     +(d.readings.length?'<table><thead><tr><th>When</th><th style="text-align:right">Electricity</th><th style="text-align:right">Water</th><th>Note</th></tr></thead><tbody>'
+      +d.readings.map(function(x){ return '<tr><td>'+esc(when(x.ts))+'</td><td class="num">'+(x.electricity_kwh==null?'—':nfmt(x.electricity_kwh)+' kWh')+'</td><td class="num">'+(x.water_gal==null?'—':nfmt(x.water_gal)+' gal')+'</td><td class="muted">'+esc(x.note||'')+'</td></tr>'; }).join('')
+      +'</tbody></table>':'<div class="empty">No readings this month.</div>')
+    +'</div>';
+}
+
+/* ---- FIELD APP (mobile-friendly quick logging) ---- */
+function viewField(){
+  var m=$('main');
+  m.innerHTML='<div class="head"><div class="eyebrow">Staff</div><h1>Field app</h1><div class="sub">Quick logging for crews on site — works on a phone</div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Log a meter reading</h2>'
+   +'<div class="row"><div><label>Villa</label><select id="fVilla"></select></div><div><label>Electricity (kWh)</label><input id="fElec" inputmode="decimal"/></div><div><label>Water (gal)</label><input id="fWater" inputmode="decimal"/></div></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="fSaveR" style="width:100%;padding:15px">Save reading</button></div><div id="fMsgR" class="msg"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Report a problem</h2>'
+   +'<div><label>What is wrong?</label><input id="fTitle" placeholder="e.g. Shower mixer dripping"/></div>'
+   +'<div class="row" style="margin-top:12px"><div><label>Villa</label><select id="fVilla2"></select></div></div>'
+   +'<div style="margin-top:12px"><label>Detail</label><textarea id="fNote" placeholder="Where is it, how bad?"></textarea></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="fSaveW" style="width:100%;padding:15px">Report it</button></div><div id="fMsgW" class="msg"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Today\'s open jobs</h2><div id="fJobs"></div></div>';
+  fillSelect($('fVilla'), VILLAS); fillSelect($('fVilla2'), VILLAS);
+  $('fSaveR').onclick=async function(){
+    var msg=$('fMsgR'); msg.textContent=''; msg.className='msg';
+    var p={villa:$('fVilla').value, electricity_kwh:$('fElec').value.trim(), water_gal:$('fWater').value.trim()};
+    if(!p.electricity_kwh && !p.water_gal){ msg.textContent='Enter at least one reading.'; msg.className='msg err'; return; }
+    $('fSaveR').disabled=true; var r=await api('/api/readings',{method:'POST',body:JSON.stringify(p)}); $('fSaveR').disabled=false;
+    if(r.status===200){ $('fElec').value='';$('fWater').value=''; msg.textContent='Saved. Thank you.'; msg.className='msg ok'; }
+    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+  };
+  $('fSaveW').onclick=async function(){
+    var msg=$('fMsgW'); msg.textContent=''; msg.className='msg';
+    var p={title:$('fTitle').value.trim(), villa:$('fVilla2').value, note:$('fNote').value.trim()};
+    if(!p.title){ msg.textContent='Say what is wrong.'; msg.className='msg err'; return; }
+    $('fSaveW').disabled=true; var r=await api('/api/workorders',{method:'POST',body:JSON.stringify(p)}); $('fSaveW').disabled=false;
+    if(r.status===200){ $('fTitle').value='';$('fNote').value=''; msg.textContent='Reported. It is now in Maintenance.'; msg.className='msg ok'; updateBadges(); loadFieldJobs(); }
+    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+  };
+  loadFieldJobs();
+}
+async function loadFieldJobs(){
+  var wrap=$('fJobs'); if(!wrap) return;
+  var r=await api('/api/workorders'); var open=(r.body.workorders||[]).filter(function(x){return x.status!=='Done';});
+  wrap.innerHTML = open.length ? open.slice(0,10).map(function(x){
+    return '<div class="wocard" style="margin-top:10px"><div class="top"><h3>'+esc(x.title)+'</h3><span class="stpill" style="'+stStyle(x.status)+'">'+esc(x.status)+'</span></div>'
+      +'<div class="badges"><span class="badge2">'+esc(x.villa)+'</span>'+(x.scheduled_date?'<span class="badge2">'+esc(x.scheduled_date)+'</span>':'')+'</div>'
+      +'<div style="margin-top:10px"><button class="ghost" data-done="'+esc(x.id)+'">Mark done</button></div></div>';
+  }).join('') : '<div class="empty">Nothing open. Good.</div>';
+  wrap.querySelectorAll('[data-done]').forEach(function(b){ b.onclick=async function(){ await api('/api/workorders/update',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-done'),status:'Done'})}); loadFieldJobs(); updateBadges(); }; });
+}
+
 /* ---- WORK ORDERS ---- */
 function viewWorkorders(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Work orders</h1><div class="sub">Maintenance across the villas · shared <span id="woSum"></span></div></div>'
+  m.innerHTML='<div class="head"><div class="eyebrow">Maintenance</div><h1>Schedule &amp; work orders</h1><div class="sub">Maintenance across the villas <span id="woSum"></span></div></div>'
    +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">New work order</h2>'
    +'<div class="row"><div style="flex:2"><label>Title</label><input id="wTitle" placeholder="e.g. Master bath shower mixer dripping"/></div><div><label>Villa</label><select id="wVilla"></select></div></div>'
    +'<div class="row" style="margin-top:12px"><div><label>Vendor</label><input id="wVendor" placeholder="e.g. Clima Caribe"/></div><div><label>Est. cost (RD$)</label><input id="wCost" inputmode="decimal" placeholder="optional"/></div><div><label>Status</label><select id="wStatus"></select></div></div>'
@@ -357,7 +607,7 @@ async function loadWorkorders(){
 /* ---- WORK ORDER DETAIL ---- */
 async function openWO(id){
   var r = await api('/api/workorders'); var wo=(r.body.workorders||[]).find(function(x){return x.id===id;});
-  if(!wo){ go('workorders'); return; }
+  if(!wo){ go('maintenance'); return; }
   viewWODetail(wo);
 }
 function viewWODetail(wo){
@@ -367,7 +617,7 @@ function viewWODetail(wo){
   var vopts=VILLAS.map(function(v){return '<option'+(v===wo.villa?' selected':'')+'>'+esc(v)+'</option>';}).join('');
   var ropts=RECUR.map(function(v){return '<option'+((wo.recurring||'None')===v?' selected':'')+'>'+esc(v)+'</option>';}).join('');
   $('main').innerHTML =
-    '<button class="backlink" id="woBack">← Work orders</button>'
+    '<button class="backlink" id="woBack">← Maintenance</button>'
    +'<div class="head" style="margin-top:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h1>'+esc(wo.title)+'</h1><span class="stpill" id="dPill" style="'+stStyle(wo.status)+';margin-top:12px">'+esc(wo.status)+'</span></div><div class="sub">'+esc(wo.villa||'')+' · updated by '+esc(cap(wo.updated_by||wo.created_by))+' · '+esc(when(wo.updated_ts||wo.created_ts))+'</div></div>'
    +'<div class="card"><label>Why this matters</label><textarea id="dWhy" placeholder="Why is this needed, and what happens if it waits?">'+esc(wo.why||'')+'</textarea></div>'
    +'<div class="card"><div class="dgrid">'
@@ -383,7 +633,7 @@ function viewWODetail(wo){
    +'<div class="card"><label>Photos</label><div id="dPhotos" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px"></div><input type="file" id="dPhotoInput" accept="image/*" style="display:none"><div style="margin-top:12px"><button class="ghost" id="dPhotoBtn">+ Add photo</button></div><div id="dPhotoMsg" class="msg"></div></div>'
    +'<button class="btn-complete'+(wo.status==='Done'?' done':'')+'" id="dComplete">'+(wo.status==='Done'?'Completed ✓ · reopen':'Mark as complete')+'</button>'
    +'<div style="text-align:center;margin-top:12px"><button class="link" id="dDelete">Delete work order</button></div>';
-  $('woBack').onclick=function(){ go('workorders'); };
+  $('woBack').onclick=function(){ go('maintenance'); };
   async function save(patch){ await api('/api/workorders/update',{method:'POST',body:JSON.stringify(Object.assign({id:wo.id},patch))}); Object.assign(wo,patch); var msg=$('dMsg'); msg.textContent='Saved.'; msg.className='msg ok'; setTimeout(function(){ if(msg) msg.textContent=''; },1200); updateBadges(); }
   $('dWhy').addEventListener('change',function(){ save({why:this.value}); });
   $('dDate').addEventListener('change',function(){ save({scheduled_date:this.value}); });
@@ -395,7 +645,7 @@ function viewWODetail(wo){
   $('dNote').addEventListener('change',function(){ save({note:this.value}); });
   $('dStatus').addEventListener('change',function(){ var v=this.value; save({status:v}); var p=$('dPill'); if(p){ p.textContent=v; p.setAttribute('style', stStyle(v)+';margin-top:12px'); } });
   $('dComplete').onclick=async function(){ var ns = wo.status==='Done' ? 'Open' : 'Done'; await save({status:ns}); openWO(wo.id); };
-  $('dDelete').onclick=async function(){ if(!confirm('Delete this work order?'))return; await api('/api/workorders/delete',{method:'POST',body:JSON.stringify({id:wo.id})}); updateBadges(); go('workorders'); };
+  $('dDelete').onclick=async function(){ if(!confirm('Delete this work order?'))return; await api('/api/workorders/delete',{method:'POST',body:JSON.stringify({id:wo.id})}); updateBadges(); go('maintenance'); };
   function renderPhotos(){ var w=$('dPhotos'); w.innerHTML=(wo.photos||[]).map(function(p){ return '<div style="position:relative"><img src="/api/photo/'+esc(p.id)+'" style="width:92px;height:92px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block"><button data-delphoto="'+esc(p.id)+'" title="Remove" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line);color:#a8543a;cursor:pointer;line-height:1">×</button></div>'; }).join('') || '<span class="muted">No photos yet.</span>'; w.querySelectorAll('[data-delphoto]').forEach(function(b){ b.onclick=async function(){ var pid=b.getAttribute('data-delphoto'); await api('/api/workorders/photo/delete',{method:'POST',body:JSON.stringify({id:wo.id,photoId:pid})}); wo.photos=(wo.photos||[]).filter(function(x){return x.id!==pid;}); renderPhotos(); }; }); }
   $('dPhotoBtn').onclick=function(){ $('dPhotoInput').click(); };
   $('dPhotoInput').onchange=function(){ var f=this.files[0]; if(!f) return; var msg=$('dPhotoMsg'); msg.textContent='Uploading…'; msg.className='msg'; var inp=this; resizeImage(f,async function(dataUrl){ if(!dataUrl){ msg.textContent='Could not read image.'; msg.className='msg err'; return; } var r=await api('/api/workorders/photo',{method:'POST',body:JSON.stringify({id:wo.id,data:dataUrl})}); if(r.status===200 && r.body.photo){ wo.photos=wo.photos||[]; wo.photos.push(r.body.photo); renderPhotos(); msg.textContent=''; } else { msg.textContent=(r.body&&r.body.error)||'Upload failed.'; msg.className='msg err'; } inp.value=''; }); };
@@ -407,7 +657,7 @@ var INV_FILTER='unpaid';
 function invStyle(s){ var m={'Unpaid':['#f5efdf','#8a6a1f'],'Approved':['#e9eef2','#2f4a5a'],'Paid':['#edf0e7','#4a5a3c'],'Disputed':['#f6e9e3','#a8543a']}; var c=m[s]||['#eee7dd','#8a8378']; return 'background:'+c[0]+';color:'+c[1]; }
 function viewInvoices(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Invoices</h1><div class="sub">Vendor bills &amp; receipts <span id="invSum"></span></div></div>'
+  m.innerHTML='<div class="head"><div class="eyebrow">Ledger</div><h1>Payments for services &amp; products</h1><div class="sub">Vendor bills &amp; receipts <span id="invSum"></span></div></div>'
    +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">New invoice</h2>'
    +'<div class="row"><div style="flex:2"><label>Vendor</label><input id="iVendor" placeholder="e.g. Clima Caribe"/></div><div><label>Invoice #</label><input id="iNumber" placeholder="optional"/></div><div><label>Amount (RD$)</label><input id="iAmount" inputmode="decimal" placeholder="e.g. 1980"/></div></div>'
    +'<div class="row" style="margin-top:12px"><div><label>Villa</label><select id="iVilla"></select></div><div><label>Charged to</label><select id="iCharged"></select></div><div><label>Status</label><select id="iStatus"></select></div></div>'
@@ -458,14 +708,14 @@ async function loadInvoices(){
 }
 async function openInv(id){
   var r=await api('/api/invoices'); var inv=(r.body.invoices||[]).find(function(x){ return x.id===id; });
-  if(!inv){ go('invoices'); return; }
+  if(!inv){ go('payments'); return; }
   VIEW='invoice'; $('main').classList.remove('full');
   var sts=['Unpaid','Approved','Paid','Disputed'], chg=['Owner','Absorbed','Rental'];
   var stopts=sts.map(function(s){ return '<option'+(s===inv.status?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
   var chopts=chg.map(function(s){ return '<option'+(s===(inv.charged||'Owner')?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
   var vopts=['All villas'].concat(VILLAS).map(function(v){ return '<option'+(v===inv.villa?' selected':'')+'>'+esc(v)+'</option>'; }).join('');
   $('main').innerHTML =
-    '<button class="backlink" id="invBack">← Invoices</button>'
+    '<button class="backlink" id="invBack">← Payments</button>'
    +'<div class="head" style="margin-top:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h1>'+esc(inv.vendor)+' · '+rd(inv.amount)+'</h1><span class="stpill" id="iPill" style="'+invStyle(inv.status)+';margin-top:12px">'+esc(inv.status)+'</span></div><div class="sub">'+esc(inv.villa||'—')+' · logged by '+esc(cap(inv.created_by))+' · '+esc(when(inv.created_ts))+'</div></div>'
    +'<div class="card"><div class="dgrid">'
      +'<div><label>Vendor</label><input id="ivVendor" value="'+esc(inv.vendor)+'"/></div>'
@@ -481,7 +731,7 @@ async function openInv(id){
    +'<div class="card"><label>Receipt / invoice photos</label><div id="ivPhotos" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px"></div><input type="file" id="ivPhotoInput" accept="image/*" style="display:none"><div style="margin-top:12px"><button class="ghost" id="ivPhotoBtn">+ Add photo</button></div><div id="ivPhotoMsg" class="msg"></div></div>'
    +'<button class="btn-complete'+(inv.status==='Paid'?' done':'')+'" id="ivPaid">'+(inv.status==='Paid'?'Paid ✓ · mark unpaid':'Mark as paid')+'</button>'
    +'<div style="text-align:center;margin-top:12px"><button class="link" id="ivDelete">Delete invoice</button></div>';
-  $('invBack').onclick=function(){ go('invoices'); };
+  $('invBack').onclick=function(){ go('payments'); };
   async function save(patch){ await api('/api/invoices/update',{method:'POST',body:JSON.stringify(Object.assign({id:inv.id},patch))}); Object.assign(inv,patch); var msg=$('ivMsg'); msg.textContent='Saved.'; msg.className='msg ok'; setTimeout(function(){ if(msg) msg.textContent=''; },1200); updateBadges(); }
   $('ivVendor').addEventListener('change',function(){ save({vendor:this.value}); });
   $('ivNumber').addEventListener('change',function(){ save({number:this.value}); });
@@ -493,7 +743,7 @@ async function openInv(id){
   $('ivDesc').addEventListener('change',function(){ save({description:this.value}); });
   $('ivStatus').addEventListener('change',function(){ var v=this.value; save({status:v}); var p=$('iPill'); if(p){ p.textContent=v; p.setAttribute('style', invStyle(v)+';margin-top:12px'); } });
   $('ivPaid').onclick=async function(){ await save({status: inv.status==='Paid'?'Unpaid':'Paid'}); openInv(inv.id); };
-  $('ivDelete').onclick=async function(){ if(!confirm('Delete this invoice?'))return; await api('/api/invoices/delete',{method:'POST',body:JSON.stringify({id:inv.id})}); updateBadges(); go('invoices'); };
+  $('ivDelete').onclick=async function(){ if(!confirm('Delete this invoice?'))return; await api('/api/invoices/delete',{method:'POST',body:JSON.stringify({id:inv.id})}); updateBadges(); go('payments'); };
   function renderIv(){ var w=$('ivPhotos'); w.innerHTML=(inv.photos||[]).map(function(p){ return '<div style="position:relative"><img src="/api/photo/'+esc(p.id)+'" style="width:110px;height:110px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block"><button data-delphoto="'+esc(p.id)+'" title="Remove" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line);color:#a8543a;cursor:pointer;line-height:1">×</button></div>'; }).join('') || '<span class="muted">No receipt attached yet.</span>'; w.querySelectorAll('[data-delphoto]').forEach(function(b){ b.onclick=async function(){ var pid=b.getAttribute('data-delphoto'); await api('/api/invoices/photo/delete',{method:'POST',body:JSON.stringify({id:inv.id,photoId:pid})}); inv.photos=(inv.photos||[]).filter(function(x){return x.id!==pid;}); renderIv(); }; }); }
   $('ivPhotoBtn').onclick=function(){ $('ivPhotoInput').click(); };
   $('ivPhotoInput').onchange=function(){ var f=this.files[0]; if(!f) return; var msg=$('ivPhotoMsg'); msg.textContent='Uploading…'; msg.className='msg'; var inp=this; resizeImage(f,async function(dataUrl){ if(!dataUrl){ msg.textContent='Could not read image.'; msg.className='msg err'; return; } var rr=await api('/api/invoices/photo',{method:'POST',body:JSON.stringify({id:inv.id,data:dataUrl})}); if(rr.status===200&&rr.body.photo){ inv.photos=inv.photos||[]; inv.photos.push(rr.body.photo); renderIv(); msg.textContent=''; } else { msg.textContent=(rr.body&&rr.body.error)||'Upload failed.'; msg.className='msg err'; } inp.value=''; }); };
@@ -549,7 +799,7 @@ function qaForm(kind){
       msg.textContent='Saved.'; msg.className='msg ok'; updateBadges();
       if(kind==='villa'||kind==='owner'){ var pr=await api('/api/properties'); VILLAS=(pr.body.properties||[]).filter(function(x){return x.active!==false;}).map(function(x){return x.name;}); }
       setTimeout(function(){ qaClose();
-        var dest={invoice:'invoices',workorder:'workorders',reading:'readings',villa:'manage',owner:'manage'}[kind];
+        var dest={invoice:'payments',workorder:'maintenance',reading:'utilities',villa:'manage',owner:'manage'}[kind];
         go(dest);
       }, 500);
     } else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
@@ -560,7 +810,6 @@ function qaForm(kind){
 async function viewVillaProfile(name){
   var main=$('main'); main.classList.remove('full'); VIEW='villa'; main.setAttribute('data-sec','villa');
   [].forEach.call($('nav').querySelectorAll('button[data-view]'), function(b){ b.setAttribute('aria-current','false'); });
-  var sub=$('dashSub'); if(sub){ [].forEach.call(sub.children, function(x){ x.setAttribute('aria-current','false'); }); }
   main.innerHTML='<div class="empty">Loading…</div>';
   var pr=await api('/api/properties'); var props=pr.body.properties||[];
   var prop=props.find(function(p){ return String(p.name).toLowerCase()===name.toLowerCase(); });
@@ -574,7 +823,7 @@ async function viewVillaProfile(name){
   var nPhotos=(prop&&prop.photos||[]).length;
   var woDelta=monthDelta(wos,'created_ts'), rdDelta=monthDelta(reads,'ts');
   main.innerHTML =
-    '<button class="backlink" id="vpBack">← Dashboard</button>'
+    '<button class="backlink" id="vpBack">← Overview</button>'
    +'<div class="head" style="margin-top:8px"><div class="eyebrow">Property profile</div><h1>'+esc(name)+'</h1>'
      +'<div class="chips" style="margin-top:10px"><span class="chip" style="cursor:default">📍 '+esc(area)+'</span>'
        + detailChips.map(function(c){ return '<span class="chip" style="cursor:default">'+esc(c)+'</span>'; }).join('')
@@ -589,7 +838,7 @@ async function viewVillaProfile(name){
    +'</div>'
    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Work orders</h2><div id="vpWo"></div></div>'
    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Recent meter readings</h2><div id="vpRd"></div></div>';
-  $('vpBack').onclick=function(){ go('dashboard'); };
+  $('vpBack').onclick=function(){ go('overview'); };
   $('vpWo').innerHTML = wos.length ? wos.slice(0,8).map(function(x){
     return '<div class="wocard" data-open="'+esc(x.id)+'" style="margin-top:10px"><div class="top"><h3>'+esc(x.title)+'</h3><span class="stpill" style="'+stStyle(x.status)+'">'+esc(x.status)+'</span></div>'
       +'<div class="foot"><div class="muted">'+esc(cap(x.updated_by||x.created_by))+' · '+esc(when(x.updated_ts||x.created_ts))+'</div><div class="muted">'+(x.cost!=null?rd(x.cost):'')+'</div></div></div>';

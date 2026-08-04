@@ -81,6 +81,8 @@ function loadOwners(){ return loadStore('owners') || []; }
 const WO_STATUSES = ['Open','Quoting','Approved','Parts ordered','Scheduled','Done'];
 const INV_STATUSES = ['Unpaid','Approved','Paid','Disputed'];
 const INV_CHARGED  = ['Owner','Absorbed','Rental'];
+const QUOTE_STATUSES = ['Pending','Approved','Rejected'];
+const STAFF_ROLES = ['Housekeeper','Gardener','Pool','Maintenance','Caretaker','Security','Other'];
 
 // ---- helpers ------------------------------------------------------------
 const TYPES = {
@@ -283,6 +285,127 @@ http.createServer(async (req, res) => {
     return sendJSON(res, saveStore('workorders',(loadStore('workorders')||[]).filter(r=>r.id!==id))?200:500, { ok:true });
   }
 
+  // ---- staff (labour) ----
+  if(url === '/api/staff' && method === 'GET'){ return sendJSON(res, 200, { staff: loadStore('staff')||[], roles: STAFF_ROLES }); }
+  if(url === '/api/staff' && method === 'POST'){
+    const b = await readBody(req);
+    const name = String(b.name||'').trim();
+    if(!name) return sendJSON(res, 400, { error:'name required' });
+    const rate = num(b.rate);
+    if(rate != null && !isFinite(rate)) return sendJSON(res, 400, { error:'rate must be a number' });
+    const rows = loadStore('staff')||[];
+    const entry = { id:newId(), name, role:(STAFF_ROLES.indexOf(b.role)>=0?b.role:'Other'),
+      villa:str(b.villa,120), rate, active:true, created_by:user, created_ts:new Date().toISOString() };
+    rows.push(entry);
+    return sendJSON(res, saveStore('staff',rows)?200:500, { ok:true, entry });
+  }
+  if(url === '/api/staff/update' && method === 'POST'){
+    const b = await readBody(req);
+    const rows = loadStore('staff')||[]; const s = rows.find(x=>x.id===b.id);
+    if(!s) return sendJSON(res, 404, { error:'not found' });
+    if(b.name != null && String(b.name).trim()) s.name = String(b.name).trim();
+    if(b.role != null && STAFF_ROLES.indexOf(b.role)>=0) s.role = b.role;
+    if(b.villa != null) s.villa = str(b.villa,120);
+    if(b.rate !== undefined){ const r=num(b.rate); if(r!=null && !isFinite(r)) return sendJSON(res,400,{error:'rate must be a number'}); s.rate=r; }
+    if(b.active != null) s.active = !!b.active;
+    return sendJSON(res, saveStore('staff',rows)?200:500, { ok:true, entry:s });
+  }
+  if(url === '/api/staff/delete' && method === 'POST'){
+    const { id } = await readBody(req);
+    return sendJSON(res, saveStore('staff',(loadStore('staff')||[]).filter(s=>s.id!==id))?200:500, { ok:true });
+  }
+
+  // ---- hours worked ----
+  if(url === '/api/hours' && method === 'GET'){ return sendJSON(res, 200, { hours: loadStore('hours')||[] }); }
+  if(url === '/api/hours' && method === 'POST'){
+    const b = await readBody(req);
+    const staffId = String(b.staff_id||'').trim();
+    const staff = (loadStore('staff')||[]).find(s=>s.id===staffId);
+    if(!staff) return sendJSON(res, 400, { error:'choose a staff member' });
+    const hours = num(b.hours);
+    if(hours == null || !isFinite(hours) || hours <= 0) return sendJSON(res, 400, { error:'hours must be a positive number' });
+    const villa = String(b.villa||'').trim();
+    if(villa && villa !== 'All villas' && villaNames().indexOf(villa) < 0) return sendJSON(res, 400, { error:'unknown villa' });
+    const rows = loadStore('hours')||[];
+    const entry = { id:newId(), staff_id:staffId, staff_name:staff.name, villa, hours,
+      date:str(b.date,20) || new Date().toISOString().slice(0,10), note:str(b.note,240),
+      cost: (staff.rate!=null ? Math.round(staff.rate*hours*100)/100 : null),
+      user, ts:new Date().toISOString() };
+    rows.unshift(entry);
+    return sendJSON(res, saveStore('hours',rows)?200:500, { ok:true, entry });
+  }
+  if(url === '/api/hours/delete' && method === 'POST'){
+    const { id } = await readBody(req);
+    return sendJSON(res, saveStore('hours',(loadStore('hours')||[]).filter(h=>h.id!==id))?200:500, { ok:true });
+  }
+
+  // ---- quotes ----
+  if(url === '/api/quotes' && method === 'GET'){ return sendJSON(res, 200, { quotes: loadStore('quotes')||[], statuses: QUOTE_STATUSES }); }
+  if(url === '/api/quotes' && method === 'POST'){
+    const b = await readBody(req);
+    const title = String(b.title||'').trim();
+    const vendor = String(b.vendor||'').trim();
+    if(!title) return sendJSON(res, 400, { error:'what is the job?' });
+    if(!vendor) return sendJSON(res, 400, { error:'vendor required' });
+    const amount = num(b.amount);
+    if(amount == null || !isFinite(amount)) return sendJSON(res, 400, { error:'amount must be a number' });
+    const villa = String(b.villa||'').trim();
+    if(villa && villa !== 'All villas' && villaNames().indexOf(villa) < 0) return sendJSON(res, 400, { error:'unknown villa' });
+    const rows = loadStore('quotes')||[];
+    const entry = { id:newId(), title, vendor, villa, amount,
+      status: QUOTE_STATUSES.indexOf(b.status)>=0 ? b.status : 'Pending',
+      lead_time:str(b.lead_time,60), note:str(b.note,400),
+      created_by:user, created_ts:new Date().toISOString(), updated_by:user, updated_ts:new Date().toISOString() };
+    rows.unshift(entry);
+    return sendJSON(res, saveStore('quotes',rows)?200:500, { ok:true, entry });
+  }
+  if(url === '/api/quotes/update' && method === 'POST'){
+    const b = await readBody(req);
+    const rows = loadStore('quotes')||[]; const q = rows.find(x=>x.id===b.id);
+    if(!q) return sendJSON(res, 404, { error:'not found' });
+    if(b.status != null){ if(QUOTE_STATUSES.indexOf(b.status)<0) return sendJSON(res,400,{error:'unknown status'}); q.status = b.status; }
+    if(b.title != null && String(b.title).trim()) q.title = String(b.title).trim();
+    if(b.vendor != null && String(b.vendor).trim()) q.vendor = String(b.vendor).trim();
+    if(b.villa != null) q.villa = str(b.villa,120);
+    if(b.amount !== undefined){ const a=num(b.amount); if(a!=null && !isFinite(a)) return sendJSON(res,400,{error:'amount must be a number'}); q.amount=a; }
+    if(b.lead_time != null) q.lead_time = str(b.lead_time,60);
+    if(b.note != null) q.note = str(b.note,400);
+    q.updated_by = user; q.updated_ts = new Date().toISOString();
+    return sendJSON(res, saveStore('quotes',rows)?200:500, { ok:true, entry:q });
+  }
+  if(url === '/api/quotes/delete' && method === 'POST'){
+    const { id } = await readBody(req);
+    return sendJSON(res, saveStore('quotes',(loadStore('quotes')||[]).filter(q=>q.id!==id))?200:500, { ok:true });
+  }
+
+  // ---- owner statement (computed, never stored) ----
+  if(url.indexOf('/api/statement') === 0 && method === 'GET'){
+    const qs = new URLSearchParams((req.url.split('?')[1])||'');
+    const villa = qs.get('villa')||'';
+    const month = qs.get('month')||new Date().toISOString().slice(0,7); // YYYY-MM
+    if(!villa) return sendJSON(res, 400, { error:'villa required' });
+    const inMonth = (d) => String(d||'').slice(0,7) === month;
+    const invoices = (loadStore('invoices')||[]).filter(i =>
+      (i.villa === villa || i.villa === 'All villas') && inMonth(i.date || i.created_ts));
+    const readings = (loadStore('readings')||[]).filter(r => r.villa === villa && inMonth(r.ts));
+    const hours    = (loadStore('hours')||[]).filter(h => h.villa === villa && inMonth(h.date));
+    const workorders = (loadStore('workorders')||[]).filter(w => w.villa === villa && inMonth(w.created_ts));
+    const sum = (arr,f) => Math.round(arr.reduce((a,x)=>a+(Number(f(x))||0),0)*100)/100;
+    return sendJSON(res, 200, { villa, month,
+      invoices, readings, hours, workorders,
+      totals: {
+        owner_billable: sum(invoices.filter(i=>(i.charged||'Owner')==='Owner'), i=>i.amount),
+        absorbed:       sum(invoices.filter(i=>i.charged==='Absorbed'), i=>i.amount),
+        invoices_total: sum(invoices, i=>i.amount),
+        labour_cost:    sum(hours, h=>h.cost),
+        labour_hours:   sum(hours, h=>h.hours),
+        electricity_kwh: sum(readings, r=>r.electricity_kwh),
+        water_gal:       sum(readings, r=>r.water_gal),
+        open_workorders: workorders.filter(w=>w.status!=='Done').length
+      }
+    });
+  }
+
   // ---- backup / restore (admin) ----
   if(url === '/api/backup' && method === 'GET'){
     if(!admin) return needAdmin();
@@ -290,7 +413,8 @@ http.createServer(async (req, res) => {
       exported_at: new Date().toISOString(), exported_by: user, version: 1,
       properties: loadProperties(), owners: loadOwners(),
       readings: loadStore('readings')||[], workorders: loadStore('workorders')||[],
-      invoices: loadStore('invoices')||[]
+      invoices: loadStore('invoices')||[], staff: loadStore('staff')||[],
+      hours: loadStore('hours')||[], quotes: loadStore('quotes')||[]
     };
     res.writeHead(200, {
       'Content-Type':'application/json; charset=utf-8',
@@ -301,7 +425,7 @@ http.createServer(async (req, res) => {
   if(url === '/api/restore' && method === 'POST'){
     if(!admin) return needAdmin();
     const b = await readBody(req);
-    const KEYS = ['properties','owners','readings','workorders','invoices'];
+    const KEYS = ['properties','owners','readings','workorders','invoices','staff','hours','quotes'];
     const restored = [];
     for(const k of KEYS){
       if(Array.isArray(b[k])){ if(saveStore(k, b[k])) restored.push(k+':'+b[k].length); }
