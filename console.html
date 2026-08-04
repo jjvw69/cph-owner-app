@@ -77,6 +77,16 @@
   .stat .k{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--soft); }
   .stat .v{ font-family:Newsreader,Georgia,serif; font-size:30px; margin-top:4px; }
   .hidden{ display:none; }
+  .chips{ display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 2px; }
+  .chip{ background:#fff; border:1px solid var(--line); color:var(--soft); border-radius:20px; padding:7px 15px; font-size:13.5px; cursor:pointer; }
+  .chip[aria-pressed="true"]{ background:#211e1a; color:#fff; border-color:#211e1a; }
+  .wocard{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-top:12px; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+  .wocard .top{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .wocard h3{ margin:0; font-family:inherit; font-size:16px; font-weight:600; }
+  .badges{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .badge2{ background:#f4f0e8; color:#6e6862; border-radius:8px; padding:3px 10px; font-size:12.5px; }
+  .stpill{ font-size:12px; padding:4px 11px; border-radius:20px; white-space:nowrap; }
+  .wocard .foot{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:12px; flex-wrap:wrap; }
   @media (max-width:760px){ .shell{ flex-direction:column; } .sidebar{ width:auto; flex:none; flex-direction:row; flex-wrap:wrap; align-items:center; } .nav{ flex-direction:row; flex-wrap:wrap; margin-top:10px; } .sidefoot{ margin:0 0 0 auto; } .main{ padding:20px; } }
 </style>
 </head>
@@ -127,7 +137,8 @@
 
 <script>
 var $ = function(id){ return document.getElementById(id); };
-var ME = null, VILLAS = [], STATUSES = [], VIEW = 'dashboard';
+var ME = null, VILLAS = [], STATUSES = [], VIEW = 'dashboard', WO_FILTER = 'open';
+function stStyle(s){ var m={'Open':['#eee7dd','#8a8378'],'Quoting':['#f5efdf','#8a6a1f'],'Approved':['#edf0e7','#4a5a3c'],'Parts ordered':['#e9eef2','#2f4a5a'],'Scheduled':['#e9eef2','#2f4a5a'],'Done':['#edf0e7','#4a5a3c']}; var c=m[s]||['#eee7dd','#8a8378']; return 'background:'+c[0]+';color:'+c[1]; }
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
@@ -215,8 +226,12 @@ function viewWorkorders(){
    +'<div class="row" style="margin-top:12px"><div><label>Vendor</label><input id="wVendor" placeholder="e.g. Clima Caribe"/></div><div><label>Est. cost (RD$)</label><input id="wCost" inputmode="decimal" placeholder="optional"/></div><div><label>Status</label><select id="wStatus"></select></div></div>'
    +'<div style="margin-top:12px"><label>Note (optional)</label><textarea id="wNote" placeholder="Scope, parts, context"></textarea></div>'
    +'<div style="margin-top:14px"><button class="primary" id="wSave">Create work order</button></div><div id="wMsg" class="msg"></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Open &amp; recent</h2><div class="sub" style="margin-bottom:6px">Change status inline</div><div id="wList"></div></div>';
+   +'<div class="chips" id="woChips"></div>'
+   +'<div id="wList"></div>';
   fillSelect($('wVilla'), VILLAS); fillSelect($('wStatus'), STATUSES);
+  var fchips=[['open','Open'],['done','Done'],['all','All']];
+  $('woChips').innerHTML = fchips.map(function(c){ return '<button class="chip" data-f="'+c[0]+'" aria-pressed="'+(WO_FILTER===c[0])+'">'+c[1]+'</button>'; }).join('');
+  [].forEach.call($('woChips').children, function(b){ b.onclick=function(){ WO_FILTER=b.getAttribute('data-f'); [].forEach.call($('woChips').children,function(x){x.setAttribute('aria-pressed', x===b);}); loadWorkorders(); }; });
   $('wSave').onclick = async function(){
     var msg=$('wMsg'); msg.textContent=''; msg.className='msg';
     var p={villa:$('wVilla').value, title:$('wTitle').value.trim(), vendor:$('wVendor').value.trim(), cost:$('wCost').value.trim(), status:$('wStatus').value, note:$('wNote').value.trim()};
@@ -230,11 +245,18 @@ function viewWorkorders(){
 async function loadWorkorders(){
   var wrap=$('wList'); wrap.innerHTML='<div class="empty">Loading…</div>';
   var r=await api('/api/workorders'); var rows=r.body.workorders||[];
-  if(!rows.length){ wrap.innerHTML='<div class="empty">No work orders yet.</div>'; return; }
-  wrap.innerHTML='<table><thead><tr><th>Work order</th><th>Villa</th><th style="text-align:right">Cost</th><th>Status</th><th>Updated</th><th></th></tr></thead><tbody>'
-    +rows.map(function(x){ var opts=STATUSES.map(function(s){return '<option'+(s===x.status?' selected':'')+'>'+esc(s)+'</option>';}).join('');
-      return '<tr><td><div style="font-weight:500">'+esc(x.title)+'</div>'+(x.vendor?'<div class="muted">'+esc(x.vendor)+'</div>':'')+(x.note?'<div class="muted">'+esc(x.note)+'</div>':'')+'</td><td>'+esc(x.villa)+'</td><td class="num">'+rd(x.cost)+'</td><td><select class="st" data-id="'+esc(x.id)+'" style="padding:5px 9px;border-radius:8px;font-size:13px;border:1px solid var(--line)">'+opts+'</select></td><td style="color:#6e6862">'+esc(cap(x.updated_by||x.created_by))+'<div class="muted">'+esc(when(x.updated_ts||x.created_ts))+'</div></td><td><button class="link" data-del="'+esc(x.id)+'">Delete</button></td></tr>'; }).join('')
-    +'</tbody></table>';
+  if(WO_FILTER==='open') rows=rows.filter(function(x){return x.status!=='Done';});
+  else if(WO_FILTER==='done') rows=rows.filter(function(x){return x.status==='Done';});
+  if(!rows.length){ wrap.innerHTML='<div class="empty">Nothing here.</div>'; return; }
+  wrap.innerHTML = rows.map(function(x){
+    var badges=[]; if(x.villa) badges.push(x.villa); if(x.vendor) badges.push(x.vendor); if(x.cost!=null) badges.push(rd(x.cost));
+    var opts=STATUSES.map(function(s){return '<option'+(s===x.status?' selected':'')+'>'+esc(s)+'</option>';}).join('');
+    return '<div class="wocard"><div class="top"><h3>'+esc(x.title)+'</h3><span class="stpill" style="'+stStyle(x.status)+'">'+esc(x.status)+'</span></div>'
+      + (x.note?'<div class="muted" style="margin-top:6px">'+esc(x.note)+'</div>':'')
+      + '<div class="badges">'+badges.map(function(b){return '<span class="badge2">'+esc(b)+'</span>';}).join('')+'</div>'
+      + '<div class="foot"><div class="muted">'+esc(cap(x.updated_by||x.created_by))+' · '+esc(when(x.updated_ts||x.created_ts))+'</div>'
+      + '<div style="display:flex;gap:10px;align-items:center"><select class="st" data-id="'+esc(x.id)+'" style="padding:6px 10px;border-radius:8px;font-size:13px;border:1px solid var(--line)">'+opts+'</select><button class="link" data-del="'+esc(x.id)+'">Delete</button></div></div></div>';
+  }).join('');
   wrap.querySelectorAll('select.st').forEach(function(s){ s.onchange=async function(){ s.disabled=true; await api('/api/workorders/update',{method:'POST',body:JSON.stringify({id:s.getAttribute('data-id'),status:s.value})}); loadWorkorders(); updateBadges(); }; });
   wrap.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this work order?'))return; await api('/api/workorders/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-del')})}); loadWorkorders(); updateBadges(); }; });
 }
