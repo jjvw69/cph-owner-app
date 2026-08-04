@@ -198,5 +198,9 @@
 
   boot();
 </script>
+<div id="cphUpdateBar" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#2b2723;color:#fff;padding:12px 16px;text-align:center;font-size:14px;z-index:9999;box-shadow:0 -2px 12px rgba(0,0,0,.15)">A new version of this page is available.<button onclick="location.reload(true)" style="margin-left:12px;background:#5a9e46;color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:14px;">Reload</button></div>
+<script>
+(function(){ var v0=null; function chk(){ fetch('/api/version',{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){ if(v0===null){v0=d.v;} else if(d.v&&d.v!==v0){ var b=document.getElementById('cphUpdateBar'); if(b) b.style.display='block'; } }).catch(function(){}); } chk(); setInterval(chk,60000); })();
+</script>
 </body>
 </html>

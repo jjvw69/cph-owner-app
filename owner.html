@@ -339,5 +339,9 @@ try {
 } catch (x) {}
 render();
 </script>
+<div id="cphUpdateBar" style="display:none;position:fixed;left:0;right:0;top:0;background:#211E1A;color:#fff;padding:calc(8px + env(safe-area-inset-top)) 16px 8px;text-align:center;font-size:13.5px;z-index:9999;">Hay una nueva versión de esta app.<button onclick="location.reload(true)" style="margin-left:10px;background:#4A5A3C;color:#fff;border:0;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:13.5px;">Actualizar</button></div>
+<script>
+(function(){ var v0=null; function chk(){ fetch('/api/version',{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){ if(v0===null){v0=d.v;} else if(d.v&&d.v!==v0){ var b=document.getElementById('cphUpdateBar'); if(b) b.style.display='block'; } }).catch(function(){}); } chk(); setInterval(chk,60000); })();
+</script>
 </body>
 </html>

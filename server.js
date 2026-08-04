@@ -15,6 +15,7 @@ const path   = require('path');
 const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
+const BUILD = String(Date.now()); // changes on every deploy/restart → clients can detect updates
 
 // ---- staff users & auth -------------------------------------------------
 const USERS = {
@@ -120,6 +121,7 @@ http.createServer(async (req, res) => {
   const method = req.method;
 
   if(url === '/healthz'){ res.writeHead(200,{'Content-Type':'text/plain'}); return res.end('ok'); }
+  if(url === '/api/version'){ return sendJSON(res, 200, { v: BUILD }); }
 
   // ---- staff auth ----
   if(url === '/api/login' && method === 'POST'){
