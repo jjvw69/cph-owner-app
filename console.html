@@ -614,8 +614,32 @@ function viewManage(){
    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Owners</h2><div class="sub" style="margin-bottom:10px">Each owner gets a code to log into the owner app at <b>/owner</b> (code + last name).</div>'
    +'<div class="row"><div><label>Owner name</label><input id="oName" placeholder="e.g. Sra. Aldrich"/></div><div><label>Last name (login)</label><input id="oLast" placeholder="e.g. Aldrich"/></div><div><label>Villa</label><select id="oVilla"></select></div></div>'
    +'<div class="row" style="margin-top:12px"><div><label>Email</label><input id="oEmail" placeholder="owner@email.com"/></div><div><label>Login code</label><input id="oCode" placeholder="e.g. CDC-OWN-0012"/></div><div><label>Language</label><select id="oLang"><option value="es">Spanish</option><option value="en">English</option></select></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="oAdd">Add owner</button></div></div>'
-   +'<div id="oMsg" class="msg"></div><div id="oList"></div></div>';
+   +'<div id="oMsg" class="msg"></div><div id="oList"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Backup</h2>'
+   +'<div class="sub" style="margin-bottom:12px">Download every villa, owner, reading, work order and invoice as one JSON file. Keep a copy — restoring puts it all back.</div>'
+   +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="primary" id="bkDown">Download backup</button>'
+   +'<input type="file" id="bkFile" accept="application/json,.json" style="display:none"><button class="ghost" id="bkUp">Restore from file…</button></div>'
+   +'<div id="bkMsg" class="msg"></div></div>';
   loadProps(); loadOwners();
+  $('bkDown').onclick=function(){ window.location.href='/api/backup'; };
+  $('bkUp').onclick=function(){ $('bkFile').click(); };
+  $('bkFile').onchange=function(){
+    var f=this.files[0]; if(!f) return; var msg=$('bkMsg'); var inp=this;
+    var rd=new FileReader();
+    rd.onload=async function(){
+      var data; try{ data=JSON.parse(rd.result); }catch(e){ msg.textContent='That file is not valid JSON.'; msg.className='msg err'; inp.value=''; return; }
+      var counts=['properties','owners','readings','workorders','invoices'].filter(function(k){return Array.isArray(data[k]);})
+        .map(function(k){ return data[k].length+' '+k; }).join(', ');
+      if(!counts){ msg.textContent='No console data found in that file.'; msg.className='msg err'; inp.value=''; return; }
+      if(!confirm('Restore '+counts+'?\n\nThis REPLACES the current data in those sections.')){ inp.value=''; return; }
+      msg.textContent='Restoring…'; msg.className='msg';
+      var r=await api('/api/restore',{method:'POST',body:JSON.stringify(data)});
+      if(r.status===200){ msg.textContent='Restored: '+(r.body.restored||[]).join(', '); msg.className='msg ok'; loadProps(); loadOwners(); updateBadges(); }
+      else { msg.textContent=(r.body&&r.body.error)||'Restore failed.'; msg.className='msg err'; }
+      inp.value='';
+    };
+    rd.readAsText(f);
+  };
   $('pAdd').onclick = async function(){ var msg=$('pMsg'); msg.textContent=''; msg.className='msg'; var name=$('pName').value.trim(); if(!name){ msg.textContent='Enter a villa name.'; msg.className='msg err'; return; } var r=await api('/api/properties',{method:'POST',body:JSON.stringify({name:name,meta:$('pMeta').value.trim()})}); if(r.status===200){ $('pName').value='';$('pMeta').value=''; msg.textContent='Villa added.'; msg.className='msg ok'; loadProps(); } else { msg.textContent=(r.body&&r.body.error)||'Could not add.'; msg.className='msg err'; } };
   $('oAdd').onclick = async function(){ var msg=$('oMsg'); msg.textContent=''; msg.className='msg'; var p={name:$('oName').value.trim(),lastName:$('oLast').value.trim(),villa:$('oVilla').value,email:$('oEmail').value.trim(),code:$('oCode').value.trim(),lang:$('oLang').value}; if(!p.name){ msg.textContent='Enter the owner name.'; msg.className='msg err'; return; } if(!p.code){ msg.textContent='Enter a login code.'; msg.className='msg err'; return; } var r=await api('/api/owners',{method:'POST',body:JSON.stringify(p)}); if(r.status===200){ $('oName').value='';$('oLast').value='';$('oEmail').value='';$('oCode').value=''; msg.textContent='Owner added.'; msg.className='msg ok'; loadOwners(); } else { msg.textContent=(r.body&&r.body.error)||'Could not add.'; msg.className='msg err'; } };
 }

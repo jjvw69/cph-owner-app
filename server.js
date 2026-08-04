@@ -283,6 +283,33 @@ http.createServer(async (req, res) => {
     return sendJSON(res, saveStore('workorders',(loadStore('workorders')||[]).filter(r=>r.id!==id))?200:500, { ok:true });
   }
 
+  // ---- backup / restore (admin) ----
+  if(url === '/api/backup' && method === 'GET'){
+    if(!admin) return needAdmin();
+    const dump = {
+      exported_at: new Date().toISOString(), exported_by: user, version: 1,
+      properties: loadProperties(), owners: loadOwners(),
+      readings: loadStore('readings')||[], workorders: loadStore('workorders')||[],
+      invoices: loadStore('invoices')||[]
+    };
+    res.writeHead(200, {
+      'Content-Type':'application/json; charset=utf-8',
+      'Content-Disposition':'attachment; filename="cph-console-backup-'+new Date().toISOString().slice(0,10)+'.json"'
+    });
+    return res.end(JSON.stringify(dump, null, 2));
+  }
+  if(url === '/api/restore' && method === 'POST'){
+    if(!admin) return needAdmin();
+    const b = await readBody(req);
+    const KEYS = ['properties','owners','readings','workorders','invoices'];
+    const restored = [];
+    for(const k of KEYS){
+      if(Array.isArray(b[k])){ if(saveStore(k, b[k])) restored.push(k+':'+b[k].length); }
+    }
+    if(!restored.length) return sendJSON(res, 400, { error:'nothing to restore — is this a console backup file?' });
+    return sendJSON(res, 200, { ok:true, restored });
+  }
+
   // ---- invoices (any signed-in staff) ----
   if(url === '/api/invoices' && method === 'GET'){
     return sendJSON(res, 200, { invoices: loadStore('invoices')||[], statuses: INV_STATUSES, charged: INV_CHARGED });
