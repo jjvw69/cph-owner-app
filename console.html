@@ -44,6 +44,11 @@
   .nav button[aria-current="true"]{ background:#f3efe9; color:#211e1a; }
   .nav .badge{ font-size:11px; background:rgba(255,255,255,.14); color:#e9e4da; border-radius:20px; padding:1px 8px; }
   .nav button[aria-current="true"] .badge{ background:#e0dccf; color:#5a544a; }
+  .submenu{ display:none; flex-direction:column; gap:1px; margin:2px 0 6px 14px; padding-left:10px; border-left:1px solid rgba(255,255,255,.1); }
+  .submenu.open{ display:flex; }
+  .submenu button{ text-align:left; background:none; border:0; color:#a8a196; font:inherit; font-size:14px; padding:7px 10px; border-radius:8px; cursor:pointer; }
+  .submenu button:hover{ background:rgba(255,255,255,.06); color:#e3ded4; }
+  .submenu button[aria-current="true"]{ color:#fff; font-weight:500; }
   .sidefoot{ margin-top:auto; padding-top:16px; font-size:13px; color:#8f887d; }
   .sidefoot button{ background:none; border:1px solid rgba(255,255,255,.16); color:#cfc9bf; border-radius:8px; padding:7px 12px; font-size:13px; cursor:pointer; margin-top:8px; }
 
@@ -125,7 +130,16 @@
     </div>
     <nav class="nav" id="nav">
       <button data-view="dashboard" aria-current="true">Dashboard</button>
-      <button data-view="overview">Overview</button>
+      <div class="submenu open" id="dashSub">
+        <button data-dash="overview" aria-current="true">Overview</button>
+        <button data-dash="utilities">Utilities</button>
+        <button data-dash="labour">Labour &amp; hours</button>
+        <button data-dash="maintenance">Maintenance</button>
+        <button data-dash="quotes">Quotes</button>
+        <button data-dash="payments">Payments</button>
+        <button data-dash="statement">Owner statement</button>
+        <button data-dash="field">Field app</button>
+      </div>
       <button data-view="readings">Meter readings</button>
       <button data-view="workorders">Work orders <span class="badge" id="woBadge"></span></button>
       <button data-view="manage" id="navManage">Manage</button>
@@ -142,7 +156,7 @@
 
 <script>
 var $ = function(id){ return document.getElementById(id); };
-var ME = null, VILLAS = [], STATUSES = [], VIEW = 'dashboard', WO_FILTER = 'open';
+var ME = null, VILLAS = [], STATUSES = [], VIEW = 'dashboard', WO_FILTER = 'open', DASH_SECTION = 'overview';
 function stStyle(s){ var m={'Open':['#eee7dd','#8a8378'],'Quoting':['#f5efdf','#8a6a1f'],'Approved':['#edf0e7','#4a5a3c'],'Parts ordered':['#e9eef2','#2f4a5a'],'Scheduled':['#e9eef2','#2f4a5a'],'Done':['#edf0e7','#4a5a3c']}; var c=m[s]||['#eee7dd','#8a8378']; return 'background:'+c[0]+';color:'+c[1]; }
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
@@ -169,16 +183,29 @@ async function updateBadges(){
 }
 
 /* ---- nav ---- */
-$('nav').addEventListener('mousedown', function(e){ var b=e.target.closest('button[data-view]'); if(b){ e.preventDefault(); go(b.getAttribute('data-view')); } });
+document.addEventListener('mousedown', function(e){
+  var t=e.target;
+  var db=t.closest && t.closest('#dashSub button[data-dash]'); if(db){ e.preventDefault(); openDash(db.getAttribute('data-dash')); return; }
+  var nb=t.closest && t.closest('.nav > button[data-view]'); if(nb){ e.preventDefault(); go(nb.getAttribute('data-view')); return; }
+}, true);
+function openDash(section){
+  DASH_SECTION=section;
+  var sub=$('dashSub'); if(sub){ [].forEach.call(sub.children,function(x){ x.setAttribute('aria-current', x.getAttribute('data-dash')===section?'true':'false'); }); }
+  if(VIEW!=='dashboard'){ go('dashboard'); return; }
+  var ifr=$('dashFrame');
+  if(ifr && ifr.contentWindow){ try{ ifr.contentWindow.location.hash=section; }catch(e){ ifr.src='/property-console#'+section; } }
+  else { go('dashboard'); }
+}
 function resizeImage(file, cb){ var img=new Image(), url=URL.createObjectURL(file); img.onload=function(){ URL.revokeObjectURL(url); var max=1100,w=img.width,h=img.height; if(w>h&&w>max){h=Math.round(h*max/w);w=max;} else if(h>max){w=Math.round(w*max/h);h=max;} var c=document.createElement('canvas'); c.width=w;c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); cb(c.toDataURL('image/jpeg',0.6)); }; img.onerror=function(){ cb(null); }; img.src=url; }
 function go(view){
   if(view==='manage' && (!ME || !ME.isAdmin)) view='dashboard';
   VIEW = view;
   [].forEach.call($('nav').querySelectorAll('button[data-view]'), function(b){ b.setAttribute('aria-current', b.getAttribute('data-view')===view ? 'true':'false'); });
   $('main').classList.toggle('full', view==='dashboard');
+  var sub=$('dashSub'); if(sub) sub.classList.toggle('open', view==='dashboard');
   ({dashboard:viewDashboard, overview:viewOverview, readings:viewReadings, workorders:viewWorkorders, manage:viewManage}[view] || viewDashboard)();
 }
-function viewDashboard(){ $('main').innerHTML = '<iframe title="Caribbean Paradise Homes Dashboard" src="/property-console" style="display:block;width:100%;height:100vh;border:0;background:#f3efe9"></iframe>'; }
+function viewDashboard(){ $('main').innerHTML = '<iframe id="dashFrame" title="Caribbean Paradise Homes Dashboard" src="/property-console#'+DASH_SECTION+'" style="display:block;width:100%;height:100vh;border:0;background:#f3efe9"></iframe>'; }
 
 /* ---- OVERVIEW ---- */
 async function viewOverview(){
