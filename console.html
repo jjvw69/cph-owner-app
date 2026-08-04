@@ -199,6 +199,7 @@ var L_INV={'Unpaid':'Por pagar','Approved':'Aprobada','Paid':'Pagada','Disputed'
 var L_CHG={'Owner':'Propietario','Absorbed':'Asumido','Rental':'Alquiler'};
 var L_QT={'Pending':'Pendiente','Approved':'Aprobada','Rejected':'Rechazada'};
 var L_ROLE={'Housekeeper':'Ama de llaves','Gardener':'Jardinero','Pool':'Piscina','Maintenance':'Mantenimiento','Caretaker':'Cuidador','Security':'Seguridad','Other':'Otro'};
+var L_VILLA={'All villas':'Todas las villas'};
 var L_RECUR={'None':'Ninguna','Weekly':'Semanal','Monthly':'Mensual','Quarterly':'Trimestral','Semi-annual':'Semestral','Annually':'Anual'};
 function tr(map,v){ return map[v]||v; }
 function optsL(map,arr,sel){ return arr.map(function(v){ return '<option value="'+esc(v)+'"'+(v===sel?' selected':'')+'>'+esc(tr(map,v))+'</option>'; }).join(''); }
@@ -284,7 +285,7 @@ async function viewOverview(){
       open:openWo.filter(function(x){return x.villa===v;}).length };
   });
   $('ovTable').innerHTML = rows.length ? '<table><thead><tr><th>Villa</th><th style="text-align:right">Galones</th><th style="text-align:right">kWh</th><th style="text-align:right">Horas</th><th style="text-align:right">Gasto</th><th style="text-align:right">Trabajos</th></tr></thead><tbody>'
-    +rows.map(function(r){ return '<tr data-villa="'+esc(r.villa)+'" style="cursor:pointer"><td style="font-weight:500">'+esc(r.villa)+'</td><td class="num">'+(r.gal?nfmt(r.gal):'—')+'</td><td class="num">'+(r.kwh?nfmt(r.kwh):'—')+'</td><td class="num">'+(r.hrs||'—')+'</td><td class="num">'+(r.spend?rd(r.spend):'—')+'</td><td class="num">'+(r.open||'—')+'</td></tr>'; }).join('')
+    +rows.map(function(r){ return '<tr data-villa="'+esc(r.villa)+'" style="cursor:pointer"><td style="font-weight:500">'+esc(tr(L_VILLA,r.villa))+'</td><td class="num">'+(r.gal?nfmt(r.gal):'—')+'</td><td class="num">'+(r.kwh?nfmt(r.kwh):'—')+'</td><td class="num">'+(r.hrs||'—')+'</td><td class="num">'+(r.spend?rd(r.spend):'—')+'</td><td class="num">'+(r.open||'—')+'</td></tr>'; }).join('')
     +'</tbody></table>' : '<div class="empty">Aún no hay villas — añádalas en Gestionar.</div>';
   $('ovTable').querySelectorAll('[data-villa]').forEach(function(tr){ tr.onclick=function(){ viewVillaProfile(tr.getAttribute('data-villa')); }; });
   // alerts built from real signals
@@ -382,8 +383,8 @@ function viewLabour(){
    +'<div class="row"><div><label>Nombre</label><input id="sName" placeholder="ej. Marisol R."/></div><div><label>Cargo</label><select id="sRole"></select></div><div><label>Villa (habitual)</label><select id="sVilla"></select></div><div><label>Tarifa por hora (RD$)</label><input id="sRate" inputmode="decimal" placeholder="opcional"/></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="sAdd">Añadir personal</button></div></div>'
    +'<div id="sMsg" class="msg"></div><div id="sList"></div></div>'
    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Registro de horas</h2><div id="hList"></div></div>';
-  fillSelect($('hVilla'), ['All villas'].concat(VILLAS));
-  fillSelect($('sVilla'), ['—'].concat(VILLAS));
+  fillSelectL($('hVilla'), L_VILLA, ['All villas'].concat(VILLAS));
+  fillSelectL($('sVilla'), L_VILLA, ['—'].concat(VILLAS));
   $('hDate').value=new Date().toISOString().slice(0,10);
   $('sAdd').onclick=async function(){
     var msg=$('sMsg'); msg.textContent=''; msg.className='msg';
@@ -426,7 +427,7 @@ async function loadHours(){
     +'<div class="stat"><div class="k">Personal activo</div><div class="v">'+STAFF.filter(function(s){return s.active!==false;}).length+'</div></div>';
   if($('lbSum')) $('lbSum').innerHTML='· '+rows.length+' registros'+deltaInline(monthDelta(rows,'date'));
   wrap.innerHTML = rows.length ? '<table><thead><tr><th>Fecha</th><th>Personal</th><th>Villa</th><th style="text-align:right">Horas</th><th style="text-align:right">Costo</th><th>Nota</th><th></th></tr></thead><tbody>'
-    +rows.slice(0,60).map(function(x){ return '<tr><td>'+esc(x.date)+'</td><td style="font-weight:500">'+esc(x.staff_name)+'</td><td class="muted">'+esc(x.villa||'—')+'</td><td class="num">'+x.hours+'</td><td class="num">'+(x.cost!=null?rd(x.cost):'—')+'</td><td class="muted">'+esc(x.note||'')+'</td><td><button class="link" data-delh="'+esc(x.id)+'">Delete</button></td></tr>'; }).join('')
+    +rows.slice(0,60).map(function(x){ return '<tr><td>'+esc(x.date)+'</td><td style="font-weight:500">'+esc(x.staff_name)+'</td><td class="muted">'+esc(tr(L_VILLA,x.villa||'—'))+'</td><td class="num">'+x.hours+'</td><td class="num">'+(x.cost!=null?rd(x.cost):'—')+'</td><td class="muted">'+esc(x.note||'')+'</td><td><button class="link" data-delh="'+esc(x.id)+'">Delete</button></td></tr>'; }).join('')
     +'</tbody></table>' : '<div class="empty">Aún no hay horas registradas.</div>';
   wrap.querySelectorAll('[data-delh]').forEach(function(b){ b.onclick=async function(){ if(!confirm('¿Eliminar este registro?'))return; await api('/api/hours/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delh')})}); loadHours(); }; });
 }
@@ -442,7 +443,7 @@ function viewQuotes(){
    +'<div class="row" style="margin-top:12px"><div><label>Villa</label><select id="qVilla2"></select></div><div><label>Plazo</label><input id="qLead" placeholder="ej. 3 semanas"/></div><div style="flex:2"><label>Notas</label><input id="qNote2" placeholder="¿Qué incluye?"/></div></div>'
    +'<div style="margin-top:14px"><button class="primary" id="qSave2">Añadir cotización</button></div><div id="qMsg2" class="msg"></div></div>'
    +'<div class="chips" id="qtChips"></div><div id="qList"></div>';
-  fillSelect($('qVilla2'), ['All villas'].concat(VILLAS));
+  fillSelectL($('qVilla2'), L_VILLA, ['All villas'].concat(VILLAS));
   var f=[['pending','Pendientes'],['approved','Aprobadas'],['all','Todas']];
   $('qtChips').innerHTML=f.map(function(c){ return '<button class="chip" data-f="'+c[0]+'" aria-pressed="'+(QT_FILTER===c[0])+'">'+c[1]+'</button>'; }).join('');
   [].forEach.call($('qtChips').children,function(b){ b.onclick=function(){ QT_FILTER=b.getAttribute('data-f'); [].forEach.call($('qtChips').children,function(x){x.setAttribute('aria-pressed', x===b);}); loadQuotes(); }; });
@@ -603,7 +604,7 @@ async function loadWorkorders(){
   else if(WO_FILTER==='done') rows=rows.filter(function(x){return x.status==='Done';});
   if(!rows.length){ wrap.innerHTML='<div class="empty">No hay nada aquí.</div>'; return; }
   wrap.innerHTML = rows.map(function(x){
-    var badges=[]; if(x.villa) badges.push(x.villa); if(x.vendor) badges.push(x.vendor); if(x.cost!=null) badges.push(rd(x.cost));
+    var badges=[]; if(x.villa) badges.push(tr(L_VILLA,x.villa)); if(x.vendor) badges.push(x.vendor); if(x.cost!=null) badges.push(rd(x.cost));
     var opts=optsL(L_WO,STATUSES,x.status);
     return '<div class="wocard" data-open="'+esc(x.id)+'"><div class="top"><h3>'+esc(x.title)+'</h3><span class="stpill" style="'+stStyle(x.status)+'">'+esc(tr(L_WO,x.status))+'</span></div>'
       + (x.note?'<div class="muted" style="margin-top:6px">'+esc(x.note)+'</div>':'')
@@ -676,7 +677,7 @@ function viewInvoices(){
    +'<div style="margin-top:14px"><button class="primary" id="iSave">Añadir factura</button></div><div id="iMsg" class="msg"></div></div>'
    +'<div class="chips" id="invChips"></div><div id="iList"></div>';
   var villaOpts=['All villas'].concat(VILLAS);
-  fillSelect($('iVilla'), villaOpts); fillSelectL($('iCharged'), L_CHG, ['Owner','Absorbed','Rental']); fillSelectL($('iStatus'), L_INV, ['Unpaid','Approved','Paid','Disputed']);
+  fillSelectL($('iVilla'), L_VILLA, villaOpts); fillSelectL($('iCharged'), L_CHG, ['Owner','Absorbed','Rental']); fillSelectL($('iStatus'), L_INV, ['Unpaid','Approved','Paid','Disputed']);
   var fchips=[['unpaid','Por pagar'],['paid','Pagadas'],['all','Todas']];
   $('invChips').innerHTML=fchips.map(function(c){ return '<button class="chip" data-f="'+c[0]+'" aria-pressed="'+(INV_FILTER===c[0])+'">'+c[1]+'</button>'; }).join('');
   [].forEach.call($('invChips').children,function(b){ b.onclick=function(){ INV_FILTER=b.getAttribute('data-f'); [].forEach.call($('invChips').children,function(x){x.setAttribute('aria-pressed', x===b);}); loadInvoices(); }; });
@@ -705,7 +706,7 @@ async function loadInvoices(){
   if(!rows.length){ wrap.innerHTML='<div class="empty">No hay nada aquí.</div>'; return; }
   var statuses=r.body.statuses||['Unpaid','Approved','Paid','Disputed'];
   wrap.innerHTML=rows.map(function(x){
-    var badges=[]; if(x.villa) badges.push(x.villa); if(x.number) badges.push('#'+x.number); badges.push(tr(L_CHG,x.charged||'Owner'));
+    var badges=[]; if(x.villa) badges.push(tr(L_VILLA,x.villa)); if(x.number) badges.push('#'+x.number); badges.push(tr(L_CHG,x.charged||'Owner'));
     if(x.due_date) badges.push('vence '+x.due_date);
     var opts=optsL(L_INV,statuses,x.status);
     return '<div class="wocard" data-open="'+esc(x.id)+'"><div class="top"><h3>'+esc(x.vendor)+' · '+rd(x.amount)+'</h3><span class="stpill" style="'+invStyle(x.status)+'">'+esc(tr(L_INV,x.status))+'</span></div>'
@@ -724,7 +725,7 @@ async function openInv(id){
   var sts=['Unpaid','Approved','Paid','Disputed'], chg=['Owner','Absorbed','Rental'];
   var stopts=optsL(L_INV,sts,inv.status);
   var chopts=optsL(L_CHG,chg,inv.charged||'Owner');
-  var vopts=['All villas'].concat(VILLAS).map(function(v){ return '<option'+(v===inv.villa?' selected':'')+'>'+esc(v)+'</option>'; }).join('');
+  var vopts=optsL(L_VILLA,['All villas'].concat(VILLAS),inv.villa);
   $('main').innerHTML =
     '<button class="backlink" id="invBack">← Pagos</button>'
    +'<div class="head" style="margin-top:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h1>'+esc(inv.vendor)+' · '+rd(inv.amount)+'</h1><span class="stpill" id="iPill" style="'+invStyle(inv.status)+';margin-top:12px">'+esc(inv.status)+'</span></div><div class="sub">'+esc(inv.villa||'—')+' · registrada por '+esc(cap(inv.created_by))+' · '+esc(when(inv.created_ts))+'</div></div>'
@@ -772,7 +773,7 @@ function qaMenu(){
   [].forEach.call($('qaBody').querySelectorAll('[data-qa]'), function(b){ b.onclick=function(){ qaForm(b.getAttribute('data-qa')); }; });
 }
 function qaForm(kind){
-  var vsel=function(id,all){ return '<label>Villa</label><select id="'+id+'">'+(all?'<option>All villas</option>':'')+VILLAS.map(function(v){ return '<option>'+esc(v)+'</option>'; }).join('')+'</select>'; };
+  var vsel=function(id,all){ return '<label>Villa</label><select id="'+id+'">'+(all?'<option value="All villas">Todas las villas</option>':'')+VILLAS.map(function(v){ return '<option>'+esc(v)+'</option>'; }).join('')+'</select>'; };
   var F={
     invoice:{ t:'Nueva factura', s:'Se registra en Pagos', html:
       '<div class="row" style="margin-top:14px"><div style="flex:2"><label>Vendor</label><input id="qVendor" placeholder="e.g. Clima Caribe"/></div><div><label>Amount (RD$)</label><input id="qAmount" inputmode="decimal"/></div></div>'
