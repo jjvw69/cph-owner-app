@@ -50,6 +50,19 @@
   .submenu button{ text-align:left; background:none; border:0; color:#a8a196; font:inherit; font-size:14px; padding:8px 11px; border-radius:8px; cursor:pointer; }
   .submenu button:hover{ background:rgba(255,255,255,.06); color:#e3ded4; }
   .submenu button[aria-current="true"]{ background:rgba(255,255,255,.10); color:#fff; font-weight:500; }
+  .quickadd{ margin-top:14px; background:var(--btn); color:#fff; border:0; border-radius:10px; padding:11px 14px; font:inherit; font-size:14px; cursor:pointer; }
+  .quickadd:hover{ filter:brightness(1.08); }
+  /* quick-add modal */
+  .modalWrap{ display:none; position:fixed; inset:0; background:rgba(20,18,15,.55); z-index:200; align-items:flex-start; justify-content:center; padding:7vh 20px; overflow:auto; }
+  .modalWrap.open{ display:flex; }
+  .modalBox{ width:100%; max-width:560px; background:var(--card); border-radius:16px; padding:24px; box-shadow:0 24px 60px rgba(0,0,0,.35); }
+  .modalBox h2{ margin:0 0 4px; font-size:22px; }
+  .modalHead{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .xbtn{ background:none; border:0; font-size:22px; color:var(--faint); cursor:pointer; line-height:1; padding:0 4px; }
+  .qpick{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:16px; }
+  .qpick button{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px 14px; text-align:left; font:inherit; cursor:pointer; }
+  .qpick button:hover{ border-color:#c9c0b0; background:#faf7f2; }
+  .qpick .qt{ font-size:15px; font-weight:600; } .qpick .qd{ font-size:12.5px; color:var(--soft); margin-top:3px; }
   .sidefoot{ margin-top:auto; padding-top:16px; font-size:13px; color:#8f887d; }
   .sidefoot button{ background:none; border:1px solid rgba(255,255,255,.16); color:#cfc9bf; border-radius:8px; padding:7px 12px; font-size:13px; cursor:pointer; margin-top:8px; }
 
@@ -141,16 +154,27 @@
         <button data-dash="statement">Owner statement</button>
         <button data-dash="field">Field app</button>
       </div>
+      <div class="navgroup">Operations</div>
       <button data-view="readings">Meter readings</button>
       <button data-view="workorders">Work orders <span class="badge" id="woBadge"></span></button>
+      <button data-view="invoices">Invoices <span class="badge" id="invBadge"></span></button>
       <button data-view="manage" id="navManage">Manage</button>
     </nav>
+    <button class="quickadd" id="quickAddBtn">+ Quick add</button>
     <div class="sidefoot">
       <div id="whoName"></div>
       <button id="logout" style="margin-top:8px;">Log out</button>
     </div>
   </aside>
   <main class="main" id="main"></main>
+</div>
+
+<!-- QUICK ADD -->
+<div class="modalWrap" id="qaWrap">
+  <div class="modalBox">
+    <div class="modalHead"><div><h2 id="qaTitle">Quick add</h2><div class="sub" id="qaSub">What do you want to add?</div></div><button class="xbtn" id="qaClose">×</button></div>
+    <div id="qaBody"></div>
+  </div>
 </div>
 
 <div id="cphUpdateBar" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#211e1a;color:#fff;padding:12px 16px;text-align:center;font-size:14px;z-index:9999;box-shadow:0 -2px 12px rgba(0,0,0,.15)">A new version of the console is available.<button onclick="location.reload(true)" style="margin-left:12px;background:#2f7d4f;color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:14px;">Reload</button></div>
@@ -186,6 +210,7 @@ async function boot(){
 }
 async function updateBadges(){
   try{ var w = await api('/api/workorders'); var open=(w.body.workorders||[]).filter(function(x){return x.status!=='Done';}).length; $('woBadge').textContent = open || ''; }catch(e){}
+  try{ var i = await api('/api/invoices'); var un=(i.body.invoices||[]).filter(function(x){return x.status!=='Paid';}).length; $('invBadge').textContent = un || ''; }catch(e){}
 }
 
 /* ---- nav ---- */
@@ -220,7 +245,7 @@ function go(view){
   /* Dashboard sections live in the submenu; highlight one only while on the dashboard */
   var sub=$('dashSub');
   if(sub){ [].forEach.call(sub.children, function(x){ x.setAttribute('aria-current', (view==='dashboard' && x.getAttribute('data-dash')===DASH_SECTION) ? 'true':'false'); }); }
-  ({dashboard:viewDashboard, overview:viewOverview, readings:viewReadings, workorders:viewWorkorders, manage:viewManage}[view] || viewDashboard)();
+  ({dashboard:viewDashboard, overview:viewOverview, readings:viewReadings, workorders:viewWorkorders, invoices:viewInvoices, manage:viewManage}[view] || viewDashboard)();
 }
 function viewDashboard(){ $('main').innerHTML = '<iframe id="dashFrame" title="Caribbean Paradise Homes Dashboard" src="/property-console#'+DASH_SECTION+'" style="display:block;width:100%;height:100vh;border:0;background:#f3efe9"></iframe>'; }
 
@@ -362,6 +387,160 @@ function viewWODetail(wo){
   renderPhotos();
 }
 
+/* ---- INVOICES ---- */
+var INV_FILTER='unpaid';
+function invStyle(s){ var m={'Unpaid':['#f5efdf','#8a6a1f'],'Approved':['#e9eef2','#2f4a5a'],'Paid':['#edf0e7','#4a5a3c'],'Disputed':['#f6e9e3','#a8543a']}; var c=m[s]||['#eee7dd','#8a8378']; return 'background:'+c[0]+';color:'+c[1]; }
+function viewInvoices(){
+  var m=$('main');
+  m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Invoices</h1><div class="sub">Vendor bills &amp; receipts <span id="invSum"></span></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">New invoice</h2>'
+   +'<div class="row"><div style="flex:2"><label>Vendor</label><input id="iVendor" placeholder="e.g. Clima Caribe"/></div><div><label>Invoice #</label><input id="iNumber" placeholder="optional"/></div><div><label>Amount (RD$)</label><input id="iAmount" inputmode="decimal" placeholder="e.g. 1980"/></div></div>'
+   +'<div class="row" style="margin-top:12px"><div><label>Villa</label><select id="iVilla"></select></div><div><label>Charged to</label><select id="iCharged"></select></div><div><label>Status</label><select id="iStatus"></select></div></div>'
+   +'<div class="row" style="margin-top:12px"><div><label>Invoice date</label><input id="iDate" type="date"/></div><div><label>Due date</label><input id="iDue" type="date"/></div><div style="flex:2"><label>Description</label><input id="iDesc" placeholder="e.g. AC coil clean, 6 units"/></div></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="iSave">Add invoice</button></div><div id="iMsg" class="msg"></div></div>'
+   +'<div class="chips" id="invChips"></div><div id="iList"></div>';
+  var villaOpts=['All villas'].concat(VILLAS);
+  fillSelect($('iVilla'), villaOpts); fillSelect($('iCharged'), ['Owner','Absorbed','Rental']); fillSelect($('iStatus'), ['Unpaid','Approved','Paid','Disputed']);
+  var fchips=[['unpaid','Unpaid'],['paid','Paid'],['all','All']];
+  $('invChips').innerHTML=fchips.map(function(c){ return '<button class="chip" data-f="'+c[0]+'" aria-pressed="'+(INV_FILTER===c[0])+'">'+c[1]+'</button>'; }).join('');
+  [].forEach.call($('invChips').children,function(b){ b.onclick=function(){ INV_FILTER=b.getAttribute('data-f'); [].forEach.call($('invChips').children,function(x){x.setAttribute('aria-pressed', x===b);}); loadInvoices(); }; });
+  $('iList').addEventListener('click', function(e){ if(e.target.closest('select,button')) return; var c=e.target.closest('.wocard[data-open]'); if(c) openInv(c.getAttribute('data-open')); });
+  $('iSave').onclick=async function(){
+    var msg=$('iMsg'); msg.textContent=''; msg.className='msg';
+    var p={vendor:$('iVendor').value.trim(), number:$('iNumber').value.trim(), amount:$('iAmount').value.trim(),
+           villa:$('iVilla').value, charged:$('iCharged').value, status:$('iStatus').value,
+           date:$('iDate').value, due_date:$('iDue').value, description:$('iDesc').value.trim()};
+    if(!p.vendor){ msg.textContent='Enter the vendor.'; msg.className='msg err'; return; }
+    if(!p.amount){ msg.textContent='Enter the amount.'; msg.className='msg err'; return; }
+    $('iSave').disabled=true; var r=await api('/api/invoices',{method:'POST',body:JSON.stringify(p)}); $('iSave').disabled=false;
+    if(r.status===200){ msg.textContent='Invoice added.'; msg.className='msg ok'; ['iVendor','iNumber','iAmount','iDesc'].forEach(function(k){ $(k).value=''; }); loadInvoices(); updateBadges(); }
+    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+  };
+  loadInvoices();
+}
+async function loadInvoices(){
+  var wrap=$('iList'); wrap.innerHTML='<div class="empty">Loading…</div>';
+  var r=await api('/api/invoices'); var all=r.body.invoices||[]; var rows=all;
+  var unpaid=all.filter(function(x){ return x.status!=='Paid'; });
+  var owed=unpaid.reduce(function(a,x){ return a+(Number(x.amount)||0); },0);
+  var sumEl=$('invSum'); if(sumEl) sumEl.innerHTML='· '+unpaid.length+' outstanding · '+rd(owed)+deltaInline(monthDelta(all,'created_ts'));
+  if(INV_FILTER==='unpaid') rows=all.filter(function(x){ return x.status!=='Paid'; });
+  else if(INV_FILTER==='paid') rows=all.filter(function(x){ return x.status==='Paid'; });
+  if(!rows.length){ wrap.innerHTML='<div class="empty">Nothing here.</div>'; return; }
+  var statuses=r.body.statuses||['Unpaid','Approved','Paid','Disputed'];
+  wrap.innerHTML=rows.map(function(x){
+    var badges=[]; if(x.villa) badges.push(x.villa); if(x.number) badges.push('#'+x.number); badges.push(x.charged||'Owner');
+    if(x.due_date) badges.push('due '+x.due_date);
+    var opts=statuses.map(function(s){ return '<option'+(s===x.status?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
+    return '<div class="wocard" data-open="'+esc(x.id)+'"><div class="top"><h3>'+esc(x.vendor)+' · '+rd(x.amount)+'</h3><span class="stpill" style="'+invStyle(x.status)+'">'+esc(x.status)+'</span></div>'
+      + (x.description?'<div class="muted" style="margin-top:6px">'+esc(x.description)+'</div>':'')
+      + '<div class="badges">'+badges.map(function(b){ return '<span class="badge2">'+esc(b)+'</span>'; }).join('')+'</div>'
+      + '<div class="foot"><div class="muted">'+esc(cap(x.updated_by||x.created_by))+' · '+esc(when(x.updated_ts||x.created_ts))+((x.photos||[]).length?' · '+x.photos.length+' receipt'+(x.photos.length>1?'s':''):'')+'</div>'
+      + '<div style="display:flex;gap:10px;align-items:center"><select class="ist" data-id="'+esc(x.id)+'" style="padding:6px 10px;border-radius:8px;font-size:13px;border:1px solid var(--line)">'+opts+'</select><button class="link" data-deli="'+esc(x.id)+'">Delete</button></div></div></div>';
+  }).join('');
+  wrap.querySelectorAll('select.ist').forEach(function(s){ s.onchange=async function(){ s.disabled=true; await api('/api/invoices/update',{method:'POST',body:JSON.stringify({id:s.getAttribute('data-id'),status:s.value})}); loadInvoices(); updateBadges(); }; });
+  wrap.querySelectorAll('[data-deli]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this invoice?'))return; await api('/api/invoices/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-deli')})}); loadInvoices(); updateBadges(); }; });
+}
+async function openInv(id){
+  var r=await api('/api/invoices'); var inv=(r.body.invoices||[]).find(function(x){ return x.id===id; });
+  if(!inv){ go('invoices'); return; }
+  VIEW='invoice'; $('main').classList.remove('full');
+  var sts=['Unpaid','Approved','Paid','Disputed'], chg=['Owner','Absorbed','Rental'];
+  var stopts=sts.map(function(s){ return '<option'+(s===inv.status?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
+  var chopts=chg.map(function(s){ return '<option'+(s===(inv.charged||'Owner')?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
+  var vopts=['All villas'].concat(VILLAS).map(function(v){ return '<option'+(v===inv.villa?' selected':'')+'>'+esc(v)+'</option>'; }).join('');
+  $('main').innerHTML =
+    '<button class="backlink" id="invBack">← Invoices</button>'
+   +'<div class="head" style="margin-top:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h1>'+esc(inv.vendor)+' · '+rd(inv.amount)+'</h1><span class="stpill" id="iPill" style="'+invStyle(inv.status)+';margin-top:12px">'+esc(inv.status)+'</span></div><div class="sub">'+esc(inv.villa||'—')+' · logged by '+esc(cap(inv.created_by))+' · '+esc(when(inv.created_ts))+'</div></div>'
+   +'<div class="card"><div class="dgrid">'
+     +'<div><label>Vendor</label><input id="ivVendor" value="'+esc(inv.vendor)+'"/></div>'
+     +'<div><label>Invoice #</label><input id="ivNumber" value="'+esc(inv.number||'')+'"/></div>'
+     +'<div><label>Amount (RD$)</label><input id="ivAmount" inputmode="decimal" value="'+(inv.amount==null?'':inv.amount)+'"/></div>'
+     +'<div><label>Villa</label><select id="ivVilla">'+vopts+'</select></div>'
+     +'<div><label>Charged to</label><select id="ivCharged">'+chopts+'</select></div>'
+     +'<div><label>Status</label><select id="ivStatus">'+stopts+'</select></div>'
+     +'<div><label>Invoice date</label><input id="ivDate" type="date" value="'+esc(inv.date||'')+'"/></div>'
+     +'<div><label>Due date</label><input id="ivDue" type="date" value="'+esc(inv.due_date||'')+'"/></div>'
+   +'</div><div id="ivMsg" class="msg"></div></div>'
+   +'<div class="card"><label>Description</label><textarea id="ivDesc">'+esc(inv.description||'')+'</textarea></div>'
+   +'<div class="card"><label>Receipt / invoice photos</label><div id="ivPhotos" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px"></div><input type="file" id="ivPhotoInput" accept="image/*" style="display:none"><div style="margin-top:12px"><button class="ghost" id="ivPhotoBtn">+ Add photo</button></div><div id="ivPhotoMsg" class="msg"></div></div>'
+   +'<button class="btn-complete'+(inv.status==='Paid'?' done':'')+'" id="ivPaid">'+(inv.status==='Paid'?'Paid ✓ · mark unpaid':'Mark as paid')+'</button>'
+   +'<div style="text-align:center;margin-top:12px"><button class="link" id="ivDelete">Delete invoice</button></div>';
+  $('invBack').onclick=function(){ go('invoices'); };
+  async function save(patch){ await api('/api/invoices/update',{method:'POST',body:JSON.stringify(Object.assign({id:inv.id},patch))}); Object.assign(inv,patch); var msg=$('ivMsg'); msg.textContent='Saved.'; msg.className='msg ok'; setTimeout(function(){ if(msg) msg.textContent=''; },1200); updateBadges(); }
+  $('ivVendor').addEventListener('change',function(){ save({vendor:this.value}); });
+  $('ivNumber').addEventListener('change',function(){ save({number:this.value}); });
+  $('ivAmount').addEventListener('change',function(){ save({amount:this.value.trim()}); });
+  $('ivVilla').addEventListener('change',function(){ save({villa:this.value}); });
+  $('ivCharged').addEventListener('change',function(){ save({charged:this.value}); });
+  $('ivDate').addEventListener('change',function(){ save({date:this.value}); });
+  $('ivDue').addEventListener('change',function(){ save({due_date:this.value}); });
+  $('ivDesc').addEventListener('change',function(){ save({description:this.value}); });
+  $('ivStatus').addEventListener('change',function(){ var v=this.value; save({status:v}); var p=$('iPill'); if(p){ p.textContent=v; p.setAttribute('style', invStyle(v)+';margin-top:12px'); } });
+  $('ivPaid').onclick=async function(){ await save({status: inv.status==='Paid'?'Unpaid':'Paid'}); openInv(inv.id); };
+  $('ivDelete').onclick=async function(){ if(!confirm('Delete this invoice?'))return; await api('/api/invoices/delete',{method:'POST',body:JSON.stringify({id:inv.id})}); updateBadges(); go('invoices'); };
+  function renderIv(){ var w=$('ivPhotos'); w.innerHTML=(inv.photos||[]).map(function(p){ return '<div style="position:relative"><img src="/api/photo/'+esc(p.id)+'" style="width:110px;height:110px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block"><button data-delphoto="'+esc(p.id)+'" title="Remove" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line);color:#a8543a;cursor:pointer;line-height:1">×</button></div>'; }).join('') || '<span class="muted">No receipt attached yet.</span>'; w.querySelectorAll('[data-delphoto]').forEach(function(b){ b.onclick=async function(){ var pid=b.getAttribute('data-delphoto'); await api('/api/invoices/photo/delete',{method:'POST',body:JSON.stringify({id:inv.id,photoId:pid})}); inv.photos=(inv.photos||[]).filter(function(x){return x.id!==pid;}); renderIv(); }; }); }
+  $('ivPhotoBtn').onclick=function(){ $('ivPhotoInput').click(); };
+  $('ivPhotoInput').onchange=function(){ var f=this.files[0]; if(!f) return; var msg=$('ivPhotoMsg'); msg.textContent='Uploading…'; msg.className='msg'; var inp=this; resizeImage(f,async function(dataUrl){ if(!dataUrl){ msg.textContent='Could not read image.'; msg.className='msg err'; return; } var rr=await api('/api/invoices/photo',{method:'POST',body:JSON.stringify({id:inv.id,data:dataUrl})}); if(rr.status===200&&rr.body.photo){ inv.photos=inv.photos||[]; inv.photos.push(rr.body.photo); renderIv(); msg.textContent=''; } else { msg.textContent=(rr.body&&rr.body.error)||'Upload failed.'; msg.className='msg err'; } inp.value=''; }); };
+  renderIv();
+}
+
+/* ---- QUICK ADD ---- */
+function qaOpen(){ $('qaWrap').classList.add('open'); qaMenu(); }
+function qaClose(){ $('qaWrap').classList.remove('open'); }
+function qaMenu(){
+  $('qaTitle').textContent='Quick add'; $('qaSub').textContent='What do you want to add?';
+  var items=[['invoice','Invoice','Vendor bill or receipt'],['workorder','Work order','Maintenance job'],['reading','Meter reading','Water / electricity']];
+  if(ME&&ME.isAdmin){ items.push(['villa','Villa','New property']); items.push(['owner','Owner','Owner + login code']); }
+  $('qaBody').innerHTML='<div class="qpick">'+items.map(function(i){ return '<button data-qa="'+i[0]+'"><div class="qt">'+i[1]+'</div><div class="qd">'+i[2]+'</div></button>'; }).join('')+'</div>';
+  [].forEach.call($('qaBody').querySelectorAll('[data-qa]'), function(b){ b.onclick=function(){ qaForm(b.getAttribute('data-qa')); }; });
+}
+function qaForm(kind){
+  var vsel=function(id,all){ return '<label>Villa</label><select id="'+id+'">'+(all?'<option>All villas</option>':'')+VILLAS.map(function(v){ return '<option>'+esc(v)+'</option>'; }).join('')+'</select>'; };
+  var F={
+    invoice:{ t:'New invoice', s:'Logged straight to Invoices', html:
+      '<div class="row" style="margin-top:14px"><div style="flex:2"><label>Vendor</label><input id="qVendor" placeholder="e.g. Clima Caribe"/></div><div><label>Amount (RD$)</label><input id="qAmount" inputmode="decimal"/></div></div>'
+     +'<div class="row" style="margin-top:12px"><div>'+vsel('qVilla',true)+'</div><div><label>Status</label><select id="qStatus"><option>Unpaid</option><option>Approved</option><option>Paid</option></select></div></div>'
+     +'<div style="margin-top:12px"><label>Description</label><input id="qDesc" placeholder="optional"/></div>' },
+    workorder:{ t:'New work order', s:'Logged straight to Work orders', html:
+      '<div style="margin-top:14px"><label>Title</label><input id="qTitle" placeholder="e.g. Shower mixer dripping"/></div>'
+     +'<div class="row" style="margin-top:12px"><div>'+vsel('qVilla')+'</div><div><label>Vendor</label><input id="qVendor" placeholder="optional"/></div><div><label>Est. cost (RD$)</label><input id="qCost" inputmode="decimal" placeholder="optional"/></div></div>' },
+    reading:{ t:'New meter reading', s:'Logged straight to Meter readings', html:
+      '<div class="row" style="margin-top:14px"><div>'+vsel('qVilla')+'</div><div><label>Electricity (kWh)</label><input id="qElec" inputmode="decimal"/></div><div><label>Water (gal)</label><input id="qWater" inputmode="decimal"/></div></div>'
+     +'<div style="margin-top:12px"><label>Note</label><input id="qNote" placeholder="optional"/></div>' },
+    villa:{ t:'New villa', s:'Added to Properties', html:
+      '<div class="row" style="margin-top:14px"><div style="flex:2"><label>Villa name</label><input id="qName" placeholder="e.g. Villa Las Palmas 9"/></div><div style="flex:2"><label>Detail</label><input id="qMeta" placeholder="e.g. 5 bed · oceanfront"/></div></div>' },
+    owner:{ t:'New owner', s:'Gets a code for the owner app', html:
+      '<div class="row" style="margin-top:14px"><div><label>Owner name</label><input id="qName" placeholder="e.g. Sra. Aldrich"/></div><div><label>Last name (login)</label><input id="qLast" placeholder="e.g. Aldrich"/></div></div>'
+     +'<div class="row" style="margin-top:12px"><div>'+vsel('qVilla')+'</div><div><label>Login code</label><input id="qCode" placeholder="e.g. CDC-OWN-0012"/></div></div>' }
+  }[kind];
+  $('qaTitle').textContent=F.t; $('qaSub').textContent=F.s;
+  $('qaBody').innerHTML=F.html+'<div style="margin-top:16px;display:flex;gap:10px;align-items:center"><button class="primary" id="qSave">Save</button><button class="ghost" id="qBack">← All types</button></div><div id="qMsg" class="msg"></div>';
+  $('qBack').onclick=qaMenu;
+  $('qSave').onclick=async function(){
+    var msg=$('qMsg'); msg.textContent=''; msg.className='msg'; var ep, p;
+    if(kind==='invoice'){ ep='/api/invoices'; p={vendor:$('qVendor').value.trim(), amount:$('qAmount').value.trim(), villa:$('qVilla').value, status:$('qStatus').value, description:$('qDesc').value.trim()};
+      if(!p.vendor||!p.amount){ msg.textContent='Vendor and amount are required.'; msg.className='msg err'; return; } }
+    else if(kind==='workorder'){ ep='/api/workorders'; p={title:$('qTitle').value.trim(), villa:$('qVilla').value, vendor:$('qVendor').value.trim(), cost:$('qCost').value.trim()};
+      if(!p.title){ msg.textContent='Give it a title.'; msg.className='msg err'; return; } }
+    else if(kind==='reading'){ ep='/api/readings'; p={villa:$('qVilla').value, electricity_kwh:$('qElec').value.trim(), water_gal:$('qWater').value.trim(), note:$('qNote').value.trim()};
+      if(!p.electricity_kwh && !p.water_gal){ msg.textContent='Enter at least one reading.'; msg.className='msg err'; return; } }
+    else if(kind==='villa'){ ep='/api/properties'; p={name:$('qName').value.trim(), meta:$('qMeta').value.trim()};
+      if(!p.name){ msg.textContent='Enter a villa name.'; msg.className='msg err'; return; } }
+    else { ep='/api/owners'; p={name:$('qName').value.trim(), lastName:$('qLast').value.trim(), villa:$('qVilla').value, code:$('qCode').value.trim()};
+      if(!p.name||!p.code){ msg.textContent='Name and login code are required.'; msg.className='msg err'; return; } }
+    $('qSave').disabled=true; var r=await api(ep,{method:'POST',body:JSON.stringify(p)}); $('qSave').disabled=false;
+    if(r.status===200){
+      msg.textContent='Saved.'; msg.className='msg ok'; updateBadges();
+      if(kind==='villa'||kind==='owner'){ var pr=await api('/api/properties'); VILLAS=(pr.body.properties||[]).filter(function(x){return x.active!==false;}).map(function(x){return x.name;}); }
+      setTimeout(function(){ qaClose();
+        var dest={invoice:'invoices',workorder:'workorders',reading:'readings',villa:'manage',owner:'manage'}[kind];
+        go(dest);
+      }, 500);
+    } else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+  };
+}
+
 /* ---- VILLA PROFILE (opened from the dashboard villa table) ---- */
 async function viewVillaProfile(name){
   var main=$('main'); main.classList.remove('full'); VIEW='villa';
@@ -452,6 +631,10 @@ $('loginBtn').onclick = async function(){
 };
 $('loginCode').addEventListener('keydown',function(e){ if(e.key==='Enter') $('loginBtn').click(); });
 $('logout').onclick = async function(){ await api('/api/logout',{method:'POST'}); ME=null; document.body.classList.add('login-mode'); };
+$('quickAddBtn').onclick = qaOpen;
+$('qaClose').onclick = qaClose;
+$('qaWrap').addEventListener('mousedown', function(e){ if(e.target===this) qaClose(); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') qaClose(); });
 
 boot();
 (function(){ var v0=null; function chk(){ fetch('/api/version',{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){ if(v0===null){v0=d.v;} else if(d.v&&d.v!==v0){ $('cphUpdateBar').style.display='block'; } }).catch(function(){}); } chk(); setInterval(chk,60000); })();

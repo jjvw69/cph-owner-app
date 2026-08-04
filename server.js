@@ -79,6 +79,8 @@ function loadProperties(){
 function villaNames(){ return loadProperties().filter(p => p.active !== false).map(p => p.name); }
 function loadOwners(){ return loadStore('owners') || []; }
 const WO_STATUSES = ['Open','Quoting','Approved','Parts ordered','Scheduled','Done'];
+const INV_STATUSES = ['Unpaid','Approved','Paid','Disputed'];
+const INV_CHARGED  = ['Owner','Absorbed','Rental'];
 
 // ---- helpers ------------------------------------------------------------
 const TYPES = {
@@ -279,6 +281,72 @@ http.createServer(async (req, res) => {
   if(url === '/api/workorders/delete' && method === 'POST'){
     const { id } = await readBody(req);
     return sendJSON(res, saveStore('workorders',(loadStore('workorders')||[]).filter(r=>r.id!==id))?200:500, { ok:true });
+  }
+
+  // ---- invoices (any signed-in staff) ----
+  if(url === '/api/invoices' && method === 'GET'){
+    return sendJSON(res, 200, { invoices: loadStore('invoices')||[], statuses: INV_STATUSES, charged: INV_CHARGED });
+  }
+  if(url === '/api/invoices' && method === 'POST'){
+    const b = await readBody(req);
+    const vendor = String(b.vendor||'').trim();
+    if(!vendor) return sendJSON(res, 400, { error:'vendor required' });
+    const amount = num(b.amount);
+    if(amount == null || !isFinite(amount)) return sendJSON(res, 400, { error:'amount must be a number' });
+    const villa = String(b.villa||'').trim();
+    if(villa && villa !== 'All villas' && villaNames().indexOf(villa) < 0) return sendJSON(res, 400, { error:'unknown villa' });
+    const status  = INV_STATUSES.indexOf(b.status)  >= 0 ? b.status  : 'Unpaid';
+    const charged = INV_CHARGED.indexOf(b.charged)  >= 0 ? b.charged : 'Owner';
+    const rows = loadStore('invoices')||[];
+    const entry = { id:newId(), vendor, villa, amount, status, charged,
+      number:str(b.number,60), description:str(b.description,300),
+      date:str(b.date,20), due_date:str(b.due_date,20), photos:[],
+      created_by:user, created_ts:new Date().toISOString(), updated_by:user, updated_ts:new Date().toISOString() };
+    rows.unshift(entry);
+    return sendJSON(res, saveStore('invoices',rows)?200:500, { ok:true, entry });
+  }
+  if(url === '/api/invoices/update' && method === 'POST'){
+    const b = await readBody(req);
+    const rows = loadStore('invoices')||[]; const inv = rows.find(x=>x.id===b.id);
+    if(!inv) return sendJSON(res, 404, { error:'not found' });
+    if(b.status  != null){ if(INV_STATUSES.indexOf(b.status) < 0) return sendJSON(res,400,{error:'unknown status'}); inv.status = b.status; }
+    if(b.charged != null){ if(INV_CHARGED.indexOf(b.charged) < 0) return sendJSON(res,400,{error:'unknown charge type'}); inv.charged = b.charged; }
+    if(b.vendor != null && String(b.vendor).trim()) inv.vendor = String(b.vendor).trim();
+    if(b.villa != null){ const v=String(b.villa).trim(); if(v && v!=='All villas' && villaNames().indexOf(v)<0) return sendJSON(res,400,{error:'unknown villa'}); inv.villa = v; }
+    if(b.amount !== undefined){ const a=num(b.amount); if(a!=null && !isFinite(a)) return sendJSON(res,400,{error:'amount must be a number'}); inv.amount=a; }
+    if(b.number != null) inv.number = str(b.number,60);
+    if(b.description != null) inv.description = str(b.description,300);
+    if(b.date != null) inv.date = str(b.date,20);
+    if(b.due_date != null) inv.due_date = str(b.due_date,20);
+    inv.updated_by = user; inv.updated_ts = new Date().toISOString();
+    return sendJSON(res, saveStore('invoices',rows)?200:500, { ok:true, entry:inv });
+  }
+  if(url === '/api/invoices/delete' && method === 'POST'){
+    const { id } = await readBody(req);
+    return sendJSON(res, saveStore('invoices',(loadStore('invoices')||[]).filter(r=>r.id!==id))?200:500, { ok:true });
+  }
+  if(url === '/api/invoices/photo' && method === 'POST'){
+    const b = await readBody(req);
+    const rows = loadStore('invoices')||[]; const inv = rows.find(x=>x.id===b.id);
+    if(!inv) return sendJSON(res, 404, { error:'not found' });
+    const m = /^data:image\/[a-z+]+;base64,(.+)$/i.exec(String(b.data||''));
+    if(!m) return sendJSON(res, 400, { error:'invalid image' });
+    const buf = Buffer.from(m[1], 'base64');
+    if(buf.length > 4*1024*1024) return sendJSON(res, 400, { error:'image too large' });
+    const pid = newId();
+    try { fs.writeFileSync(path.join(PHOTO_DIR, pid + '.jpg'), buf); } catch(e){ return sendJSON(res, 500, { error:'could not save image' }); }
+    const photo = { id:pid, by:user, ts:new Date().toISOString() };
+    inv.photos = inv.photos || []; inv.photos.push(photo);
+    inv.updated_by = user; inv.updated_ts = new Date().toISOString();
+    return sendJSON(res, saveStore('invoices',rows)?200:500, { ok:true, photo });
+  }
+  if(url === '/api/invoices/photo/delete' && method === 'POST'){
+    const b = await readBody(req);
+    const rows = loadStore('invoices')||[]; const inv = rows.find(x=>x.id===b.id);
+    if(!inv) return sendJSON(res, 404, { error:'not found' });
+    inv.photos = (inv.photos||[]).filter(p=>p.id!==b.photoId);
+    try { fs.unlinkSync(path.join(PHOTO_DIR, String(b.photoId||'').replace(/[^a-z0-9]/gi,'') + '.jpg')); } catch(e){}
+    return sendJSON(res, saveStore('invoices',rows)?200:500, { ok:true });
   }
 
   // ---- properties (admin) ----
