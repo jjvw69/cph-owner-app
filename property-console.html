@@ -948,8 +948,21 @@ class Component extends DCLogic {
 <script>
 (function(){
   var MAP={overview:"Overview",utilities:"Utilities",labour:"Labour & hours",maintenance:"Maintenance",quotes:"Quotes",payments:"Payments",statement:"Owner statement",field:"Field app"};
-  function findNav(lbl){ var all=document.querySelectorAll("span,button,a,div,li"); return [].find.call(all,function(e){ return e.children.length<=1 && (e.textContent||"").trim().replace(/\s+/g," ")===lbl; }); }
-  function apply(){ var key=(location.hash||"").replace("#","").toLowerCase(); var lbl=MAP[key]; if(!lbl) return; var el=findNav(lbl); if(el){ var n=el; for(var i=0;i<4&&n;i++){ try{n.click();}catch(e){} n=n.parentElement; } } }
+  /* The sidebar rows are: <div onClick><span dot/><span label/><span badge/></div>.
+     Match the LABEL span exactly, then click its parent row. Matching whole-row
+     text fails on rows that carry a badge number (Maintenance, Quotes, Payments). */
+  function findNav(lbl){
+    var spans=document.querySelectorAll("aside span");
+    for(var i=0;i<spans.length;i++){
+      var s=spans[i];
+      if(s.children.length===0 && (s.textContent||"").trim().replace(/\s+/g," ")===lbl){
+        var row=s.parentElement;
+        if(row && row.children.length>=2) return row;
+      }
+    }
+    return null;
+  }
+  function apply(){ var key=(location.hash||"").replace("#","").toLowerCase(); var lbl=MAP[key]; if(!lbl) return; var el=findNav(lbl); if(el){ try{ el.click(); }catch(e){} } }
   if(window.self!==window.top){ var st=document.createElement("style"); st.textContent="aside{display:none!important}"; document.documentElement.appendChild(st); }
   window.addEventListener("hashchange", apply);
   setTimeout(apply,700); setTimeout(apply,1500);

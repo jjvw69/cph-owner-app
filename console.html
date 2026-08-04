@@ -44,11 +44,12 @@
   .nav > button[aria-current="true"]{ background:#f3efe9; color:#211e1a; }
   .nav > button .badge{ font-size:11px; background:rgba(255,255,255,.14); color:#e9e4da; border-radius:20px; padding:1px 8px; }
   .nav > button[aria-current="true"] .badge{ background:#e0dccf; color:#5a544a; }
-  .submenu{ display:none; flex-direction:column; gap:1px; margin:2px 0 6px 14px; padding-left:10px; border-left:1px solid rgba(255,255,255,.1); }
+  .navgroup{ font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; color:#8b857a; padding:12px 12px 6px; }
+  .submenu{ display:none; flex-direction:column; gap:1px; margin:0 0 8px 8px; padding-left:10px; border-left:1px solid rgba(255,255,255,.1); }
   .submenu.open{ display:flex; }
-  .submenu button{ text-align:left; background:none; border:0; color:#a8a196; font:inherit; font-size:14px; padding:7px 10px; border-radius:8px; cursor:pointer; }
+  .submenu button{ text-align:left; background:none; border:0; color:#a8a196; font:inherit; font-size:14px; padding:8px 11px; border-radius:8px; cursor:pointer; }
   .submenu button:hover{ background:rgba(255,255,255,.06); color:#e3ded4; }
-  .submenu button[aria-current="true"]{ color:#fff; font-weight:500; }
+  .submenu button[aria-current="true"]{ background:rgba(255,255,255,.10); color:#fff; font-weight:500; }
   .sidefoot{ margin-top:auto; padding-top:16px; font-size:13px; color:#8f887d; }
   .sidefoot button{ background:none; border:1px solid rgba(255,255,255,.16); color:#cfc9bf; border-radius:8px; padding:7px 12px; font-size:13px; cursor:pointer; margin-top:8px; }
 
@@ -129,7 +130,7 @@
       <div><div class="bt">Property Console</div><div class="bs">Caribbean Paradise Homes</div></div>
     </div>
     <nav class="nav" id="nav">
-      <button data-view="dashboard" aria-current="true">Dashboard</button>
+      <div class="navgroup">Dashboard</div>
       <div class="submenu open" id="dashSub">
         <button data-dash="overview" aria-current="true">Overview</button>
         <button data-dash="utilities">Utilities</button>
@@ -198,12 +199,17 @@ window.addEventListener('message', function(e){
   var d=e.data; if(d && d.type==='cph-open-villa' && d.villa){ viewVillaProfile(String(d.villa)); }
 });
 function openDash(section){
+  var changedView = (VIEW!=='dashboard');
   DASH_SECTION=section;
   var sub=$('dashSub'); if(sub){ [].forEach.call(sub.children,function(x){ x.setAttribute('aria-current', x.getAttribute('data-dash')===section?'true':'false'); }); }
-  if(VIEW!=='dashboard'){ go('dashboard'); return; }
+  if(changedView){ go('dashboard'); return; }   // fresh iframe already opens on #section
   var ifr=$('dashFrame');
-  if(ifr && ifr.contentWindow){ try{ ifr.contentWindow.location.hash=section; }catch(e){ ifr.src='/property-console#'+section; } }
-  else { go('dashboard'); }
+  if(!ifr){ go('dashboard'); return; }
+  try{
+    // set the hash AND re-trigger, so repeat clicks on the same section still work
+    ifr.contentWindow.location.hash=section;
+    if(ifr.contentWindow.dispatchEvent) ifr.contentWindow.dispatchEvent(new ifr.contentWindow.Event('hashchange'));
+  }catch(e){ ifr.src='/property-console#'+section; }
 }
 function resizeImage(file, cb){ var img=new Image(), url=URL.createObjectURL(file); img.onload=function(){ URL.revokeObjectURL(url); var max=1100,w=img.width,h=img.height; if(w>h&&w>max){h=Math.round(h*max/w);w=max;} else if(h>max){w=Math.round(w*max/h);h=max;} var c=document.createElement('canvas'); c.width=w;c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); cb(c.toDataURL('image/jpeg',0.6)); }; img.onerror=function(){ cb(null); }; img.src=url; }
 function go(view){
@@ -211,7 +217,9 @@ function go(view){
   VIEW = view;
   [].forEach.call($('nav').querySelectorAll('button[data-view]'), function(b){ b.setAttribute('aria-current', b.getAttribute('data-view')===view ? 'true':'false'); });
   $('main').classList.toggle('full', view==='dashboard');
-  var sub=$('dashSub'); if(sub) sub.classList.toggle('open', view==='dashboard');
+  /* Dashboard sections live in the submenu; highlight one only while on the dashboard */
+  var sub=$('dashSub');
+  if(sub){ [].forEach.call(sub.children, function(x){ x.setAttribute('aria-current', (view==='dashboard' && x.getAttribute('data-dash')===DASH_SECTION) ? 'true':'false'); }); }
   ({dashboard:viewDashboard, overview:viewOverview, readings:viewReadings, workorders:viewWorkorders, manage:viewManage}[view] || viewDashboard)();
 }
 function viewDashboard(){ $('main').innerHTML = '<iframe id="dashFrame" title="Caribbean Paradise Homes Dashboard" src="/property-console#'+DASH_SECTION+'" style="display:block;width:100%;height:100vh;border:0;background:#f3efe9"></iframe>'; }
@@ -356,8 +364,9 @@ function viewWODetail(wo){
 
 /* ---- VILLA PROFILE (opened from the dashboard villa table) ---- */
 async function viewVillaProfile(name){
-  var main=$('main'); main.classList.remove('full');
-  var sub=$('dashSub'); if(sub) sub.classList.remove('open');
+  var main=$('main'); main.classList.remove('full'); VIEW='villa';
+  [].forEach.call($('nav').querySelectorAll('button[data-view]'), function(b){ b.setAttribute('aria-current','false'); });
+  var sub=$('dashSub'); if(sub){ [].forEach.call(sub.children, function(x){ x.setAttribute('aria-current','false'); }); }
   main.innerHTML='<div class="empty">Loading…</div>';
   var pr=await api('/api/properties'); var props=pr.body.properties||[];
   var prop=props.find(function(p){ return String(p.name).toLowerCase()===name.toLowerCase(); });
