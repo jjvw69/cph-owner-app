@@ -166,6 +166,11 @@ function rd(n){ return n==null ? '—' : 'RD$'+Number(n).toLocaleString('en-US')
 function when(iso){ try{ return new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return iso; } }
 async function api(p,o){ var r=await fetch(p,Object.assign({headers:{'Content-Type':'application/json'}},o||{})); var b={}; try{b=await r.json();}catch(e){} return {status:r.status,body:b}; }
 function fillSelect(sel,arr,ph){ sel.innerHTML=''; if(ph){var o0=document.createElement('option');o0.value='';o0.textContent=ph;sel.appendChild(o0);} arr.forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}); }
+/* month-over-month deltas */
+function monthKey(iso){ var d=new Date(iso); return isNaN(d)?null:(d.getFullYear()*12+d.getMonth()); }
+function monthDelta(items,field){ var now=new Date(); var cm=now.getFullYear()*12+now.getMonth(); var c=0,p=0; (items||[]).forEach(function(x){ var k=monthKey(x[field]); if(k===cm)c++; else if(k===cm-1)p++; }); return {now:c,prev:p,delta:c-p}; }
+function deltaHtml(d){ if(!d) return ''; if(d.delta>0) return '<span style="color:#4a5a3c;font-size:12.5px">▲ '+d.delta+' vs last month</span>'; if(d.delta<0) return '<span style="color:#a8543a;font-size:12.5px">▼ '+Math.abs(d.delta)+' vs last month</span>'; return '<span style="color:#a09a8f;font-size:12.5px">'+(d.now?'no change vs last month':'—')+'</span>'; }
+function deltaInline(d){ if(!d) return ''; if(d.delta>0) return ' · <span style="color:#4a5a3c">▲ '+d.delta+' this month</span>'; if(d.delta<0) return ' · <span style="color:#a8543a">▼ '+Math.abs(d.delta)+' vs last month</span>'; return ''; }
 
 /* ---- boot / auth ---- */
 async function boot(){
@@ -227,7 +232,7 @@ async function viewOverview(){
 /* ---- METER READINGS ---- */
 function viewReadings(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Meter readings</h1><div class="sub">Water &amp; electricity per villa · shared log</div></div>'
+  m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Meter readings</h1><div class="sub">Water &amp; electricity per villa · shared log <span id="rdSum"></span></div></div>'
    +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Submit a reading</h2>'
    +'<div class="row"><div><label>Villa</label><select id="rVilla"></select></div><div><label>Electricity (kWh)</label><input id="rElec" inputmode="decimal" placeholder="e.g. 9120"/></div><div><label>Water (gallons)</label><input id="rWater" inputmode="decimal" placeholder="e.g. 31400"/></div></div>'
    +'<div style="margin-top:12px"><label>Note (optional)</label><textarea id="rNote" placeholder="Anything worth flagging"></textarea></div>'
@@ -247,6 +252,7 @@ function viewReadings(){
 async function loadReadings(){
   var wrap=$('rList'); wrap.innerHTML='<div class="empty">Loading…</div>';
   var r=await api('/api/readings'); var rows=r.body.readings||[];
+  var sumEl=$('rdSum'); if(sumEl){ sumEl.innerHTML='· '+rows.length+' logged'+deltaInline(monthDelta(rows,'ts')); }
   if(!rows.length){ wrap.innerHTML='<div class="empty">No readings yet.</div>'; return; }
   wrap.innerHTML='<table><thead><tr><th>Villa</th><th style="text-align:right">Electricity</th><th style="text-align:right">Water</th><th>Note</th><th>By</th><th>When</th><th></th></tr></thead><tbody>'
     +rows.map(function(x){ return '<tr><td>'+esc(x.villa)+'</td><td class="num">'+(x.electricity_kwh==null?'—':nfmt(x.electricity_kwh)+' <span style="color:#a09a8f">kWh</span>')+'</td><td class="num">'+(x.water_gal==null?'—':nfmt(x.water_gal)+' <span style="color:#a09a8f">gal</span>')+'</td><td>'+esc(x.note||'')+'</td><td><span class="pill">'+esc(cap(x.user))+'</span></td><td style="color:#6e6862">'+esc(when(x.ts))+'</td><td><button class="link" data-del="'+esc(x.id)+'">Delete</button></td></tr>'; }).join('')
@@ -257,7 +263,7 @@ async function loadReadings(){
 /* ---- WORK ORDERS ---- */
 function viewWorkorders(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Work orders</h1><div class="sub">Maintenance across the villas · shared</div></div>'
+  m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Work orders</h1><div class="sub">Maintenance across the villas · shared <span id="woSum"></span></div></div>'
    +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">New work order</h2>'
    +'<div class="row"><div style="flex:2"><label>Title</label><input id="wTitle" placeholder="e.g. Master bath shower mixer dripping"/></div><div><label>Villa</label><select id="wVilla"></select></div></div>'
    +'<div class="row" style="margin-top:12px"><div><label>Vendor</label><input id="wVendor" placeholder="e.g. Clima Caribe"/></div><div><label>Est. cost (RD$)</label><input id="wCost" inputmode="decimal" placeholder="optional"/></div><div><label>Status</label><select id="wStatus"></select></div></div>'
@@ -283,6 +289,7 @@ function viewWorkorders(){
 async function loadWorkorders(){
   var wrap=$('wList'); wrap.innerHTML='<div class="empty">Loading…</div>';
   var r=await api('/api/workorders'); var rows=r.body.workorders||[];
+  var allWo=r.body.workorders||[]; var sumEl=$('woSum'); if(sumEl){ sumEl.innerHTML='· '+allWo.filter(function(x){return x.status!=='Done';}).length+' open'+deltaInline(monthDelta(allWo,'created_ts')); }
   if(WO_FILTER==='open') rows=rows.filter(function(x){return x.status!=='Done';});
   else if(WO_FILTER==='done') rows=rows.filter(function(x){return x.status==='Done';});
   if(!rows.length){ wrap.innerHTML='<div class="empty">Nothing here.</div>'; return; }
@@ -362,6 +369,7 @@ async function viewVillaProfile(name){
   var area=(prop&&prop.area) || (function(){ var s=name.replace(/^villa\s+/i,'').replace(/\s+\d+\s*$/,'').trim(); return s?s+' · Casa de Campo':'Casa de Campo'; })();
   var openWos=wos.filter(function(x){ return x.status!=='Done'; });
   var nPhotos=(prop&&prop.photos||[]).length;
+  var woDelta=monthDelta(wos,'created_ts'), rdDelta=monthDelta(reads,'ts');
   main.innerHTML =
     '<button class="backlink" id="vpBack">← Dashboard</button>'
    +'<div class="head" style="margin-top:8px"><div class="eyebrow">Property profile</div><h1>'+esc(name)+'</h1>'
@@ -369,8 +377,8 @@ async function viewVillaProfile(name){
        + detailChips.map(function(c){ return '<span class="chip" style="cursor:default">'+esc(c)+'</span>'; }).join('')
      +'</div></div>'
    +'<div class="stats" style="margin-top:16px">'
-     +'<div class="stat"><div class="k">Open work orders</div><div class="v">'+openWos.length+'</div></div>'
-     +'<div class="stat"><div class="k">Readings logged</div><div class="v">'+reads.length+'</div></div>'
+     +'<div class="stat"><div class="k">Open work orders</div><div class="v">'+openWos.length+'</div><div style="margin-top:5px">'+deltaHtml(woDelta)+'</div></div>'
+     +'<div class="stat"><div class="k">Readings logged</div><div class="v">'+reads.length+'</div><div style="margin-top:5px">'+deltaHtml(rdDelta)+'</div></div>'
      +'<div class="stat"><div class="k">Photos</div><div class="v">'+nPhotos+'</div></div>'
    +'</div>'
    +'<div class="card"><label>Photos</label><div id="vpPhotos" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px"></div>'
