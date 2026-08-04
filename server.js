@@ -87,12 +87,12 @@ const TYPES = {
 };
 const PAGES = {
   '/':'owner.html', '/owner':'owner.html',
+  '/console':'console.html',
   '/property-console':'property-console.html',
-  '/owner-design':'owner-design.html',
-  '/readings':'readings.html',
-  '/work-orders':'work-orders.html',
-  '/manage':'manage.html'
+  '/owner-design':'owner-design.html'
 };
+// Old standalone tools now live as sections inside /console.
+const REDIRECTS = { '/readings':'/console', '/work-orders':'/console', '/manage':'/console' };
 const STATIC_WHITELIST = new Set(['support.js','doc-page.js','ios-frame.jsx','cph-logo.png']);
 
 function sendFile(res, file){
@@ -286,6 +286,7 @@ http.createServer(async (req, res) => {
   }
 
   // ---- pages & static ----
+  if(REDIRECTS[url]){ res.writeHead(302, { 'Location': REDIRECTS[url] }); return res.end(); }
   if(PAGES[url]) return sendFile(res, PAGES[url]);
   const name = url.replace(/^\/+/, '');
   if(STATIC_WHITELIST.has(name)) return sendFile(res, name);

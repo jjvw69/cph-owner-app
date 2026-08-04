@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Property Console · Caribbean Paradise Homes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&display=swap" rel="stylesheet" />
+<style>
+  :root{ --ink:#2b2723; --soft:#6e6862; --faint:#a09a8f; --line:#e7e1d8; --bg:#f3efe9;
+         --card:#fff; --green:#4a5a3c; --greenbg:#edf0e7; --red:#a8543a; --redbg:#f6e9e3;
+         --amber:#8a6a1f; --amberbg:#f5efdf; --blue:#2f4a5a; --bluebg:#e9eef2;
+         --sidebar:#211e1a; --sidetext:#cfc9bf; --btn:#2f7d4f; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; height:100%; }
+  body{ background:var(--bg); color:var(--ink);
+        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  h1,h2,.serif{ font-family:Newsreader,Georgia,serif; font-weight:400; }
+  a{ color:var(--green); text-decoration:none; }
+
+  /* login */
+  .loginScreen{ display:none; position:fixed; inset:0; background:#1c3550; align-items:flex-start; justify-content:center; padding:9vh 20px; z-index:100; }
+  body.login-mode .loginScreen{ display:flex; } body.login-mode .shell{ display:none; }
+  .loginBox{ width:100%; max-width:400px; background:#ecece6; border-radius:16px; padding:30px 28px; box-shadow:0 24px 60px rgba(0,0,0,.4); text-align:center; }
+  .loginBox img{ width:60px; height:auto; margin:0 auto 12px; display:block; }
+  .loginBox .lbrand{ letter-spacing:.2em; font-size:12px; color:#6e6862; text-transform:uppercase; }
+  .loginBox h2{ font-size:26px; font-weight:700; margin:6px 0 2px; color:#22201c; }
+  .loginBox .lsub{ color:#6e6862; font-size:14px; margin-bottom:16px; }
+  .loginBox .lfield{ text-align:left; margin-top:12px; }
+  .loginBox .signin{ width:100%; background:var(--btn); color:#fff; border:0; border-radius:10px; padding:13px; font-size:15px; margin-top:16px; cursor:pointer; }
+  .loginBox .lfoot{ color:#8a8378; font-size:12px; margin-top:14px; }
+
+  /* shell */
+  .shell{ display:flex; min-height:100vh; }
+  .sidebar{ width:250px; flex:0 0 250px; background:var(--sidebar); color:var(--sidetext); padding:22px 16px; display:flex; flex-direction:column; }
+  .sidebar .brand{ display:flex; align-items:center; gap:12px; padding:0 6px 8px; }
+  .sidebar .brand img{ width:42px; height:auto; }
+  .sidebar .brand .bt{ font-family:Newsreader,Georgia,serif; font-size:18px; color:#fff; line-height:1.1; }
+  .sidebar .brand .bs{ font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:#8f887d; margin-top:2px; }
+  .nav{ margin-top:18px; display:flex; flex-direction:column; gap:2px; }
+  .nav button{ text-align:left; background:none; border:0; color:var(--sidetext); font:inherit; font-size:15px; padding:10px 12px; border-radius:9px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+  .nav button:hover{ background:rgba(255,255,255,.06); }
+  .nav button[aria-current="true"]{ background:#f3efe9; color:#211e1a; }
+  .nav .badge{ font-size:11px; background:rgba(255,255,255,.14); color:#e9e4da; border-radius:20px; padding:1px 8px; }
+  .nav button[aria-current="true"] .badge{ background:#e0dccf; color:#5a544a; }
+  .sidefoot{ margin-top:auto; padding-top:16px; font-size:13px; color:#8f887d; }
+  .sidefoot button{ background:none; border:1px solid rgba(255,255,255,.16); color:#cfc9bf; border-radius:8px; padding:7px 12px; font-size:13px; cursor:pointer; margin-top:8px; }
+
+  .main{ flex:1; padding:30px 34px 70px; max-width:1050px; }
+  .head{ margin-bottom:6px; }
+  .eyebrow{ letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--soft); }
+  h1{ font-size:30px; margin:4px 0 2px; }
+  .sub{ color:var(--soft); font-size:14px; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-top:18px; }
+  label{ display:block; font-size:12px; color:var(--soft); text-transform:uppercase; letter-spacing:.06em; margin:0 0 6px; }
+  input,select,textarea{ width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:9px; font-size:15px; background:#fff; color:var(--ink); font-family:inherit; }
+  textarea{ resize:vertical; min-height:44px; }
+  .row{ display:flex; gap:14px; flex-wrap:wrap; } .row>div{ flex:1; min-width:150px; }
+  button.primary{ background:var(--ink); color:#fff; border:0; border-radius:10px; padding:12px 18px; font-size:15px; cursor:pointer; font-family:inherit; }
+  button.ghost{ background:transparent; color:var(--soft); border:1px solid var(--line); padding:7px 12px; font-size:13px; border-radius:8px; cursor:pointer; }
+  button.link{ background:none; border:0; color:var(--red); padding:4px; font-size:13px; cursor:pointer; }
+  button:disabled{ opacity:.5; cursor:default; }
+  .msg{ margin-top:12px; font-size:14px; } .msg.ok{ color:var(--green); } .msg.err{ color:var(--red); }
+  table{ width:100%; border-collapse:collapse; margin-top:6px; font-size:14px; }
+  th{ text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); border-bottom:1px solid var(--line); padding:8px; font-weight:400; }
+  td{ padding:11px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.num{ text-align:right; font-variant-numeric:tabular-nums; }
+  .pill{ display:inline-block; font-size:11px; padding:2px 8px; border-radius:20px; background:var(--greenbg); color:var(--green); }
+  .pill.off{ background:#eee7dd; color:#8a8378; }
+  .muted{ color:var(--faint); font-size:12px; margin-top:2px; }
+  .empty{ color:var(--faint); padding:16px 8px; }
+  code.tag{ background:var(--greenbg); color:#3a6b2c; padding:2px 8px; border-radius:6px; font-size:13px; }
+  .stats{ display:flex; gap:14px; flex-wrap:wrap; }
+  .stat{ flex:1; min-width:150px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; }
+  .stat .k{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--soft); }
+  .stat .v{ font-family:Newsreader,Georgia,serif; font-size:30px; margin-top:4px; }
+  .hidden{ display:none; }
+  @media (max-width:760px){ .shell{ flex-direction:column; } .sidebar{ width:auto; flex:none; flex-direction:row; flex-wrap:wrap; align-items:center; } .nav{ flex-direction:row; flex-wrap:wrap; margin-top:10px; } .sidefoot{ margin:0 0 0 auto; } .main{ padding:20px; } }
+</style>
+</head>
+<body class="login-mode">
+
+<!-- LOGIN -->
+<div class="loginScreen">
+  <div class="loginBox">
+    <img src="/cph-logo.png" alt="Caribbean Paradise Homes" />
+    <div class="lbrand">Caribbean Paradise Homes</div>
+    <h2>Property Console</h2>
+    <div class="lsub">Staff sign-in</div>
+    <div class="lfield"><label>Name</label>
+      <select id="loginName"><option value="">Choose…</option><option value="ivonna">Ivonna</option><option value="jan">Jan</option><option value="maria">Maria</option></select>
+    </div>
+    <div class="lfield"><label>Access code</label>
+      <input id="loginCode" type="password" autocomplete="off" placeholder="••••••" />
+    </div>
+    <button class="signin" id="loginBtn">Sign in</button>
+    <div id="loginMsg" class="msg"></div>
+    <div class="lfoot">Authorized staff only.</div>
+  </div>
+</div>
+
+<!-- SHELL -->
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="/cph-logo.png" alt="CPH" />
+      <div><div class="bt">Property Console</div><div class="bs">Caribbean Paradise Homes</div></div>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-view="overview" aria-current="true">Overview</button>
+      <button data-view="readings">Meter readings</button>
+      <button data-view="workorders">Work orders <span class="badge" id="woBadge"></span></button>
+      <button data-view="manage" id="navManage">Manage</button>
+    </nav>
+    <div class="sidefoot">
+      <div id="whoName"></div>
+      <a href="/property-console" style="color:#cfc9bf;font-size:13px;display:inline-block;margin-top:8px;">Portfolio report →</a><br>
+      <button id="logout">Log out</button>
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<div id="cphUpdateBar" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#211e1a;color:#fff;padding:12px 16px;text-align:center;font-size:14px;z-index:9999;box-shadow:0 -2px 12px rgba(0,0,0,.15)">A new version of the console is available.<button onclick="location.reload(true)" style="margin-left:12px;background:#2f7d4f;color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:14px;">Reload</button></div>
+
+<script>
+var $ = function(id){ return document.getElementById(id); };
+var ME = null, VILLAS = [], STATUSES = [], VIEW = 'overview';
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
+function nfmt(n){ return n==null ? '—' : Number(n).toLocaleString('en-US'); }
+function rd(n){ return n==null ? '—' : 'RD$'+Number(n).toLocaleString('en-US'); }
+function when(iso){ try{ return new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return iso; } }
+async function api(p,o){ var r=await fetch(p,Object.assign({headers:{'Content-Type':'application/json'}},o||{})); var b={}; try{b=await r.json();}catch(e){} return {status:r.status,body:b}; }
+function fillSelect(sel,arr,ph){ sel.innerHTML=''; if(ph){var o0=document.createElement('option');o0.value='';o0.textContent=ph;sel.appendChild(o0);} arr.forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}); }
+
+/* ---- boot / auth ---- */
+async function boot(){
+  var me = await api('/api/me');
+  if(me.status !== 200){ document.body.classList.add('login-mode'); return; }
+  ME = me.body; VILLAS = me.body.villas || []; STATUSES = me.body.wo_statuses || [];
+  document.body.classList.remove('login-mode');
+  $('whoName').textContent = 'Signed in as ' + cap(ME.user);
+  $('navManage').style.display = ME.isAdmin ? '' : 'none';
+  updateBadges();
+  go(VIEW);
+}
+async function updateBadges(){
+  try{ var w = await api('/api/workorders'); var open=(w.body.workorders||[]).filter(function(x){return x.status!=='Done';}).length; $('woBadge').textContent = open || ''; }catch(e){}
+}
+
+/* ---- nav ---- */
+$('nav').addEventListener('click', function(e){ var b=e.target.closest('button[data-view]'); if(b) go(b.getAttribute('data-view')); });
+function go(view){
+  if(view==='manage' && (!ME || !ME.isAdmin)) view='overview';
+  VIEW = view;
+  [].forEach.call($('nav').querySelectorAll('button[data-view]'), function(b){ b.setAttribute('aria-current', b.getAttribute('data-view')===view ? 'true':'false'); });
+  ({overview:viewOverview, readings:viewReadings, workorders:viewWorkorders, manage:viewManage}[view] || viewOverview)();
+}
+
+/* ---- OVERVIEW ---- */
+async function viewOverview(){
+  var m=$('main'); m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Where things stand</h1><div class="sub">Estate operations · '+VILLAS.length+' villas</div></div><div class="stats" id="ovStats"></div><div class="card"><h2 style="margin:0 0 4px;font-size:19px">Open work orders</h2><div id="ovWo"></div></div><div class="card"><h2 style="margin:0 0 4px;font-size:19px">Recent meter readings</h2><div id="ovRd"></div></div>';
+  var r = await api('/api/readings'); var w = await api('/api/workorders');
+  var reads=r.body.readings||[]; var wos=w.body.workorders||[]; var open=wos.filter(function(x){return x.status!=='Done';});
+  $('ovStats').innerHTML =
+    '<div class="stat"><div class="k">Villas</div><div class="v">'+VILLAS.length+'</div></div>'+
+    '<div class="stat"><div class="k">Readings logged</div><div class="v">'+reads.length+'</div></div>'+
+    '<div class="stat"><div class="k">Open work orders</div><div class="v">'+open.length+'</div></div>';
+  $('ovWo').innerHTML = open.length ? '<table><tbody>'+open.slice(0,6).map(function(x){ return '<tr><td style="font-weight:500">'+esc(x.title)+'<div class="muted">'+esc(x.villa)+'</div></td><td class="num">'+rd(x.cost)+'</td><td><span class="pill">'+esc(x.status)+'</span></td></tr>'; }).join('')+'</tbody></table>' : '<div class="empty">No open work orders.</div>';
+  $('ovRd').innerHTML = reads.length ? '<table><tbody>'+reads.slice(0,6).map(function(x){ return '<tr><td>'+esc(x.villa)+'</td><td class="num">'+(x.electricity_kwh==null?'—':nfmt(x.electricity_kwh)+' kWh')+'</td><td class="num">'+(x.water_gal==null?'—':nfmt(x.water_gal)+' gal')+'</td><td class="muted">'+esc(when(x.ts))+'</td></tr>'; }).join('')+'</tbody></table>' : '<div class="empty">No readings yet.</div>';
+}
+
+/* ---- METER READINGS ---- */
+function viewReadings(){
+  var m=$('main');
+  m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Meter readings</h1><div class="sub">Water &amp; electricity per villa · shared log</div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Submit a reading</h2>'
+   +'<div class="row"><div><label>Villa</label><select id="rVilla"></select></div><div><label>Electricity (kWh)</label><input id="rElec" inputmode="decimal" placeholder="e.g. 9120"/></div><div><label>Water (gallons)</label><input id="rWater" inputmode="decimal" placeholder="e.g. 31400"/></div></div>'
+   +'<div style="margin-top:12px"><label>Note (optional)</label><textarea id="rNote" placeholder="Anything worth flagging"></textarea></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="rSave">Save reading</button></div><div id="rMsg" class="msg"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Reading log</h2><div id="rList"></div></div>';
+  fillSelect($('rVilla'), VILLAS);
+  $('rSave').onclick = async function(){
+    var msg=$('rMsg'); msg.textContent=''; msg.className='msg';
+    var p={villa:$('rVilla').value, electricity_kwh:$('rElec').value.trim(), water_gal:$('rWater').value.trim(), note:$('rNote').value.trim()};
+    if(!p.electricity_kwh && !p.water_gal){ msg.textContent='Enter at least one reading.'; msg.className='msg err'; return; }
+    $('rSave').disabled=true; var r=await api('/api/readings',{method:'POST',body:JSON.stringify(p)}); $('rSave').disabled=false;
+    if(r.status===200){ msg.textContent='Saved.'; msg.className='msg ok'; $('rElec').value='';$('rWater').value='';$('rNote').value=''; loadReadings(); }
+    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+  };
+  loadReadings();
+}
+async function loadReadings(){
+  var wrap=$('rList'); wrap.innerHTML='<div class="empty">Loading…</div>';
+  var r=await api('/api/readings'); var rows=r.body.readings||[];
+  if(!rows.length){ wrap.innerHTML='<div class="empty">No readings yet.</div>'; return; }
+  wrap.innerHTML='<table><thead><tr><th>Villa</th><th style="text-align:right">Electricity</th><th style="text-align:right">Water</th><th>Note</th><th>By</th><th>When</th><th></th></tr></thead><tbody>'
+    +rows.map(function(x){ return '<tr><td>'+esc(x.villa)+'</td><td class="num">'+(x.electricity_kwh==null?'—':nfmt(x.electricity_kwh)+' <span style="color:#a09a8f">kWh</span>')+'</td><td class="num">'+(x.water_gal==null?'—':nfmt(x.water_gal)+' <span style="color:#a09a8f">gal</span>')+'</td><td>'+esc(x.note||'')+'</td><td><span class="pill">'+esc(cap(x.user))+'</span></td><td style="color:#6e6862">'+esc(when(x.ts))+'</td><td><button class="link" data-del="'+esc(x.id)+'">Delete</button></td></tr>'; }).join('')
+    +'</tbody></table>';
+  wrap.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this reading?'))return; await api('/api/readings/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-del')})}); loadReadings(); }; });
+}
+
+/* ---- WORK ORDERS ---- */
+function viewWorkorders(){
+  var m=$('main');
+  m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Work orders</h1><div class="sub">Maintenance across the villas · shared</div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">New work order</h2>'
+   +'<div class="row"><div style="flex:2"><label>Title</label><input id="wTitle" placeholder="e.g. Master bath shower mixer dripping"/></div><div><label>Villa</label><select id="wVilla"></select></div></div>'
+   +'<div class="row" style="margin-top:12px"><div><label>Vendor</label><input id="wVendor" placeholder="e.g. Clima Caribe"/></div><div><label>Est. cost (RD$)</label><input id="wCost" inputmode="decimal" placeholder="optional"/></div><div><label>Status</label><select id="wStatus"></select></div></div>'
+   +'<div style="margin-top:12px"><label>Note (optional)</label><textarea id="wNote" placeholder="Scope, parts, context"></textarea></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="wSave">Create work order</button></div><div id="wMsg" class="msg"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Open &amp; recent</h2><div class="sub" style="margin-bottom:6px">Change status inline</div><div id="wList"></div></div>';
+  fillSelect($('wVilla'), VILLAS); fillSelect($('wStatus'), STATUSES);
+  $('wSave').onclick = async function(){
+    var msg=$('wMsg'); msg.textContent=''; msg.className='msg';
+    var p={villa:$('wVilla').value, title:$('wTitle').value.trim(), vendor:$('wVendor').value.trim(), cost:$('wCost').value.trim(), status:$('wStatus').value, note:$('wNote').value.trim()};
+    if(!p.title){ msg.textContent='Give the work order a title.'; msg.className='msg err'; return; }
+    $('wSave').disabled=true; var r=await api('/api/workorders',{method:'POST',body:JSON.stringify(p)}); $('wSave').disabled=false;
+    if(r.status===200){ msg.textContent='Created.'; msg.className='msg ok'; $('wTitle').value='';$('wVendor').value='';$('wCost').value='';$('wNote').value=''; loadWorkorders(); updateBadges(); }
+    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+  };
+  loadWorkorders();
+}
+async function loadWorkorders(){
+  var wrap=$('wList'); wrap.innerHTML='<div class="empty">Loading…</div>';
+  var r=await api('/api/workorders'); var rows=r.body.workorders||[];
+  if(!rows.length){ wrap.innerHTML='<div class="empty">No work orders yet.</div>'; return; }
+  wrap.innerHTML='<table><thead><tr><th>Work order</th><th>Villa</th><th style="text-align:right">Cost</th><th>Status</th><th>Updated</th><th></th></tr></thead><tbody>'
+    +rows.map(function(x){ var opts=STATUSES.map(function(s){return '<option'+(s===x.status?' selected':'')+'>'+esc(s)+'</option>';}).join('');
+      return '<tr><td><div style="font-weight:500">'+esc(x.title)+'</div>'+(x.vendor?'<div class="muted">'+esc(x.vendor)+'</div>':'')+(x.note?'<div class="muted">'+esc(x.note)+'</div>':'')+'</td><td>'+esc(x.villa)+'</td><td class="num">'+rd(x.cost)+'</td><td><select class="st" data-id="'+esc(x.id)+'" style="padding:5px 9px;border-radius:8px;font-size:13px;border:1px solid var(--line)">'+opts+'</select></td><td style="color:#6e6862">'+esc(cap(x.updated_by||x.created_by))+'<div class="muted">'+esc(when(x.updated_ts||x.created_ts))+'</div></td><td><button class="link" data-del="'+esc(x.id)+'">Delete</button></td></tr>'; }).join('')
+    +'</tbody></table>';
+  wrap.querySelectorAll('select.st').forEach(function(s){ s.onchange=async function(){ s.disabled=true; await api('/api/workorders/update',{method:'POST',body:JSON.stringify({id:s.getAttribute('data-id'),status:s.value})}); loadWorkorders(); updateBadges(); }; });
+  wrap.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this work order?'))return; await api('/api/workorders/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-del')})}); loadWorkorders(); updateBadges(); }; });
+}
+
+/* ---- MANAGE (admin) ---- */
+function viewManage(){
+  var m=$('main');
+  m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Manage</h1><div class="sub">Properties &amp; owners · Jan only</div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Properties (villas)</h2>'
+   +'<div class="row"><div style="flex:2"><label>Villa name</label><input id="pName" placeholder="e.g. Villa Las Palmas 9"/></div><div style="flex:2"><label>Detail (optional)</label><input id="pMeta" placeholder="e.g. 5 bed · oceanfront"/></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="pAdd">Add villa</button></div></div>'
+   +'<div id="pMsg" class="msg"></div><div id="pList"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Owners</h2><div class="sub" style="margin-bottom:10px">Each owner gets a code to log into the owner app at <b>/owner</b> (code + last name).</div>'
+   +'<div class="row"><div><label>Owner name</label><input id="oName" placeholder="e.g. Sra. Aldrich"/></div><div><label>Last name (login)</label><input id="oLast" placeholder="e.g. Aldrich"/></div><div><label>Villa</label><select id="oVilla"></select></div></div>'
+   +'<div class="row" style="margin-top:12px"><div><label>Email</label><input id="oEmail" placeholder="owner@email.com"/></div><div><label>Login code</label><input id="oCode" placeholder="e.g. CDC-OWN-0012"/></div><div><label>Language</label><select id="oLang"><option value="es">Spanish</option><option value="en">English</option></select></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="oAdd">Add owner</button></div></div>'
+   +'<div id="oMsg" class="msg"></div><div id="oList"></div></div>';
+  loadProps(); loadOwners();
+  $('pAdd').onclick = async function(){ var msg=$('pMsg'); msg.textContent=''; msg.className='msg'; var name=$('pName').value.trim(); if(!name){ msg.textContent='Enter a villa name.'; msg.className='msg err'; return; } var r=await api('/api/properties',{method:'POST',body:JSON.stringify({name:name,meta:$('pMeta').value.trim()})}); if(r.status===200){ $('pName').value='';$('pMeta').value=''; msg.textContent='Villa added.'; msg.className='msg ok'; loadProps(); } else { msg.textContent=(r.body&&r.body.error)||'Could not add.'; msg.className='msg err'; } };
+  $('oAdd').onclick = async function(){ var msg=$('oMsg'); msg.textContent=''; msg.className='msg'; var p={name:$('oName').value.trim(),lastName:$('oLast').value.trim(),villa:$('oVilla').value,email:$('oEmail').value.trim(),code:$('oCode').value.trim(),lang:$('oLang').value}; if(!p.name){ msg.textContent='Enter the owner name.'; msg.className='msg err'; return; } if(!p.code){ msg.textContent='Enter a login code.'; msg.className='msg err'; return; } var r=await api('/api/owners',{method:'POST',body:JSON.stringify(p)}); if(r.status===200){ $('oName').value='';$('oLast').value='';$('oEmail').value='';$('oCode').value=''; msg.textContent='Owner added.'; msg.className='msg ok'; loadOwners(); } else { msg.textContent=(r.body&&r.body.error)||'Could not add.'; msg.className='msg err'; } };
+}
+async function loadProps(){
+  var r=await api('/api/properties'); var rows=r.body.properties||[];
+  VILLAS = rows.filter(function(p){return p.active!==false;}).map(function(p){return p.name;});
+  if($('oVilla')) fillSelect($('oVilla'), VILLAS);
+  $('pList').innerHTML='<table><thead><tr><th>Villa</th><th>Detail</th><th>Status</th><th></th></tr></thead><tbody>'
+    +rows.map(function(p){ return '<tr><td style="font-weight:500">'+esc(p.name)+'</td><td class="muted">'+esc(p.meta||'')+'</td><td><button class="ghost" data-toggle="'+esc(p.id)+'" data-active="'+(p.active!==false)+'">'+(p.active!==false?'<span class="pill">Active</span>':'<span class="pill off">Hidden</span>')+'</button></td><td><button class="link" data-delp="'+esc(p.id)+'">Delete</button></td></tr>'; }).join('')+'</tbody></table>';
+  $('pList').querySelectorAll('[data-toggle]').forEach(function(b){ b.onclick=async function(){ await api('/api/properties/update',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-toggle'),active:!(b.getAttribute('data-active')==='true')})}); loadProps(); }; });
+  $('pList').querySelectorAll('[data-delp]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this villa?'))return; await api('/api/properties/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delp')})}); loadProps(); }; });
+}
+async function loadOwners(){
+  var r=await api('/api/owners'); var rows=r.body.owners||[];
+  $('oList').innerHTML='<table><thead><tr><th>Owner</th><th>Villa</th><th>Login code</th><th>Email</th><th></th></tr></thead><tbody>'
+    +(rows.length?'':'<tr><td colspan="5" class="empty">No owners yet.</td></tr>')
+    +rows.map(function(o){ return '<tr><td style="font-weight:500">'+esc(o.name)+'<div class="muted">'+esc(o.lang==='en'?'English':'Spanish')+'</div></td><td>'+esc(o.villa||'—')+'</td><td><code class="tag">'+esc(o.code||'')+'</code></td><td class="muted">'+esc(o.email||'')+'</td><td><button class="link" data-delo="'+esc(o.id)+'">Delete</button></td></tr>'; }).join('')+'</tbody></table>';
+  $('oList').querySelectorAll('[data-delo]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this owner?'))return; await api('/api/owners/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delo')})}); loadOwners(); }; });
+}
+
+/* ---- login handlers ---- */
+$('loginBtn').onclick = async function(){
+  var msg=$('loginMsg'); msg.textContent=''; msg.className='msg';
+  var name=$('loginName').value, code=$('loginCode').value;
+  if(!name||!code){ msg.textContent='Choose your name and enter your code.'; msg.className='msg err'; return; }
+  $('loginBtn').disabled=true; var r=await api('/api/login',{method:'POST',body:JSON.stringify({name:name,code:code})}); $('loginBtn').disabled=false;
+  if(r.status===200){ $('loginCode').value=''; boot(); } else { msg.textContent=(r.body&&r.body.error)||'Sign-in failed.'; msg.className='msg err'; }
+};
+$('loginCode').addEventListener('keydown',function(e){ if(e.key==='Enter') $('loginBtn').click(); });
+$('logout').onclick = async function(){ await api('/api/logout',{method:'POST'}); ME=null; document.body.classList.add('login-mode'); };
+
+boot();
+(function(){ var v0=null; function chk(){ fetch('/api/version',{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){ if(v0===null){v0=d.v;} else if(d.v&&d.v!==v0){ $('cphUpdateBar').style.display='block'; } }).catch(function(){}); } chk(); setInterval(chk,60000); })();
+</script>
+</body>
+</html>
