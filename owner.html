@@ -118,12 +118,16 @@ function login(e) {
   e.preventDefault();
   var code = document.getElementById('code').value;
   var last = document.getElementById('last').value;
-  var hit = OWNERS.filter(function (o) {
-    return o.code.toUpperCase() === code.trim().toUpperCase() && o.lastName.toLowerCase() === last.trim().toLowerCase();
-  })[0];
-  if (!hit) return set({ code: code, last: last, err: 'No encontramos esa combinación. Revise el código y el apellido.' });
-  try { localStorage.setItem('cph-owner', hit.code); } catch (x) {}
-  set({ owner: hit, err: '' });
+  set({ code: code, last: last, err: '' });
+  fetch('/api/owner/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: code.trim(), lastName: last.trim() }) })
+    .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); })
+    .then(function (res) {
+      if (!res.ok || !res.b.owner) { set({ err: 'No encontramos esa combinación. Revise el código y el apellido.' }); return; }
+      try { localStorage.setItem('cph-owner', code.trim()); } catch (x) {}
+      set({ owner: res.b.owner, err: '' });
+    })
+    .catch(function () { set({ err: 'No se pudo conectar. Intente de nuevo.' }); });
 }
 
 function calendar() {
@@ -293,6 +297,7 @@ function logout() { try { localStorage.removeItem('cph-owner'); } catch (x) {} s
 
 function screenLogin() {
   return '<div class="wrap" style="padding:calc(60px + env(safe-area-inset-top)) 20px 40px">' +
+    '<img src="/cph-logo.png" alt="Caribbean Paradise Homes" style="width:66px;height:auto;display:block;margin:0 0 10px" />' +
     '<div class="eyebrow">Caribbean Paradise Homes</div>' +
     '<h1 class="serif" style="margin:12px 0 0;font-size:28px">App del Propietario</h1>' +
     '<div style="font-size:13px;color:#6E6862;margin-top:8px;line-height:1.5">Agenda de la casa, servicios, facturas y datos de su villa.</div>' +
@@ -325,7 +330,12 @@ function render() {
 
 try {
   var saved = localStorage.getItem('cph-owner');
-  if (saved) S.owner = OWNERS.filter(function (o) { return o.code === saved; })[0] || null;
+  if (saved) {
+    fetch('/api/owner/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: saved }) })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (b) { if (b && b.owner) set({ owner: b.owner }); })
+      .catch(function () {});
+  }
 } catch (x) {}
 render();
 </script>

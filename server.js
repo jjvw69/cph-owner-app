@@ -1,15 +1,13 @@
 'use strict';
 /**
  * cph-owner-app — standalone server for the Caribbean Paradise Homes
- * Owner App + Property-Management Console. Completely separate from
- * cph-my-stay (guest app + concierge console).
+ * Owner App + Property-Management Console + operational tools.
+ * Completely separate from cph-my-stay (guest app + concierge console).
  *
- * Real, persistent features behind a 3-user login (ivonna, jan, maria):
- *   - Meter readings  (/readings)
- *   - Work orders     (/work-orders)
- * Access codes come from environment variables (never committed). Data is
- * stored as JSON on a persistent disk when mounted (DATA_DIR, default
- * /var/data), falling back to ./ if not.
+ * Staff login (ivonna, jan, maria) via env-var codes. Persistent JSON on a
+ * disk (DATA_DIR, default /var/data). Stores: properties, owners, readings,
+ * workorders. Manage area (properties + owners) is admin-only (ADMIN_USERS,
+ * default "jan"). Owners each get a code to log into the owner app.
  */
 const http   = require('http');
 const fs     = require('fs');
@@ -18,12 +16,13 @@ const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
 
-// ---- users & auth -------------------------------------------------------
+// ---- staff users & auth -------------------------------------------------
 const USERS = {
   ivonna: process.env.CODE_IVONNA || 'ivonna-demo',
   jan:    process.env.CODE_JAN    || 'jan-demo',
   maria:  process.env.CODE_MARIA  || 'maria-demo'
 };
+const ADMIN_USERS = (process.env.ADMIN_USERS || 'jan').split(',').map(s => s.trim().toLowerCase());
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-secret-change-me';
 const COOKIE = 'cph_owner_sess';
 
@@ -48,27 +47,34 @@ function parseCookies(req){
   return out;
 }
 function currentUser(req){ return verifyToken(parseCookies(req)[COOKIE]); }
+function isAdmin(user){ return !!user && ADMIN_USERS.indexOf(user) >= 0; }
 
 // ---- generic JSON store (persistent disk if available) ------------------
 const DATA_DIR = process.env.DATA_DIR || '/var/data';
 let BASE_DIR = DATA_DIR;
 try { fs.mkdirSync(DATA_DIR, { recursive: true }); }
-catch(e) { BASE_DIR = __dirname; } // fallback: ephemeral
+catch(e) { BASE_DIR = __dirname; }
 function storePath(name){ return path.join(BASE_DIR, name + '.json'); }
-function loadStore(name){
-  try { return JSON.parse(fs.readFileSync(storePath(name), 'utf8')); }
-  catch(e){ return []; }
-}
-function saveStore(name, arr){
-  try { fs.writeFileSync(storePath(name), JSON.stringify(arr, null, 2)); return true; }
-  catch(e){ return false; }
-}
+function loadStore(name){ try { return JSON.parse(fs.readFileSync(storePath(name), 'utf8')); } catch(e){ return null; } }
+function saveStore(name, arr){ try { fs.writeFileSync(storePath(name), JSON.stringify(arr, null, 2)); return true; } catch(e){ return false; } }
 function newId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
-const VILLAS = [
-  'Villa Cajuiles 12','Villa Vistamar 8','Villa Barranca Este 24',
-  'Villa Las Colinas 31','Villa Punta Aguila 5','Villa Los Naranjos 78'
+// Properties (villas) — seed with the original six on first run.
+const DEFAULT_PROPERTIES = [
+  { name:'Villa Cajuiles 12',     meta:'6 bed · pool · staffed' },
+  { name:'Villa Vistamar 8',      meta:'5 bed · oceanfront' },
+  { name:'Villa Barranca Este 24',meta:'7 bed · pool · gym' },
+  { name:'Villa Las Colinas 31',  meta:'4 bed · garden' },
+  { name:'Villa Punta Aguila 5',  meta:'6 bed · beachfront' },
+  { name:'Villa Los Naranjos 78', meta:'4 bed · golf' }
 ];
+function loadProperties(){
+  let p = loadStore('properties');
+  if(!p){ p = DEFAULT_PROPERTIES.map(x => ({ id:newId(), name:x.name, meta:x.meta, active:true })); saveStore('properties', p); }
+  return p;
+}
+function villaNames(){ return loadProperties().filter(p => p.active !== false).map(p => p.name); }
+function loadOwners(){ return loadStore('owners') || []; }
 const WO_STATUSES = ['Open','Quoting','Approved','Parts ordered','Scheduled','Done'];
 
 // ---- helpers ------------------------------------------------------------
@@ -83,9 +89,10 @@ const PAGES = {
   '/property-console':'property-console.html',
   '/owner-design':'owner-design.html',
   '/readings':'readings.html',
-  '/work-orders':'work-orders.html'
+  '/work-orders':'work-orders.html',
+  '/manage':'manage.html'
 };
-const STATIC_WHITELIST = new Set(['support.js','doc-page.js','ios-frame.jsx']);
+const STATIC_WHITELIST = new Set(['support.js','doc-page.js','ios-frame.jsx','cph-logo.png']);
 
 function sendFile(res, file){
   fs.readFile(path.join(__dirname, file), (err, buf) => {
@@ -105,6 +112,7 @@ function readBody(req){
   });
 }
 function num(v){ return (v === '' || v == null) ? null : Number(v); }
+function str(v, n){ return String(v==null?'':v).slice(0, n||200); }
 
 // ---- server -------------------------------------------------------------
 http.createServer(async (req, res) => {
@@ -113,13 +121,13 @@ http.createServer(async (req, res) => {
 
   if(url === '/healthz'){ res.writeHead(200,{'Content-Type':'text/plain'}); return res.end('ok'); }
 
-  // ---- auth ----
+  // ---- staff auth ----
   if(url === '/api/login' && method === 'POST'){
     const { name, code } = await readBody(req);
     const u = String(name||'').toLowerCase().trim();
     if(USERS[u] && code && String(code) === USERS[u]){
       const tok = makeToken(u);
-      return sendJSON(res, 200, { ok:true, user:u }, {
+      return sendJSON(res, 200, { ok:true, user:u, isAdmin:isAdmin(u) }, {
         'Set-Cookie': COOKIE+'='+encodeURIComponent(tok)+'; Path=/; HttpOnly; SameSite=Lax; Max-Age='+(30*24*3600)
       });
     }
@@ -130,83 +138,149 @@ http.createServer(async (req, res) => {
   }
   if(url === '/api/me'){
     const u = currentUser(req);
-    return u ? sendJSON(res, 200, { user:u, villas:VILLAS, wo_statuses:WO_STATUSES })
+    return u ? sendJSON(res, 200, { user:u, villas:villaNames(), wo_statuses:WO_STATUSES, isAdmin:isAdmin(u) })
              : sendJSON(res, 401, { error:'not signed in' });
   }
 
-  // Everything past here needs auth.
+  // ---- owner-app login (owners store; public) ----
+  if(url === '/api/owner/login' && method === 'POST'){
+    const b = await readBody(req);
+    const code = String(b.code||'').trim().toUpperCase();
+    const last = String(b.lastName||'').trim().toLowerCase();
+    if(!code) return sendJSON(res, 400, { error:'code required' });
+    const owner = loadOwners().filter(o => o.active !== false)
+      .find(o => String(o.code||'').trim().toUpperCase() === code
+        && (!last || String(o.lastName||o.name||'').toLowerCase().indexOf(last) >= 0));
+    if(!owner) return sendJSON(res, 401, { error:'not found' });
+    return sendJSON(res, 200, { ok:true, owner:{ name:owner.name, villa:owner.villa, lang:owner.lang || 'es' } });
+  }
+
+  // ---- staff-only below ----
   const isApi = url.indexOf('/api/') === 0;
   const user = currentUser(req);
   if(isApi && !user) return sendJSON(res, 401, { error:'not signed in' });
+  const admin = isAdmin(user);
+  const needAdmin = () => { sendJSON(res, 403, { error:'admin only' }); return true; };
 
   // ---- meter readings ----
-  if(url === '/api/readings' && method === 'GET'){
-    return sendJSON(res, 200, { readings: loadStore('readings') });
-  }
+  if(url === '/api/readings' && method === 'GET'){ return sendJSON(res, 200, { readings: loadStore('readings')||[] }); }
   if(url === '/api/readings' && method === 'POST'){
     const b = await readBody(req);
     const villa = String(b.villa||'').trim();
-    if(VILLAS.indexOf(villa) < 0) return sendJSON(res, 400, { error:'unknown villa' });
+    if(villaNames().indexOf(villa) < 0) return sendJSON(res, 400, { error:'unknown villa' });
     const elec = num(b.electricity_kwh), water = num(b.water_gal);
     if(elec == null && water == null) return sendJSON(res, 400, { error:'enter at least one reading' });
-    if((elec != null && !isFinite(elec)) || (water != null && !isFinite(water)))
-      return sendJSON(res, 400, { error:'readings must be numbers' });
-    const rows = loadStore('readings');
-    const entry = { id:newId(), villa, electricity_kwh:elec, water_gal:water,
-      note:String(b.note||'').slice(0,300), user, ts:new Date().toISOString() };
+    if((elec != null && !isFinite(elec)) || (water != null && !isFinite(water))) return sendJSON(res, 400, { error:'readings must be numbers' });
+    const rows = loadStore('readings')||[];
+    const entry = { id:newId(), villa, electricity_kwh:elec, water_gal:water, note:str(b.note,300), user, ts:new Date().toISOString() };
     rows.unshift(entry);
-    const ok = saveStore('readings', rows);
-    return sendJSON(res, ok?200:500, ok ? { ok:true, entry } : { error:'could not save' });
+    return sendJSON(res, saveStore('readings',rows)?200:500, { ok:true, entry });
   }
   if(url === '/api/readings/delete' && method === 'POST'){
     const { id } = await readBody(req);
-    const rows = loadStore('readings').filter(r => r.id !== id);
-    const ok = saveStore('readings', rows);
-    return sendJSON(res, ok?200:500, ok ? { ok:true } : { error:'could not save' });
+    return sendJSON(res, saveStore('readings',(loadStore('readings')||[]).filter(r=>r.id!==id))?200:500, { ok:true });
   }
 
   // ---- work orders ----
-  if(url === '/api/workorders' && method === 'GET'){
-    return sendJSON(res, 200, { workorders: loadStore('workorders'), statuses: WO_STATUSES });
-  }
+  if(url === '/api/workorders' && method === 'GET'){ return sendJSON(res, 200, { workorders: loadStore('workorders')||[], statuses: WO_STATUSES }); }
   if(url === '/api/workorders' && method === 'POST'){
     const b = await readBody(req);
     const villa = String(b.villa||'').trim();
     const title = String(b.title||'').trim();
-    if(VILLAS.indexOf(villa) < 0) return sendJSON(res, 400, { error:'unknown villa' });
+    if(villaNames().indexOf(villa) < 0) return sendJSON(res, 400, { error:'unknown villa' });
     if(!title) return sendJSON(res, 400, { error:'title required' });
     const cost = num(b.cost);
     if(cost != null && !isFinite(cost)) return sendJSON(res, 400, { error:'cost must be a number' });
     const status = WO_STATUSES.indexOf(b.status) >= 0 ? b.status : 'Open';
-    const rows = loadStore('workorders');
-    const entry = { id:newId(), villa, title, vendor:String(b.vendor||'').slice(0,120),
-      cost, status, note:String(b.note||'').slice(0,400),
-      created_by:user, created_ts:new Date().toISOString(),
-      updated_by:user, updated_ts:new Date().toISOString() };
+    const rows = loadStore('workorders')||[];
+    const entry = { id:newId(), villa, title, vendor:str(b.vendor,120), cost, status, note:str(b.note,400),
+      created_by:user, created_ts:new Date().toISOString(), updated_by:user, updated_ts:new Date().toISOString() };
     rows.unshift(entry);
-    const ok = saveStore('workorders', rows);
-    return sendJSON(res, ok?200:500, ok ? { ok:true, entry } : { error:'could not save' });
+    return sendJSON(res, saveStore('workorders',rows)?200:500, { ok:true, entry });
   }
   if(url === '/api/workorders/update' && method === 'POST'){
     const b = await readBody(req);
-    const rows = loadStore('workorders');
+    const rows = loadStore('workorders')||[];
     const wo = rows.find(x => x.id === b.id);
     if(!wo) return sendJSON(res, 404, { error:'not found' });
-    if(b.status != null){
-      if(WO_STATUSES.indexOf(b.status) < 0) return sendJSON(res, 400, { error:'unknown status' });
-      wo.status = b.status;
-    }
-    if(b.note != null) wo.note = String(b.note).slice(0,400);
-    if(b.cost !== undefined){ const c = num(b.cost); if(c != null && !isFinite(c)) return sendJSON(res,400,{error:'cost must be a number'}); wo.cost = c; }
+    if(b.status != null){ if(WO_STATUSES.indexOf(b.status) < 0) return sendJSON(res,400,{error:'unknown status'}); wo.status = b.status; }
+    if(b.note != null) wo.note = str(b.note,400);
+    if(b.cost !== undefined){ const c=num(b.cost); if(c!=null && !isFinite(c)) return sendJSON(res,400,{error:'cost must be a number'}); wo.cost=c; }
     wo.updated_by = user; wo.updated_ts = new Date().toISOString();
-    const ok = saveStore('workorders', rows);
-    return sendJSON(res, ok?200:500, ok ? { ok:true, entry:wo } : { error:'could not save' });
+    return sendJSON(res, saveStore('workorders',rows)?200:500, { ok:true, entry:wo });
   }
   if(url === '/api/workorders/delete' && method === 'POST'){
     const { id } = await readBody(req);
-    const rows = loadStore('workorders').filter(r => r.id !== id);
-    const ok = saveStore('workorders', rows);
-    return sendJSON(res, ok?200:500, ok ? { ok:true } : { error:'could not save' });
+    return sendJSON(res, saveStore('workorders',(loadStore('workorders')||[]).filter(r=>r.id!==id))?200:500, { ok:true });
+  }
+
+  // ---- properties (admin) ----
+  if(url === '/api/properties' && method === 'GET'){ return sendJSON(res, 200, { properties: loadProperties() }); }
+  if(url === '/api/properties' && method === 'POST'){
+    if(!admin) return needAdmin();
+    const b = await readBody(req);
+    const name = String(b.name||'').trim();
+    if(!name) return sendJSON(res, 400, { error:'villa name required' });
+    const rows = loadProperties();
+    if(rows.some(p => p.name.toLowerCase() === name.toLowerCase())) return sendJSON(res, 400, { error:'villa already exists' });
+    const entry = { id:newId(), name, meta:str(b.meta,120), active:true };
+    rows.push(entry);
+    return sendJSON(res, saveStore('properties',rows)?200:500, { ok:true, entry });
+  }
+  if(url === '/api/properties/update' && method === 'POST'){
+    if(!admin) return needAdmin();
+    const b = await readBody(req);
+    const rows = loadProperties(); const p = rows.find(x=>x.id===b.id);
+    if(!p) return sendJSON(res, 404, { error:'not found' });
+    if(b.name != null && String(b.name).trim()) p.name = String(b.name).trim();
+    if(b.meta != null) p.meta = str(b.meta,120);
+    if(b.active != null) p.active = !!b.active;
+    return sendJSON(res, saveStore('properties',rows)?200:500, { ok:true, entry:p });
+  }
+  if(url === '/api/properties/delete' && method === 'POST'){
+    if(!admin) return needAdmin();
+    const { id } = await readBody(req);
+    return sendJSON(res, saveStore('properties',loadProperties().filter(p=>p.id!==id))?200:500, { ok:true });
+  }
+
+  // ---- owners (admin) ----
+  if(url === '/api/owners' && method === 'GET'){ if(!admin) return needAdmin(); return sendJSON(res, 200, { owners: loadOwners(), villas: villaNames() }); }
+  if(url === '/api/owners' && method === 'POST'){
+    if(!admin) return needAdmin();
+    const b = await readBody(req);
+    const name = String(b.name||'').trim();
+    const code = String(b.code||'').trim();
+    if(!name) return sendJSON(res, 400, { error:'owner name required' });
+    if(!code) return sendJSON(res, 400, { error:'login code required' });
+    const owners = loadOwners();
+    if(owners.some(o => String(o.code||'').toUpperCase() === code.toUpperCase())) return sendJSON(res, 400, { error:'code already in use' });
+    const entry = { id:newId(), name, email:str(b.email,160), villa:str(b.villa,120), code, lang:(b.lang==='en'?'en':'es'),
+      lastName:str(b.lastName,80), active:true, created_by:user, created_ts:new Date().toISOString() };
+    owners.push(entry);
+    return sendJSON(res, saveStore('owners',owners)?200:500, { ok:true, entry });
+  }
+  if(url === '/api/owners/update' && method === 'POST'){
+    if(!admin) return needAdmin();
+    const b = await readBody(req);
+    const owners = loadOwners(); const o = owners.find(x=>x.id===b.id);
+    if(!o) return sendJSON(res, 404, { error:'not found' });
+    if(b.name != null && String(b.name).trim()) o.name = String(b.name).trim();
+    if(b.email != null) o.email = str(b.email,160);
+    if(b.villa != null) o.villa = str(b.villa,120);
+    if(b.lastName != null) o.lastName = str(b.lastName,80);
+    if(b.lang != null) o.lang = (b.lang==='en'?'en':'es');
+    if(b.code != null && String(b.code).trim()){
+      const code = String(b.code).trim();
+      if(owners.some(x => x.id!==o.id && String(x.code||'').toUpperCase()===code.toUpperCase())) return sendJSON(res,400,{error:'code already in use'});
+      o.code = code;
+    }
+    if(b.active != null) o.active = !!b.active;
+    return sendJSON(res, saveStore('owners',owners)?200:500, { ok:true, entry:o });
+  }
+  if(url === '/api/owners/delete' && method === 'POST'){
+    if(!admin) return needAdmin();
+    const { id } = await readBody(req);
+    return sendJSON(res, saveStore('owners',loadOwners().filter(o=>o.id!==id))?200:500, { ok:true });
   }
 
   // ---- pages & static ----

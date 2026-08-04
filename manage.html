@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Manage · Caribbean Paradise Homes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&display=swap" rel="stylesheet" />
+<style>
+  :root{ --ink:#2b2723; --soft:#6e6862; --faint:#a09a8f; --line:#e7e1d8; --bg:#f3efe9;
+         --card:#ffffff; --green:#5a9e46; --greenbg:#edf0e7; --red:#a8543a; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink);
+        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  h1,h2,.serif{ font-family:Newsreader,Georgia,serif; font-weight:400; }
+  .wrap{ max-width:960px; margin:0 auto; padding:24px 20px 60px; }
+  .brand{ letter-spacing:.2em; font-size:12px; color:var(--soft); text-transform:uppercase; }
+  h1{ font-size:28px; margin:6px 0 2px; }
+  .sub{ color:var(--soft); font-size:14px; }
+  .top{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+  .brandrow{ display:flex; align-items:center; gap:14px; }
+  .logo{ width:52px; height:auto; display:block; }
+  .who{ text-align:right; font-size:13px; color:var(--soft); }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-top:18px; }
+  label{ display:block; font-size:12px; color:var(--soft); text-transform:uppercase; letter-spacing:.06em; margin:0 0 6px; }
+  input,select,textarea{ width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:9px; font-size:15px; background:#fff; color:var(--ink); font-family:inherit; }
+  .row{ display:flex; gap:14px; flex-wrap:wrap; } .row>div{ flex:1; min-width:150px; }
+  button{ background:var(--ink); color:#fff; border:0; border-radius:10px; padding:11px 16px; font-size:15px; cursor:pointer; font-family:inherit; }
+  button.ghost{ background:transparent; color:var(--soft); border:1px solid var(--line); padding:7px 12px; font-size:13px; }
+  button.link{ background:none; border:0; color:var(--red); padding:4px; font-size:13px; cursor:pointer; }
+  button:disabled{ opacity:.5; cursor:default; }
+  .msg{ margin-top:12px; font-size:14px; } .msg.ok{ color:#4a5a3c; } .msg.err{ color:var(--red); }
+  table{ width:100%; border-collapse:collapse; margin-top:8px; font-size:14px; }
+  th{ text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); border-bottom:1px solid var(--line); padding:8px; font-weight:400; }
+  td{ padding:11px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  code.tag{ background:var(--greenbg); color:#3a6b2c; padding:2px 8px; border-radius:6px; font-size:13px; }
+  .muted{ color:var(--faint); font-size:12px; margin-top:2px; }
+  .hidden{ display:none; }
+  .nav a{ color:#4a5a3c; text-decoration:none; font-size:13px; margin-right:16px; }
+  .pill{ font-size:11px; padding:2px 8px; border-radius:20px; background:var(--greenbg); color:#3a6b2c; }
+  .pill.off{ background:#eee7dd; color:#8a8378; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brandrow">
+      <img class="logo" src="/cph-logo.png" alt="Caribbean Paradise Homes" />
+      <div>
+        <div class="brand">Caribbean Paradise Homes</div>
+        <h1>Manage</h1>
+        <div class="sub">Properties &amp; owners</div>
+      </div>
+    </div>
+    <div class="who"><div id="whoName"></div><button id="logout" class="ghost hidden" style="margin-top:6px;">Log out</button></div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="loginCard" class="card hidden">
+    <h2 style="margin:0 0 12px; font-size:19px;">Sign in</h2>
+    <div class="row">
+      <div><label>Name</label>
+        <select id="loginName"><option value="">Choose…</option><option value="ivonna">Ivonna</option><option value="jan">Jan</option><option value="maria">Maria</option></select>
+      </div>
+      <div><label>Access code</label><input id="loginCode" type="password" autocomplete="off" placeholder="••••••" /></div>
+    </div>
+    <div style="margin-top:14px;"><button id="loginBtn">Sign in</button></div>
+    <div id="loginMsg" class="msg"></div>
+  </div>
+
+  <!-- NOT ADMIN -->
+  <div id="noAdmin" class="card hidden">
+    <h2 style="margin:0 0 6px; font-size:19px;">Manage is Jan-only</h2>
+    <div class="sub">You're signed in, but adding properties and owners is limited to Jan. You can still use
+      <a class="navlink" href="/readings" style="color:#4a5a3c;">meter readings</a> and
+      <a class="navlink" href="/work-orders" style="color:#4a5a3c;">work orders</a>.</div>
+  </div>
+
+  <!-- APP (admin) -->
+  <div id="app" class="hidden">
+    <div class="card">
+      <h2 style="margin:0 0 12px; font-size:19px;">Properties (villas)</h2>
+      <div class="row">
+        <div style="flex:2;"><label>Villa name</label><input id="pName" placeholder="e.g. Villa Las Palmas 9" /></div>
+        <div style="flex:2;"><label>Detail (optional)</label><input id="pMeta" placeholder="e.g. 5 bed · oceanfront" /></div>
+        <div style="flex:0 0 auto; align-self:flex-end;"><button id="pAdd">Add villa</button></div>
+      </div>
+      <div id="pMsg" class="msg"></div>
+      <div id="pList"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 4px; font-size:19px;">Owners</h2>
+      <div class="sub" style="margin-bottom:10px;">Each owner gets a code to log into the owner app at <b>/owner</b> (they enter the code + their last name).</div>
+      <div class="row">
+        <div><label>Owner name</label><input id="oName" placeholder="e.g. Sra. Aldrich" /></div>
+        <div><label>Last name (for login)</label><input id="oLast" placeholder="e.g. Aldrich" /></div>
+        <div><label>Villa</label><select id="oVilla"></select></div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <div><label>Email</label><input id="oEmail" placeholder="owner@email.com" /></div>
+        <div><label>Login code</label><input id="oCode" placeholder="e.g. CDC-OWN-0012" /></div>
+        <div><label>Language</label><select id="oLang"><option value="es">Spanish</option><option value="en">English</option></select></div>
+        <div style="flex:0 0 auto; align-self:flex-end;"><button id="oAdd">Add owner</button></div>
+      </div>
+      <div id="oMsg" class="msg"></div>
+      <div id="oList"></div>
+    </div>
+
+    <div class="nav" style="margin-top:16px;">
+      <a href="/property-console">← Operations console</a>
+      <a href="/readings">Meter readings</a>
+      <a href="/work-orders">Work orders</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  var $ = function(id){ return document.getElementById(id); };
+  var VILLAS = [];
+  function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  async function api(p, o){ var r=await fetch(p, Object.assign({headers:{'Content-Type':'application/json'}}, o||{})); var b={}; try{b=await r.json();}catch(e){} return {status:r.status, body:b}; }
+  function show(el,on){ el.classList[on?'remove':'add']('hidden'); }
+  function fillSelect(sel, arr){ sel.innerHTML=''; arr.forEach(function(v){ var o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); }); }
+
+  async function boot(){
+    var me = await api('/api/me');
+    if(me.status !== 200){ show($('loginCard'),true); show($('app'),false); show($('noAdmin'),false); show($('logout'),false); $('whoName').textContent=''; return; }
+    $('whoName').textContent = 'Signed in as ' + cap(me.body.user); show($('logout'),true); show($('loginCard'),false);
+    if(!me.body.isAdmin){ show($('noAdmin'),true); show($('app'),false); return; }
+    show($('noAdmin'),false); show($('app'),true);
+    loadProperties(); loadOwners();
+  }
+
+  async function loadProperties(){
+    var r = await api('/api/properties'); var rows = (r.body.properties)||[];
+    VILLAS = rows.filter(function(p){return p.active!==false;}).map(function(p){return p.name;});
+    fillSelect($('oVilla'), VILLAS);
+    var html = '<table><thead><tr><th>Villa</th><th>Detail</th><th>Status</th><th></th></tr></thead><tbody>';
+    rows.forEach(function(p){
+      html += '<tr><td style="font-weight:500">'+esc(p.name)+'</td><td class="muted">'+esc(p.meta||'')+'</td>'
+        + '<td><button class="ghost" data-toggle="'+esc(p.id)+'" data-active="'+(p.active!==false)+'">'+(p.active!==false?'<span class="pill">Active</span>':'<span class="pill off">Hidden</span>')+'</button></td>'
+        + '<td><button class="link" data-delp="'+esc(p.id)+'">Delete</button></td></tr>';
+    });
+    html += '</tbody></table>'; $('pList').innerHTML = html;
+    $('pList').querySelectorAll('[data-toggle]').forEach(function(b){ b.onclick=async function(){ await api('/api/properties/update',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-toggle'),active:!(b.getAttribute('data-active')==='true')})}); loadProperties(); }; });
+    $('pList').querySelectorAll('[data-delp]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this villa?'))return; await api('/api/properties/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delp')})}); loadProperties(); }; });
+  }
+
+  async function loadOwners(){
+    var r = await api('/api/owners'); var rows = (r.body.owners)||[];
+    var html = '<table><thead><tr><th>Owner</th><th>Villa</th><th>Login code</th><th>Email</th><th></th></tr></thead><tbody>';
+    if(!rows.length) html += '<tr><td colspan="5" class="muted" style="padding:14px 8px;">No owners yet. Add the first one above.</td></tr>';
+    rows.forEach(function(o){
+      html += '<tr><td style="font-weight:500">'+esc(o.name)+'<div class="muted">'+esc(o.lang==='en'?'English':'Spanish')+'</div></td>'
+        + '<td>'+esc(o.villa||'—')+'</td>'
+        + '<td><code class="tag">'+esc(o.code||'')+'</code></td>'
+        + '<td class="muted">'+esc(o.email||'')+'</td>'
+        + '<td><button class="link" data-delo="'+esc(o.id)+'">Delete</button></td></tr>';
+    });
+    html += '</tbody></table>'; $('oList').innerHTML = html;
+    $('oList').querySelectorAll('[data-delo]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this owner?'))return; await api('/api/owners/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delo')})}); loadOwners(); }; });
+  }
+
+  $('loginBtn').onclick = async function(){
+    var msg=$('loginMsg'); msg.textContent=''; msg.className='msg';
+    var name=$('loginName').value, code=$('loginCode').value;
+    if(!name||!code){ msg.textContent='Choose your name and enter your code.'; msg.className='msg err'; return; }
+    $('loginBtn').disabled=true;
+    var r=await api('/api/login',{method:'POST',body:JSON.stringify({name:name,code:code})});
+    $('loginBtn').disabled=false;
+    if(r.status===200){ $('loginCode').value=''; boot(); } else { msg.textContent=(r.body&&r.body.error)||'Sign-in failed.'; msg.className='msg err'; }
+  };
+  $('loginCode').addEventListener('keydown',function(e){ if(e.key==='Enter') $('loginBtn').click(); });
+  $('logout').onclick = async function(){ await api('/api/logout',{method:'POST'}); boot(); };
+
+  $('pAdd').onclick = async function(){
+    var msg=$('pMsg'); msg.textContent=''; msg.className='msg';
+    var name=$('pName').value.trim(); if(!name){ msg.textContent='Enter a villa name.'; msg.className='msg err'; return; }
+    var r=await api('/api/properties',{method:'POST',body:JSON.stringify({name:name,meta:$('pMeta').value.trim()})});
+    if(r.status===200){ $('pName').value=''; $('pMeta').value=''; msg.textContent='Villa added.'; msg.className='msg ok'; loadProperties(); }
+    else { msg.textContent=(r.body&&r.body.error)||'Could not add.'; msg.className='msg err'; }
+  };
+
+  $('oAdd').onclick = async function(){
+    var msg=$('oMsg'); msg.textContent=''; msg.className='msg';
+    var payload={ name:$('oName').value.trim(), lastName:$('oLast').value.trim(), villa:$('oVilla').value,
+                  email:$('oEmail').value.trim(), code:$('oCode').value.trim(), lang:$('oLang').value };
+    if(!payload.name){ msg.textContent='Enter the owner name.'; msg.className='msg err'; return; }
+    if(!payload.code){ msg.textContent='Enter a login code for the owner.'; msg.className='msg err'; return; }
+    var r=await api('/api/owners',{method:'POST',body:JSON.stringify(payload)});
+    if(r.status===200){ $('oName').value=''; $('oLast').value=''; $('oEmail').value=''; $('oCode').value='';
+      msg.textContent='Owner added. Share their login code so they can sign in at /owner.'; msg.className='msg ok'; loadOwners(); }
+    else { msg.textContent=(r.body&&r.body.error)||'Could not add.'; msg.className='msg err'; }
+  };
+
+  boot();
+</script>
+</body>
+</html>
