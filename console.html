@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Property Console · Caribbean Paradise Homes</title>
+<title>Consola de Propiedades · Caribbean Paradise Homes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&display=swap" rel="stylesheet" />
@@ -135,17 +135,17 @@
   <div class="loginBox">
     <img src="/cph-logo.png" alt="Caribbean Paradise Homes" />
     <div class="lbrand">Caribbean Paradise Homes</div>
-    <h2>Property Console</h2>
-    <div class="lsub">Staff sign-in</div>
-    <div class="lfield"><label>Name</label>
-      <select id="loginName"><option value="">Choose…</option><option value="ivonna">Ivonna</option><option value="jan">Jan</option><option value="maria">Maria</option></select>
+    <h2>Consola de Propiedades</h2>
+    <div class="lsub">Acceso del personal</div>
+    <div class="lfield"><label>Nombre</label>
+      <select id="loginName"><option value="">Elegir…</option><option value="ivonna">Ivonna</option><option value="jan">Jan</option><option value="maria">Maria</option></select>
     </div>
-    <div class="lfield"><label>Access code</label>
+    <div class="lfield"><label>Código de acceso</label>
       <input id="loginCode" type="password" autocomplete="off" placeholder="••••••" />
     </div>
-    <button class="signin" id="loginBtn">Sign in</button>
+    <button class="signin" id="loginBtn">Iniciar sesión</button>
     <div id="loginMsg" class="msg"></div>
-    <div class="lfoot">Authorized staff only.</div>
+    <div class="lfoot">Solo personal autorizado.</div>
   </div>
 </div>
 
@@ -154,24 +154,24 @@
   <aside class="sidebar">
     <div class="brand">
       <img src="/cph-logo.png" alt="CPH" />
-      <div><div class="bt">Property Console</div><div class="bs">Caribbean Paradise Homes</div></div>
+      <div><div class="bt">Consola de Propiedades</div><div class="bs">Caribbean Paradise Homes</div></div>
     </div>
-    <button class="quickadd" id="quickAddBtn">+ Quick add</button>
+    <button class="quickadd" id="quickAddBtn">+ Añadir rápido</button>
     <nav class="nav" id="nav">
-      <button data-view="overview" aria-current="true">Overview</button>
-      <button data-view="utilities">Utilities</button>
-      <button data-view="labour">Labour &amp; hours</button>
-      <button data-view="maintenance">Maintenance <span class="badge" id="woBadge"></span></button>
-      <button data-view="quotes">Quotes <span class="badge" id="qtBadge"></span></button>
-      <button data-view="payments">Payments <span class="badge" id="invBadge"></span></button>
-      <button data-view="statement">Owner statement</button>
-      <button data-view="field">Field app</button>
-      <div class="navgroup">Admin</div>
-      <button data-view="manage" id="navManage">Manage</button>
+      <button data-view="overview" aria-current="true">Resumen</button>
+      <button data-view="utilities">Servicios</button>
+      <button data-view="labour">Personal y horas</button>
+      <button data-view="maintenance">Mantenimiento <span class="badge" id="woBadge"></span></button>
+      <button data-view="quotes">Cotizaciones <span class="badge" id="qtBadge"></span></button>
+      <button data-view="payments">Pagos <span class="badge" id="invBadge"></span></button>
+      <button data-view="statement">Estado del propietario</button>
+      <button data-view="field">App de campo</button>
+      <div class="navgroup">Administración</div>
+      <button data-view="manage" id="navManage">Gestionar</button>
     </nav>
     <div class="sidefoot">
       <div id="whoName"></div>
-      <button id="logout" style="margin-top:8px;">Log out</button>
+      <button id="logout" style="margin-top:8px;">Cerrar sesión</button>
     </div>
   </aside>
   <main class="main" id="main"></main>
@@ -180,30 +180,41 @@
 <!-- QUICK ADD -->
 <div class="modalWrap" id="qaWrap">
   <div class="modalBox">
-    <div class="modalHead"><div><h2 id="qaTitle">Quick add</h2><div class="sub" id="qaSub">What do you want to add?</div></div><button class="xbtn" id="qaClose">×</button></div>
+    <div class="modalHead"><div><h2 id="qaTitle">Añadir rápido</h2><div class="sub" id="qaSub">¿Qué desea añadir?</div></div><button class="xbtn" id="qaClose">×</button></div>
     <div id="qaBody"></div>
   </div>
 </div>
 
-<div id="cphUpdateBar" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#211e1a;color:#fff;padding:12px 16px;text-align:center;font-size:14px;z-index:9999;box-shadow:0 -2px 12px rgba(0,0,0,.15)">A new version of the console is available.<button onclick="location.reload(true)" style="margin-left:12px;background:#2f7d4f;color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:14px;">Reload</button></div>
+<div id="cphUpdateBar" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#211e1a;color:#fff;padding:12px 16px;text-align:center;font-size:14px;z-index:9999;box-shadow:0 -2px 12px rgba(0,0,0,.15)">Hay una nueva versión de la consola.<button onclick="location.reload(true)" style="margin-left:12px;background:#2f7d4f;color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:14px;">Recargar</button></div>
 
 <script>
 var $ = function(id){ return document.getElementById(id); };
 var ME = null, VILLAS = [], STATUSES = [], VIEW = 'overview', WO_FILTER = 'open';
 function stStyle(s){ var m={'Open':['#eee7dd','#8a8378'],'Quoting':['#f5efdf','#8a6a1f'],'Approved':['#edf0e7','#4a5a3c'],'Parts ordered':['#e9eef2','#2f4a5a'],'Scheduled':['#e9eef2','#2f4a5a'],'Done':['#edf0e7','#4a5a3c']}; var c=m[s]||['#eee7dd','#8a8378']; return 'background:'+c[0]+';color:'+c[1]; }
 
+
+/* Spanish display labels — stored values stay English so existing data keeps working */
+var L_WO={'Open':'Abierta','Quoting':'Cotizando','Approved':'Aprobada','Parts ordered':'Piezas pedidas','Scheduled':'Programada','Done':'Terminada'};
+var L_INV={'Unpaid':'Por pagar','Approved':'Aprobada','Paid':'Pagada','Disputed':'En disputa'};
+var L_CHG={'Owner':'Propietario','Absorbed':'Asumido','Rental':'Alquiler'};
+var L_QT={'Pending':'Pendiente','Approved':'Aprobada','Rejected':'Rechazada'};
+var L_ROLE={'Housekeeper':'Ama de llaves','Gardener':'Jardinero','Pool':'Piscina','Maintenance':'Mantenimiento','Caretaker':'Cuidador','Security':'Seguridad','Other':'Otro'};
+var L_RECUR={'None':'Ninguna','Weekly':'Semanal','Monthly':'Mensual','Quarterly':'Trimestral','Semi-annual':'Semestral','Annually':'Anual'};
+function tr(map,v){ return map[v]||v; }
+function optsL(map,arr,sel){ return arr.map(function(v){ return '<option value="'+esc(v)+'"'+(v===sel?' selected':'')+'>'+esc(tr(map,v))+'</option>'; }).join(''); }
+function fillSelectL(el,map,arr,sel){ if(el) el.innerHTML=optsL(map,arr,sel); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
-function nfmt(n){ return n==null ? '—' : Number(n).toLocaleString('en-US'); }
-function rd(n){ return n==null ? '—' : 'RD$'+Number(n).toLocaleString('en-US'); }
-function when(iso){ try{ return new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return iso; } }
+function nfmt(n){ return n==null ? '—' : Number(n).toLocaleString('es-DO'); }
+function rd(n){ return n==null ? '—' : 'RD$'+Number(n).toLocaleString('es-DO'); }
+function when(iso){ try{ return new Date(iso).toLocaleString('es-DO',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return iso; } }
 async function api(p,o){ var r=await fetch(p,Object.assign({headers:{'Content-Type':'application/json'}},o||{})); var b={}; try{b=await r.json();}catch(e){} return {status:r.status,body:b}; }
 function fillSelect(sel,arr,ph){ sel.innerHTML=''; if(ph){var o0=document.createElement('option');o0.value='';o0.textContent=ph;sel.appendChild(o0);} arr.forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}); }
 /* month-over-month deltas */
 function monthKey(iso){ var d=new Date(iso); return isNaN(d)?null:(d.getFullYear()*12+d.getMonth()); }
 function monthDelta(items,field){ var now=new Date(); var cm=now.getFullYear()*12+now.getMonth(); var c=0,p=0; (items||[]).forEach(function(x){ var k=monthKey(x[field]); if(k===cm)c++; else if(k===cm-1)p++; }); return {now:c,prev:p,delta:c-p}; }
-function deltaHtml(d){ if(!d) return ''; if(d.delta>0) return '<span style="color:#4a5a3c;font-size:12.5px">▲ '+d.delta+' vs last month</span>'; if(d.delta<0) return '<span style="color:#a8543a;font-size:12.5px">▼ '+Math.abs(d.delta)+' vs last month</span>'; return '<span style="color:#a09a8f;font-size:12.5px">'+(d.now?'no change vs last month':'—')+'</span>'; }
-function deltaInline(d){ if(!d) return ''; if(d.delta>0) return ' · <span style="color:#4a5a3c">▲ '+d.delta+' this month</span>'; if(d.delta<0) return ' · <span style="color:#a8543a">▼ '+Math.abs(d.delta)+' vs last month</span>'; return ''; }
+function deltaHtml(d){ if(!d) return ''; if(d.delta>0) return '<span style="color:#4a5a3c;font-size:12.5px">▲ '+d.delta+' vs. mes pasado</span>'; if(d.delta<0) return '<span style="color:#a8543a;font-size:12.5px">▼ '+Math.abs(d.delta)+' vs. mes pasado</span>'; return '<span style="color:#a09a8f;font-size:12.5px">'+(d.now?'sin cambio vs. mes pasado':'—')+'</span>'; }
+function deltaInline(d){ if(!d) return ''; if(d.delta>0) return ' · <span style="color:#4a5a3c">▲ '+d.delta+' este mes</span>'; if(d.delta<0) return ' · <span style="color:#a8543a">▼ '+Math.abs(d.delta)+' vs. mes pasado</span>'; return ''; }
 
 /* ---- boot / auth ---- */
 async function boot(){
@@ -211,7 +222,7 @@ async function boot(){
   if(me.status !== 200){ document.body.classList.add('login-mode'); return; }
   ME = me.body; VILLAS = me.body.villas || []; STATUSES = me.body.wo_statuses || [];
   document.body.classList.remove('login-mode');
-  $('whoName').textContent = 'Signed in as ' + cap(ME.user);
+  $('whoName').textContent = 'Sesión iniciada como ' + cap(ME.user);
   $('navManage').style.display = ME.isAdmin ? '' : 'none';
   updateBadges();
   go(VIEW);
@@ -240,15 +251,15 @@ function go(view){
 }
 
 /* ---- OVERVIEW (live, from real data) ---- */
-function monthLabel(){ return new Date().toLocaleString('en-US',{month:'long',year:'numeric'}); }
+function monthLabel(){ return new Date().toLocaleString('es-DO',{month:'long',year:'numeric'}); }
 function thisMonth(){ return new Date().toISOString().slice(0,7); }
 async function viewOverview(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Portfolio · '+esc(monthLabel())+'</div><h1>Where things stand</h1><div class="sub">Live figures from your own records · '+VILLAS.length+' villas</div></div>'
+  m.innerHTML='<div class="head"><div class="eyebrow">Portafolio · '+esc(monthLabel())+'</div><h1>Cómo va el mes</h1><div class="sub">Cifras reales de sus registros · '+VILLAS.length+' villas</div></div>'
    +'<div class="stats" id="ovStats"></div>'
-   +'<div class="card"><h2 style="margin:0 0 10px;font-size:19px">By villa <span class="muted" style="font-weight:400">· click a villa for its profile</span></h2><div id="ovTable"></div></div>'
-   +'<div class="row" style="gap:18px;align-items:flex-start"><div style="flex:1;min-width:280px"><div class="card"><h2 style="margin:0 0 4px;font-size:19px">Needs attention</h2><div id="ovAlerts"></div></div></div>'
-   +'<div style="flex:1;min-width:280px"><div class="card"><h2 style="margin:0 0 4px;font-size:19px">Latest activity</h2><div id="ovRecent"></div></div></div></div>';
+   +'<div class="card"><h2 style="margin:0 0 10px;font-size:19px">Por villa <span class="muted" style="font-weight:400">· haga clic para ver la ficha</span></h2><div id="ovTable"></div></div>'
+   +'<div class="row" style="gap:18px;align-items:flex-start"><div style="flex:1;min-width:280px"><div class="card"><h2 style="margin:0 0 4px;font-size:19px">Requiere atención</h2><div id="ovAlerts"></div></div></div>'
+   +'<div style="flex:1;min-width:280px"><div class="card"><h2 style="margin:0 0 4px;font-size:19px">Actividad reciente</h2><div id="ovRecent"></div></div></div></div>';
   var rr=await api('/api/readings'), ww=await api('/api/workorders'), ii=await api('/api/invoices'), hh=await api('/api/hours'), qq=await api('/api/quotes');
   var reads=rr.body.readings||[], wos=ww.body.workorders||[], invs=ii.body.invoices||[], hrs=hh.body.hours||[], qts=qq.body.quotes||[];
   var mk=thisMonth();
@@ -259,10 +270,10 @@ async function viewOverview(){
   var openWo=wos.filter(function(x){return x.status!=='Done';});
   var unpaid=invs.filter(function(x){return x.status!=='Paid';});
   $('ovStats').innerHTML =
-    '<div class="stat"><div class="k">Water</div><div class="v">'+nfmt(sum(mReads,function(x){return x.water_gal;}))+'</div><div class="muted">gallons · this month</div></div>'+
-    '<div class="stat"><div class="k">Electricity</div><div class="v">'+nfmt(sum(mReads,function(x){return x.electricity_kwh;}))+'</div><div class="muted">kWh · this month</div></div>'+
-    '<div class="stat"><div class="k">Labour</div><div class="v">'+nfmt(sum(mHours,function(x){return x.hours;}))+'</div><div class="muted">hours · this month</div></div>'+
-    '<div class="stat"><div class="k">Invoiced</div><div class="v" style="font-size:24px">'+rd(sum(mInv,function(x){return x.amount;}))+'</div><div class="muted">this month</div></div>';
+    '<div class="stat"><div class="k">Agua</div><div class="v">'+nfmt(sum(mReads,function(x){return x.water_gal;}))+'</div><div class="muted">galones · este mes</div></div>'+
+    '<div class="stat"><div class="k">Electricidad</div><div class="v">'+nfmt(sum(mReads,function(x){return x.electricity_kwh;}))+'</div><div class="muted">kWh · este mes</div></div>'+
+    '<div class="stat"><div class="k">Personal</div><div class="v">'+nfmt(sum(mHours,function(x){return x.hours;}))+'</div><div class="muted">horas · este mes</div></div>'+
+    '<div class="stat"><div class="k">Facturado</div><div class="v" style="font-size:24px">'+rd(sum(mInv,function(x){return x.amount;}))+'</div><div class="muted">este mes</div></div>';
   // per-villa roll-up
   var rows=VILLAS.map(function(v){
     return { villa:v,
@@ -272,65 +283,65 @@ async function viewOverview(){
       spend:sum(mInv.filter(function(x){return x.villa===v;}),function(x){return x.amount;}),
       open:openWo.filter(function(x){return x.villa===v;}).length };
   });
-  $('ovTable').innerHTML = rows.length ? '<table><thead><tr><th>Villa</th><th style="text-align:right">Gallons</th><th style="text-align:right">kWh</th><th style="text-align:right">Hours</th><th style="text-align:right">Spend</th><th style="text-align:right">Open jobs</th></tr></thead><tbody>'
+  $('ovTable').innerHTML = rows.length ? '<table><thead><tr><th>Villa</th><th style="text-align:right">Galones</th><th style="text-align:right">kWh</th><th style="text-align:right">Horas</th><th style="text-align:right">Gasto</th><th style="text-align:right">Trabajos</th></tr></thead><tbody>'
     +rows.map(function(r){ return '<tr data-villa="'+esc(r.villa)+'" style="cursor:pointer"><td style="font-weight:500">'+esc(r.villa)+'</td><td class="num">'+(r.gal?nfmt(r.gal):'—')+'</td><td class="num">'+(r.kwh?nfmt(r.kwh):'—')+'</td><td class="num">'+(r.hrs||'—')+'</td><td class="num">'+(r.spend?rd(r.spend):'—')+'</td><td class="num">'+(r.open||'—')+'</td></tr>'; }).join('')
-    +'</tbody></table>' : '<div class="empty">No villas yet — add them under Manage.</div>';
+    +'</tbody></table>' : '<div class="empty">Aún no hay villas — añádalas en Gestionar.</div>';
   $('ovTable').querySelectorAll('[data-villa]').forEach(function(tr){ tr.onclick=function(){ viewVillaProfile(tr.getAttribute('data-villa')); }; });
   // alerts built from real signals
   var alerts=[];
   openWo.filter(function(x){return x.scheduled_date && x.scheduled_date < new Date().toISOString().slice(0,10);})
-    .forEach(function(x){ alerts.push(['#a8543a', x.title+' — overdue', esc(x.villa)+' · was due '+esc(x.scheduled_date)]); });
+    .forEach(function(x){ alerts.push(['#a8543a', x.title+' — atrasada', esc(x.villa)+' · vencía el '+esc(x.scheduled_date)]); });
   invs.filter(function(x){ return x.status!=='Paid' && x.due_date && x.due_date < new Date().toISOString().slice(0,10); })
-    .forEach(function(x){ alerts.push(['#a8543a', x.vendor+' — invoice overdue', rd(x.amount)+' · was due '+esc(x.due_date)]); });
+    .forEach(function(x){ alerts.push(['#a8543a', x.vendor+' — factura vencida', rd(x.amount)+' · vencía el '+esc(x.due_date)]); });
   qts.filter(function(q){return q.status==='Pending';}).slice(0,3)
-    .forEach(function(q){ alerts.push(['#8a6a1f', q.title+' — quote awaiting decision', esc(q.vendor)+' · '+rd(q.amount)]); });
-  VILLAS.forEach(function(v){ if(!mReads.some(function(x){return x.villa===v;})) alerts.push(['#8a6a1f','No meter reading this month', esc(v)]); });
+    .forEach(function(q){ alerts.push(['#8a6a1f', q.title+' — cotización por decidir', esc(q.vendor)+' · '+rd(q.amount)]); });
+  VILLAS.forEach(function(v){ if(!mReads.some(function(x){return x.villa===v;})) alerts.push(['#8a6a1f','Sin lectura de medidor este mes', esc(v)]); });
   $('ovAlerts').innerHTML = alerts.length ? alerts.slice(0,8).map(function(a){
     return '<div style="display:flex;gap:12px;align-items:flex-start;margin-top:12px"><span style="width:7px;height:7px;border-radius:7px;flex:none;margin-top:6px;background:'+a[0]+'"></span><div><div style="font-size:14px">'+esc(a[1])+'</div><div class="muted">'+a[2]+'</div></div></div>';
-  }).join('') : '<div class="empty">Nothing needs attention.</div>';
+  }).join('') : '<div class="empty">Nada requiere atención.</div>';
   // recent activity across every store
   var acts=[]
-    .concat(wos.map(function(x){return {ts:x.updated_ts||x.created_ts, t:'Work order · '+x.title, s:x.villa+' · '+x.status};}))
-    .concat(invs.map(function(x){return {ts:x.updated_ts||x.created_ts, t:'Invoice · '+x.vendor+' '+rd(x.amount), s:(x.villa||'')+' · '+x.status};}))
-    .concat(reads.map(function(x){return {ts:x.ts, t:'Reading · '+x.villa, s:(x.electricity_kwh!=null?nfmt(x.electricity_kwh)+' kWh ':'')+(x.water_gal!=null?nfmt(x.water_gal)+' gal':'')};}))
-    .concat(hrs.map(function(x){return {ts:x.ts, t:'Hours · '+x.staff_name+' '+x.hours+'h', s:x.villa||''};}))
+    .concat(wos.map(function(x){return {ts:x.updated_ts||x.created_ts, t:'Orden · '+x.title, s:x.villa+' · '+tr(L_WO,x.status)};}))
+    .concat(invs.map(function(x){return {ts:x.updated_ts||x.created_ts, t:'Factura · '+x.vendor+' '+rd(x.amount), s:(x.villa||'')+' · '+tr(L_INV,x.status)};}))
+    .concat(reads.map(function(x){return {ts:x.ts, t:'Lectura · '+x.villa, s:(x.electricity_kwh!=null?nfmt(x.electricity_kwh)+' kWh ':'')+(x.water_gal!=null?nfmt(x.water_gal)+' gal':'')};}))
+    .concat(hrs.map(function(x){return {ts:x.ts, t:'Horas · '+x.staff_name+' '+x.hours+'h', s:x.villa||''};}))
     .sort(function(a,b){ return String(b.ts||'').localeCompare(String(a.ts||'')); }).slice(0,8);
   $('ovRecent').innerHTML = acts.length ? acts.map(function(a){
     return '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:11px"><div><div style="font-size:14px">'+esc(a.t)+'</div><div class="muted">'+esc(a.s)+'</div></div><div class="muted" style="white-space:nowrap">'+esc(when(a.ts))+'</div></div>';
-  }).join('') : '<div class="empty">Nothing logged yet.</div>';
+  }).join('') : '<div class="empty">Aún no hay registros.</div>';
 }
 
 /* ---- METER READINGS ---- */
 function viewReadings(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Utilities</div><h1>Water &amp; electricity, metered</h1><div class="sub">Per villa · shared log <span id="rdSum"></span></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Add a reading</h2>'
-   +'<div class="row"><div><label>Villa</label><select id="rVilla"></select></div><div><label>Electricity (kWh)</label><input id="rElec" inputmode="decimal" placeholder="e.g. 9120"/></div><div><label>Water (gallons)</label><input id="rWater" inputmode="decimal" placeholder="e.g. 31400"/></div></div>'
-   +'<div style="margin-top:12px"><label>Note (optional)</label><textarea id="rNote" placeholder="Anything worth flagging"></textarea></div>'
-   +'<div style="margin-top:14px"><button class="primary" id="rSave">Save reading</button></div><div id="rMsg" class="msg"></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Consumption by villa <span class="muted" style="font-weight:400">· this month</span></h2><div id="rChart"></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Reading log</h2><div id="rList"></div></div>';
+  m.innerHTML='<div class="head"><div class="eyebrow">Servicios</div><h1>Agua y electricidad, medidas</h1><div class="sub">Por villa · registro compartido <span id="rdSum"></span></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Añadir una lectura</h2>'
+   +'<div class="row"><div><label>Villa</label><select id="rVilla"></select></div><div><label>Electricidad (kWh)</label><input id="rElec" inputmode="decimal" placeholder="ej. 9120"/></div><div><label>Agua (galones)</label><input id="rWater" inputmode="decimal" placeholder="ej. 31400"/></div></div>'
+   +'<div style="margin-top:12px"><label>Nota (opcional)</label><textarea id="rNote" placeholder="Algo que valga la pena señalar"></textarea></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="rSave">Guardar lectura</button></div><div id="rMsg" class="msg"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Consumo por villa <span class="muted" style="font-weight:400">· este mes</span></h2><div id="rChart"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Registro de lecturas</h2><div id="rList"></div></div>';
   fillSelect($('rVilla'), VILLAS);
   $('rSave').onclick = async function(){
     var msg=$('rMsg'); msg.textContent=''; msg.className='msg';
     var p={villa:$('rVilla').value, electricity_kwh:$('rElec').value.trim(), water_gal:$('rWater').value.trim(), note:$('rNote').value.trim()};
-    if(!p.electricity_kwh && !p.water_gal){ msg.textContent='Enter at least one reading.'; msg.className='msg err'; return; }
+    if(!p.electricity_kwh && !p.water_gal){ msg.textContent='Ingrese al menos una lectura.'; msg.className='msg err'; return; }
     $('rSave').disabled=true; var r=await api('/api/readings',{method:'POST',body:JSON.stringify(p)}); $('rSave').disabled=false;
-    if(r.status===200){ msg.textContent='Saved.'; msg.className='msg ok'; $('rElec').value='';$('rWater').value='';$('rNote').value=''; loadReadings(); }
-    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+    if(r.status===200){ msg.textContent='Guardado.'; msg.className='msg ok'; $('rElec').value='';$('rWater').value='';$('rNote').value=''; loadReadings(); }
+    else { msg.textContent=(r.body&&r.body.error)||'No se pudo guardar.'; msg.className='msg err'; }
   };
   loadReadings();
 }
 async function loadReadings(){
-  var wrap=$('rList'); wrap.innerHTML='<div class="empty">Loading…</div>';
+  var wrap=$('rList'); wrap.innerHTML='<div class="empty">Cargando…</div>';
   var r=await api('/api/readings'); var rows=r.body.readings||[];
-  var sumEl=$('rdSum'); if(sumEl){ sumEl.innerHTML='· '+rows.length+' logged'+deltaInline(monthDelta(rows,'ts')); }
+  var sumEl=$('rdSum'); if(sumEl){ sumEl.innerHTML='· '+rows.length+' registradas'+deltaInline(monthDelta(rows,'ts')); }
   drawConsumption(rows);
-  if(!rows.length){ wrap.innerHTML='<div class="empty">No readings yet.</div>'; return; }
-  wrap.innerHTML='<table><thead><tr><th>Villa</th><th style="text-align:right">Electricity</th><th style="text-align:right">Water</th><th>Note</th><th>By</th><th>When</th><th></th></tr></thead><tbody>'
+  if(!rows.length){ wrap.innerHTML='<div class="empty">Aún no hay lecturas.</div>'; return; }
+  wrap.innerHTML='<table><thead><tr><th>Villa</th><th style="text-align:right">Electricidad</th><th style="text-align:right">Agua</th><th>Nota</th><th>Por</th><th>Cuándo</th><th></th></tr></thead><tbody>'
     +rows.map(function(x){ return '<tr><td>'+esc(x.villa)+'</td><td class="num">'+(x.electricity_kwh==null?'—':nfmt(x.electricity_kwh)+' <span style="color:#a09a8f">kWh</span>')+'</td><td class="num">'+(x.water_gal==null?'—':nfmt(x.water_gal)+' <span style="color:#a09a8f">gal</span>')+'</td><td>'+esc(x.note||'')+'</td><td><span class="pill">'+esc(cap(x.user))+'</span></td><td style="color:#6e6862">'+esc(when(x.ts))+'</td><td><button class="link" data-del="'+esc(x.id)+'">Delete</button></td></tr>'; }).join('')
     +'</tbody></table>';
-  wrap.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this reading?'))return; await api('/api/readings/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-del')})}); loadReadings(); }; });
+  wrap.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=async function(){ if(!confirm('¿Eliminar esta lectura?'))return; await api('/api/readings/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-del')})}); loadReadings(); }; });
 }
 
 /* consumption bars from real readings (this month, per villa) */
@@ -346,8 +357,8 @@ function drawConsumption(rows){
   });
   var maxK=Math.max.apply(null,data.map(function(d){return d.kwh;}).concat([1]));
   var maxG=Math.max.apply(null,data.map(function(d){return d.gal;}).concat([1]));
-  if(!data.some(function(d){return d.kwh||d.gal;})){ el.innerHTML='<div class="empty">No readings logged this month yet — add one above and the chart fills in.</div>'; return; }
-  el.innerHTML='<div style="display:flex;gap:18px;margin:6px 0 14px;font-size:12.5px;color:var(--soft)"><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#4a5a3c;margin-right:6px"></span>Electricity (kWh)</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#2f4a5a;margin-right:6px"></span>Water (gal)</span></div>'
+  if(!data.some(function(d){return d.kwh||d.gal;})){ el.innerHTML='<div class="empty">Aún no hay lecturas este mes — añada una arriba y el gráfico se llenará.</div>'; return; }
+  el.innerHTML='<div style="display:flex;gap:18px;margin:6px 0 14px;font-size:12.5px;color:var(--soft)"><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#4a5a3c;margin-right:6px"></span>Electricidad (kWh)</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#2f4a5a;margin-right:6px"></span>Agua (gal)</span></div>'
    + data.map(function(d){
       return '<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:13.5px"><span>'+esc(d.villa)+'</span><span class="muted">'+(d.kwh?nfmt(d.kwh)+' kWh':'')+(d.kwh&&d.gal?' · ':'')+(d.gal?nfmt(d.gal)+' gal':'')+'</span></div>'
         +'<div style="display:flex;gap:4px;flex-direction:column;margin-top:5px">'
@@ -361,47 +372,47 @@ function drawConsumption(rows){
 var STAFF=[];
 function viewLabour(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Labour</div><h1>Hours, shifts and payroll</h1><div class="sub">Staff and the hours they work per villa <span id="lbSum"></span></div></div>'
+  m.innerHTML='<div class="head"><div class="eyebrow">Personal</div><h1>Horas, turnos y nómina</h1><div class="sub">Personal y las horas trabajadas por villa <span id="lbSum"></span></div></div>'
    +'<div class="stats" id="lbStats"></div>'
-   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Log hours</h2>'
-   +'<div class="row"><div><label>Staff member</label><select id="hStaff"></select></div><div><label>Villa</label><select id="hVilla"></select></div><div><label>Hours</label><input id="hHours" inputmode="decimal" placeholder="e.g. 8"/></div><div><label>Date</label><input id="hDate" type="date"/></div></div>'
-   +'<div style="margin-top:12px"><label>Note (optional)</label><input id="hNote" placeholder="e.g. Deep clean after checkout"/></div>'
-   +'<div style="margin-top:14px"><button class="primary" id="hSave">Log hours</button></div><div id="hMsg" class="msg"></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Staff</h2>'
-   +'<div class="row"><div><label>Name</label><input id="sName" placeholder="e.g. Marisol R."/></div><div><label>Role</label><select id="sRole"></select></div><div><label>Villa (usual)</label><select id="sVilla"></select></div><div><label>Rate per hour (RD$)</label><input id="sRate" inputmode="decimal" placeholder="optional"/></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="sAdd">Add staff</button></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Registrar horas</h2>'
+   +'<div class="row"><div><label>Personal</label><select id="hStaff"></select></div><div><label>Villa</label><select id="hVilla"></select></div><div><label>Horas</label><input id="hHours" inputmode="decimal" placeholder="ej. 8"/></div><div><label>Fecha</label><input id="hDate" type="date"/></div></div>'
+   +'<div style="margin-top:12px"><label>Nota (opcional)</label><input id="hNote" placeholder="ej. Limpieza profunda tras salida"/></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="hSave">Registrar horas</button></div><div id="hMsg" class="msg"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Personal</h2>'
+   +'<div class="row"><div><label>Nombre</label><input id="sName" placeholder="ej. Marisol R."/></div><div><label>Cargo</label><select id="sRole"></select></div><div><label>Villa (habitual)</label><select id="sVilla"></select></div><div><label>Tarifa por hora (RD$)</label><input id="sRate" inputmode="decimal" placeholder="opcional"/></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="sAdd">Añadir personal</button></div></div>'
    +'<div id="sMsg" class="msg"></div><div id="sList"></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Hours log</h2><div id="hList"></div></div>';
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Registro de horas</h2><div id="hList"></div></div>';
   fillSelect($('hVilla'), ['All villas'].concat(VILLAS));
   fillSelect($('sVilla'), ['—'].concat(VILLAS));
   $('hDate').value=new Date().toISOString().slice(0,10);
   $('sAdd').onclick=async function(){
     var msg=$('sMsg'); msg.textContent=''; msg.className='msg';
     var p={name:$('sName').value.trim(), role:$('sRole').value, villa:($('sVilla').value==='—'?'':$('sVilla').value), rate:$('sRate').value.trim()};
-    if(!p.name){ msg.textContent='Enter a name.'; msg.className='msg err'; return; }
+    if(!p.name){ msg.textContent='Ingrese un nombre.'; msg.className='msg err'; return; }
     var r=await api('/api/staff',{method:'POST',body:JSON.stringify(p)});
-    if(r.status===200){ $('sName').value='';$('sRate').value=''; msg.textContent='Staff added.'; msg.className='msg ok'; loadStaff(); }
-    else { msg.textContent=(r.body&&r.body.error)||'Could not add.'; msg.className='msg err'; }
+    if(r.status===200){ $('sName').value='';$('sRate').value=''; msg.textContent='Personal añadido.'; msg.className='msg ok'; loadStaff(); }
+    else { msg.textContent=(r.body&&r.body.error)||'No se pudo añadir.'; msg.className='msg err'; }
   };
   $('hSave').onclick=async function(){
     var msg=$('hMsg'); msg.textContent=''; msg.className='msg';
     var p={staff_id:$('hStaff').value, villa:$('hVilla').value, hours:$('hHours').value.trim(), date:$('hDate').value, note:$('hNote').value.trim()};
-    if(!p.staff_id){ msg.textContent='Add a staff member first.'; msg.className='msg err'; return; }
-    if(!p.hours){ msg.textContent='How many hours?'; msg.className='msg err'; return; }
+    if(!p.staff_id){ msg.textContent='Primero añada personal.'; msg.className='msg err'; return; }
+    if(!p.hours){ msg.textContent='¿Cuántas horas?'; msg.className='msg err'; return; }
     $('hSave').disabled=true; var r=await api('/api/hours',{method:'POST',body:JSON.stringify(p)}); $('hSave').disabled=false;
-    if(r.status===200){ $('hHours').value='';$('hNote').value=''; msg.textContent='Logged.'; msg.className='msg ok'; loadHours(); }
-    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+    if(r.status===200){ $('hHours').value='';$('hNote').value=''; msg.textContent='Registrado.'; msg.className='msg ok'; loadHours(); }
+    else { msg.textContent=(r.body&&r.body.error)||'No se pudo guardar.'; msg.className='msg err'; }
   };
   loadStaff(); loadHours();
 }
 async function loadStaff(){
   var r=await api('/api/staff'); STAFF=r.body.staff||[]; var roles=r.body.roles||[];
-  if($('sRole') && !$('sRole').options.length) fillSelect($('sRole'), roles);
+  if($('sRole') && !$('sRole').options.length) fillSelectL($('sRole'), L_ROLE, roles);
   var active=STAFF.filter(function(s){return s.active!==false;});
-  if($('hStaff')){ $('hStaff').innerHTML=active.map(function(s){ return '<option value="'+esc(s.id)+'">'+esc(s.name)+(s.role?' · '+esc(s.role):'')+'</option>'; }).join('') || '<option value="">No staff yet</option>'; }
-  $('sList').innerHTML = STAFF.length ? '<table><thead><tr><th>Name</th><th>Role</th><th>Usual villa</th><th style="text-align:right">Rate</th><th></th></tr></thead><tbody>'
-    +STAFF.map(function(s){ return '<tr><td style="font-weight:500">'+esc(s.name)+'</td><td>'+esc(s.role||'')+'</td><td class="muted">'+esc(s.villa||'—')+'</td><td class="num">'+(s.rate!=null?rd(s.rate)+'/h':'—')+'</td><td><button class="link" data-dels="'+esc(s.id)+'">Delete</button></td></tr>'; }).join('')
-    +'</tbody></table>' : '<div class="empty">No staff yet. Add your housekeepers, gardeners and pool crew above.</div>';
-  $('sList').querySelectorAll('[data-dels]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this staff member?'))return; await api('/api/staff/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-dels')})}); loadStaff(); }; });
+  if($('hStaff')){ $('hStaff').innerHTML=active.map(function(s){ return '<option value="'+esc(s.id)+'">'+esc(s.name)+(s.role?' · '+esc(s.role):'')+'</option>'; }).join('') || '<option value="">Aún no hay personal</option>'; }
+  $('sList').innerHTML = STAFF.length ? '<table><thead><tr><th>Nombre</th><th>Cargo</th><th>Villa habitual</th><th style="text-align:right">Tarifa</th><th></th></tr></thead><tbody>'
+    +STAFF.map(function(s){ return '<tr><td style="font-weight:500">'+esc(s.name)+'</td><td>'+esc(tr(L_ROLE,s.role||''))+'</td><td class="muted">'+esc(s.villa||'—')+'</td><td class="num">'+(s.rate!=null?rd(s.rate)+'/h':'—')+'</td><td><button class="link" data-dels="'+esc(s.id)+'">Delete</button></td></tr>'; }).join('')
+    +'</tbody></table>' : '<div class="empty">Aún no hay personal. Añada arriba a sus amas de llaves, jardineros y personal de piscina.</div>';
+  $('sList').querySelectorAll('[data-dels]').forEach(function(b){ b.onclick=async function(){ if(!confirm('¿Eliminar a esta persona?'))return; await api('/api/staff/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-dels')})}); loadStaff(); }; });
 }
 async function loadHours(){
   var wrap=$('hList'); if(!wrap) return;
@@ -410,14 +421,14 @@ async function loadHours(){
   var totH=mrows.reduce(function(t,x){return t+(Number(x.hours)||0);},0);
   var totC=mrows.reduce(function(t,x){return t+(Number(x.cost)||0);},0);
   if($('lbStats')) $('lbStats').innerHTML=
-     '<div class="stat"><div class="k">Hours this month</div><div class="v">'+nfmt(totH)+'</div></div>'
-    +'<div class="stat"><div class="k">Labour cost</div><div class="v" style="font-size:24px">'+rd(totC)+'</div></div>'
-    +'<div class="stat"><div class="k">Active staff</div><div class="v">'+STAFF.filter(function(s){return s.active!==false;}).length+'</div></div>';
-  if($('lbSum')) $('lbSum').innerHTML='· '+rows.length+' entries'+deltaInline(monthDelta(rows,'date'));
-  wrap.innerHTML = rows.length ? '<table><thead><tr><th>Date</th><th>Staff</th><th>Villa</th><th style="text-align:right">Hours</th><th style="text-align:right">Cost</th><th>Note</th><th></th></tr></thead><tbody>'
+     '<div class="stat"><div class="k">Horas este mes</div><div class="v">'+nfmt(totH)+'</div></div>'
+    +'<div class="stat"><div class="k">Costo de personal</div><div class="v" style="font-size:24px">'+rd(totC)+'</div></div>'
+    +'<div class="stat"><div class="k">Personal activo</div><div class="v">'+STAFF.filter(function(s){return s.active!==false;}).length+'</div></div>';
+  if($('lbSum')) $('lbSum').innerHTML='· '+rows.length+' registros'+deltaInline(monthDelta(rows,'date'));
+  wrap.innerHTML = rows.length ? '<table><thead><tr><th>Fecha</th><th>Personal</th><th>Villa</th><th style="text-align:right">Horas</th><th style="text-align:right">Costo</th><th>Nota</th><th></th></tr></thead><tbody>'
     +rows.slice(0,60).map(function(x){ return '<tr><td>'+esc(x.date)+'</td><td style="font-weight:500">'+esc(x.staff_name)+'</td><td class="muted">'+esc(x.villa||'—')+'</td><td class="num">'+x.hours+'</td><td class="num">'+(x.cost!=null?rd(x.cost):'—')+'</td><td class="muted">'+esc(x.note||'')+'</td><td><button class="link" data-delh="'+esc(x.id)+'">Delete</button></td></tr>'; }).join('')
-    +'</tbody></table>' : '<div class="empty">No hours logged yet.</div>';
-  wrap.querySelectorAll('[data-delh]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this entry?'))return; await api('/api/hours/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delh')})}); loadHours(); }; });
+    +'</tbody></table>' : '<div class="empty">Aún no hay horas registradas.</div>';
+  wrap.querySelectorAll('[data-delh]').forEach(function(b){ b.onclick=async function(){ if(!confirm('¿Eliminar este registro?'))return; await api('/api/hours/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delh')})}); loadHours(); }; });
 }
 
 /* ---- QUOTES ---- */
@@ -425,58 +436,58 @@ var QT_FILTER='pending';
 function qtStyle(s){ var m={'Pending':['#f5efdf','#8a6a1f'],'Approved':['#edf0e7','#4a5a3c'],'Rejected':['#f6e9e3','#a8543a']}; var c=m[s]||['#eee7dd','#8a8378']; return 'background:'+c[0]+';color:'+c[1]; }
 function viewQuotes(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Procurement</div><h1>Quotes awaiting decision</h1><div class="sub">Compare vendor bids before you commit <span id="qtSum"></span></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">New quote</h2>'
-   +'<div class="row"><div style="flex:2"><label>Job</label><input id="qTitle" placeholder="e.g. Pool re-plaster"/></div><div><label>Vendor</label><input id="qVendor2" placeholder="e.g. Aqua Sur"/></div><div><label>Amount (RD$)</label><input id="qAmount2" inputmode="decimal"/></div></div>'
-   +'<div class="row" style="margin-top:12px"><div><label>Villa</label><select id="qVilla2"></select></div><div><label>Lead time</label><input id="qLead" placeholder="e.g. 3 weeks"/></div><div style="flex:2"><label>Notes</label><input id="qNote2" placeholder="What is included?"/></div></div>'
-   +'<div style="margin-top:14px"><button class="primary" id="qSave2">Add quote</button></div><div id="qMsg2" class="msg"></div></div>'
+  m.innerHTML='<div class="head"><div class="eyebrow">Compras</div><h1>Cotizaciones por decidir</h1><div class="sub">Compare ofertas antes de comprometerse <span id="qtSum"></span></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Nueva cotización</h2>'
+   +'<div class="row"><div style="flex:2"><label>Trabajo</label><input id="qTitle" placeholder="ej. Repello de piscina"/></div><div><label>Proveedor</label><input id="qVendor2" placeholder="ej. Aqua Sur"/></div><div><label>Monto (RD$)</label><input id="qAmount2" inputmode="decimal"/></div></div>'
+   +'<div class="row" style="margin-top:12px"><div><label>Villa</label><select id="qVilla2"></select></div><div><label>Plazo</label><input id="qLead" placeholder="ej. 3 semanas"/></div><div style="flex:2"><label>Notas</label><input id="qNote2" placeholder="¿Qué incluye?"/></div></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="qSave2">Añadir cotización</button></div><div id="qMsg2" class="msg"></div></div>'
    +'<div class="chips" id="qtChips"></div><div id="qList"></div>';
   fillSelect($('qVilla2'), ['All villas'].concat(VILLAS));
-  var f=[['pending','Pending'],['approved','Approved'],['all','All']];
+  var f=[['pending','Pendientes'],['approved','Aprobadas'],['all','Todas']];
   $('qtChips').innerHTML=f.map(function(c){ return '<button class="chip" data-f="'+c[0]+'" aria-pressed="'+(QT_FILTER===c[0])+'">'+c[1]+'</button>'; }).join('');
   [].forEach.call($('qtChips').children,function(b){ b.onclick=function(){ QT_FILTER=b.getAttribute('data-f'); [].forEach.call($('qtChips').children,function(x){x.setAttribute('aria-pressed', x===b);}); loadQuotes(); }; });
   $('qSave2').onclick=async function(){
     var msg=$('qMsg2'); msg.textContent=''; msg.className='msg';
     var p={title:$('qTitle').value.trim(), vendor:$('qVendor2').value.trim(), amount:$('qAmount2').value.trim(), villa:$('qVilla2').value, lead_time:$('qLead').value.trim(), note:$('qNote2').value.trim()};
-    if(!p.title||!p.vendor||!p.amount){ msg.textContent='Job, vendor and amount are required.'; msg.className='msg err'; return; }
+    if(!p.title||!p.vendor||!p.amount){ msg.textContent='Trabajo, proveedor y monto son obligatorios.'; msg.className='msg err'; return; }
     $('qSave2').disabled=true; var r=await api('/api/quotes',{method:'POST',body:JSON.stringify(p)}); $('qSave2').disabled=false;
-    if(r.status===200){ ['qTitle','qVendor2','qAmount2','qLead','qNote2'].forEach(function(k){$(k).value='';}); msg.textContent='Quote added.'; msg.className='msg ok'; loadQuotes(); updateBadges(); }
-    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+    if(r.status===200){ ['qTitle','qVendor2','qAmount2','qLead','qNote2'].forEach(function(k){$(k).value='';}); msg.textContent='Cotización añadida.'; msg.className='msg ok'; loadQuotes(); updateBadges(); }
+    else { msg.textContent=(r.body&&r.body.error)||'No se pudo guardar.'; msg.className='msg err'; }
   };
   loadQuotes();
 }
 async function loadQuotes(){
-  var wrap=$('qList'); wrap.innerHTML='<div class="empty">Loading…</div>';
+  var wrap=$('qList'); wrap.innerHTML='<div class="empty">Cargando…</div>';
   var r=await api('/api/quotes'); var all=r.body.quotes||[]; var rows=all;
   var pend=all.filter(function(x){return x.status==='Pending';});
-  if($('qtSum')) $('qtSum').innerHTML='· '+pend.length+' pending · '+rd(pend.reduce(function(t,x){return t+(Number(x.amount)||0);},0));
+  if($('qtSum')) $('qtSum').innerHTML='· '+pend.length+' pendientes · '+rd(pend.reduce(function(t,x){return t+(Number(x.amount)||0);},0));
   if(QT_FILTER==='pending') rows=all.filter(function(x){return x.status==='Pending';});
   else if(QT_FILTER==='approved') rows=all.filter(function(x){return x.status==='Approved';});
-  if(!rows.length){ wrap.innerHTML='<div class="empty">Nothing here.</div>'; return; }
+  if(!rows.length){ wrap.innerHTML='<div class="empty">No hay nada aquí.</div>'; return; }
   // group by job so competing bids sit together
   var groups={}; rows.forEach(function(q){ (groups[q.title]=groups[q.title]||[]).push(q); });
   wrap.innerHTML = Object.keys(groups).map(function(title){
     var qs=groups[title].slice().sort(function(a,b){return (a.amount||0)-(b.amount||0);});
     var low=qs[0];
-    return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><h3 style="margin:0;font-size:16px;font-weight:600">'+esc(title)+'</h3><span class="muted">'+esc(qs[0].villa||'')+(qs.length>1?' · '+qs.length+' bids':'')+'</span></div>'
+    return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><h3 style="margin:0;font-size:16px;font-weight:600">'+esc(title)+'</h3><span class="muted">'+esc(qs[0].villa||'')+(qs.length>1?' · '+qs.length+' ofertas':'')+'</span></div>'
       + qs.map(function(q){
-        return '<div class="wocard" style="margin-top:10px"><div class="top"><h3>'+esc(q.vendor)+' · '+rd(q.amount)+(q===low&&qs.length>1?' <span class="badge2" style="background:#edf0e7;color:#4a5a3c">lowest</span>':'')+'</h3><span class="stpill" style="'+qtStyle(q.status)+'">'+esc(q.status)+'</span></div>'
+        return '<div class="wocard" style="margin-top:10px"><div class="top"><h3>'+esc(q.vendor)+' · '+rd(q.amount)+(q===low&&qs.length>1?' <span class="badge2" style="background:#edf0e7;color:#4a5a3c">más baja</span>':'')+'</h3><span class="stpill" style="'+qtStyle(q.status)+'">'+esc(tr(L_QT,q.status))+'</span></div>'
           + (q.note?'<div class="muted" style="margin-top:6px">'+esc(q.note)+'</div>':'')
-          + (q.lead_time?'<div class="badges"><span class="badge2">lead '+esc(q.lead_time)+'</span></div>':'')
+          + (q.lead_time?'<div class="badges"><span class="badge2">plazo '+esc(q.lead_time)+'</span></div>':'')
           + '<div class="foot"><div class="muted">'+esc(cap(q.created_by))+' · '+esc(when(q.created_ts))+'</div>'
-          + '<div style="display:flex;gap:8px"><button class="ghost" data-approve="'+esc(q.id)+'">Approve</button><button class="ghost" data-reject="'+esc(q.id)+'">Reject</button><button class="link" data-delq="'+esc(q.id)+'">Delete</button></div></div></div>';
+          + '<div style="display:flex;gap:8px"><button class="ghost" data-approve="'+esc(q.id)+'">Aprobar</button><button class="ghost" data-reject="'+esc(q.id)+'">Rechazar</button><button class="link" data-delq="'+esc(q.id)+'">Eliminar</button></div></div></div>';
       }).join('') + '</div>';
   }).join('');
   wrap.querySelectorAll('[data-approve]').forEach(function(b){ b.onclick=async function(){ await api('/api/quotes/update',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-approve'),status:'Approved'})}); loadQuotes(); updateBadges(); }; });
   wrap.querySelectorAll('[data-reject]').forEach(function(b){ b.onclick=async function(){ await api('/api/quotes/update',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-reject'),status:'Rejected'})}); loadQuotes(); updateBadges(); }; });
-  wrap.querySelectorAll('[data-delq]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this quote?'))return; await api('/api/quotes/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delq')})}); loadQuotes(); updateBadges(); }; });
+  wrap.querySelectorAll('[data-delq]').forEach(function(b){ b.onclick=async function(){ if(!confirm('¿Eliminar esta cotización?'))return; await api('/api/quotes/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delq')})}); loadQuotes(); updateBadges(); }; });
 }
 
 /* ---- OWNER STATEMENT ---- */
 function viewStatement(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Owner portal</div><h1>Monthly statement</h1><div class="sub">Built from this villa\'s real invoices, readings and labour</div></div>'
-   +'<div class="card"><div class="row"><div><label>Villa</label><select id="stVilla"></select></div><div><label>Month</label><input id="stMonth" type="month"/></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="stGo">Build statement</button></div><div style="flex:0 0 auto;align-self:flex-end"><button class="ghost" id="stPrint">Print / PDF</button></div></div></div>'
+  m.innerHTML='<div class="head"><div class="eyebrow">Portal del propietario</div><h1>Estado de cuenta mensual</h1><div class="sub">Generado con las facturas, lecturas y horas reales de la villa</div></div>'
+   +'<div class="card"><div class="row"><div><label>Villa</label><select id="stVilla"></select></div><div><label>Mes</label><input id="stMonth" type="month"/></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="stGo">Generar estado</button></div><div style="flex:0 0 auto;align-self:flex-end"><button class="ghost" id="stPrint">Imprimir / PDF</button></div></div></div>'
    +'<div id="stOut"></div>';
   fillSelect($('stVilla'), VILLAS);
   $('stMonth').value=thisMonth();
@@ -485,65 +496,65 @@ function viewStatement(){
   loadStatement();
 }
 async function loadStatement(){
-  var out=$('stOut'); if(!$('stVilla').value){ out.innerHTML='<div class="card"><div class="empty">Add a villa first.</div></div>'; return; }
-  out.innerHTML='<div class="card"><div class="empty">Building…</div></div>';
+  var out=$('stOut'); if(!$('stVilla').value){ out.innerHTML='<div class="card"><div class="empty">Primero añada una villa.</div></div>'; return; }
+  out.innerHTML='<div class="card"><div class="empty">Generando…</div></div>';
   var r=await api('/api/statement?villa='+encodeURIComponent($('stVilla').value)+'&month='+encodeURIComponent($('stMonth').value));
-  if(r.status!==200){ out.innerHTML='<div class="card"><div class="msg err">'+esc((r.body&&r.body.error)||'Could not build.')+'</div></div>'; return; }
+  if(r.status!==200){ out.innerHTML='<div class="card"><div class="msg err">'+esc((r.body&&r.body.error)||'No se pudo generar.')+'</div></div>'; return; }
   var d=r.body, t=d.totals;
   out.innerHTML=
     '<div class="stats" style="margin-top:18px">'
-     +'<div class="stat"><div class="k">Owner billable</div><div class="v" style="font-size:24px">'+rd(t.owner_billable)+'</div></div>'
-     +'<div class="stat"><div class="k">Labour</div><div class="v" style="font-size:24px">'+rd(t.labour_cost)+'</div><div class="muted">'+nfmt(t.labour_hours)+' hours</div></div>'
-     +'<div class="stat"><div class="k">Electricity</div><div class="v" style="font-size:24px">'+nfmt(t.electricity_kwh)+'</div><div class="muted">kWh</div></div>'
-     +'<div class="stat"><div class="k">Water</div><div class="v" style="font-size:24px">'+nfmt(t.water_gal)+'</div><div class="muted">gallons</div></div>'
+     +'<div class="stat"><div class="k">Cobrable al propietario</div><div class="v" style="font-size:24px">'+rd(t.owner_billable)+'</div></div>'
+     +'<div class="stat"><div class="k">Personal</div><div class="v" style="font-size:24px">'+rd(t.labour_cost)+'</div><div class="muted">'+nfmt(t.labour_hours)+' horas</div></div>'
+     +'<div class="stat"><div class="k">Electricidad</div><div class="v" style="font-size:24px">'+nfmt(t.electricity_kwh)+'</div><div class="muted">kWh</div></div>'
+     +'<div class="stat"><div class="k">Agua</div><div class="v" style="font-size:24px">'+nfmt(t.water_gal)+'</div><div class="muted">galones</div></div>'
     +'</div>'
-    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Invoices</h2>'
-     +(d.invoices.length?'<table><thead><tr><th>Date</th><th>Vendor</th><th>Description</th><th>Charged</th><th style="text-align:right">Amount</th><th>Status</th></tr></thead><tbody>'
-      +d.invoices.map(function(i){ return '<tr><td>'+esc(i.date||String(i.created_ts||'').slice(0,10))+'</td><td style="font-weight:500">'+esc(i.vendor)+'</td><td class="muted">'+esc(i.description||'')+'</td><td>'+esc(i.charged||'Owner')+'</td><td class="num">'+rd(i.amount)+'</td><td><span class="stpill" style="'+invStyle(i.status)+'">'+esc(i.status)+'</span></td></tr>'; }).join('')
+    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px"> Facturas</h2>'
+     +(d.invoices.length?'<table><thead><tr><th>Fecha</th><th>Proveedor</th><th>Descripción</th><th>Se cobra a</th><th style="text-align:right">Monto</th><th>Estado</th></tr></thead><tbody>'
+      +d.invoices.map(function(i){ return '<tr><td>'+esc(i.date||String(i.created_ts||'').slice(0,10))+'</td><td style="font-weight:500">'+esc(i.vendor)+'</td><td class="muted">'+esc(i.description||'')+'</td><td>'+esc(tr(L_CHG,i.charged||'Owner'))+'</td><td class="num">'+rd(i.amount)+'</td><td><span class="stpill" style="'+invStyle(i.status)+'">'+esc(tr(L_INV,i.status))+'</span></td></tr>'; }).join('')
       +'<tr><td colspan="4" style="font-weight:600">Total</td><td class="num" style="font-weight:600">'+rd(t.invoices_total)+'</td><td></td></tr>'
-      +'</tbody></table>':'<div class="empty">No invoices this month.</div>')
+      +'</tbody></table>':'<div class="empty">No hay facturas este mes.</div>')
     +'</div>'
-    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Labour</h2>'
-     +(d.hours.length?'<table><thead><tr><th>Date</th><th>Staff</th><th style="text-align:right">Hours</th><th style="text-align:right">Cost</th><th>Note</th></tr></thead><tbody>'
+    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px"> Personal</h2>'
+     +(d.hours.length?'<table><thead><tr><th>Fecha</th><th>Personal</th><th style="text-align:right">Horas</th><th style="text-align:right">Costo</th><th>Nota</th></tr></thead><tbody>'
       +d.hours.map(function(h){ return '<tr><td>'+esc(h.date)+'</td><td>'+esc(h.staff_name)+'</td><td class="num">'+h.hours+'</td><td class="num">'+(h.cost!=null?rd(h.cost):'—')+'</td><td class="muted">'+esc(h.note||'')+'</td></tr>'; }).join('')
-      +'</tbody></table>':'<div class="empty">No hours logged this month.</div>')
+      +'</tbody></table>':'<div class="empty">No hay horas registradas este mes.</div>')
     +'</div>'
-    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Meter readings</h2>'
-     +(d.readings.length?'<table><thead><tr><th>When</th><th style="text-align:right">Electricity</th><th style="text-align:right">Water</th><th>Note</th></tr></thead><tbody>'
+    +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px"> Lecturas de medidor</h2>'
+     +(d.readings.length?'<table><thead><tr><th>Cuándo</th><th style="text-align:right">Electricidad</th><th style="text-align:right">Agua</th><th>Nota</th></tr></thead><tbody>'
       +d.readings.map(function(x){ return '<tr><td>'+esc(when(x.ts))+'</td><td class="num">'+(x.electricity_kwh==null?'—':nfmt(x.electricity_kwh)+' kWh')+'</td><td class="num">'+(x.water_gal==null?'—':nfmt(x.water_gal)+' gal')+'</td><td class="muted">'+esc(x.note||'')+'</td></tr>'; }).join('')
-      +'</tbody></table>':'<div class="empty">No readings this month.</div>')
+      +'</tbody></table>':'<div class="empty">No hay lecturas este mes.</div>')
     +'</div>';
 }
 
 /* ---- FIELD APP (mobile-friendly quick logging) ---- */
 function viewField(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Staff</div><h1>Field app</h1><div class="sub">Quick logging for crews on site — works on a phone</div></div>'
-   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Log a meter reading</h2>'
-   +'<div class="row"><div><label>Villa</label><select id="fVilla"></select></div><div><label>Electricity (kWh)</label><input id="fElec" inputmode="decimal"/></div><div><label>Water (gal)</label><input id="fWater" inputmode="decimal"/></div></div>'
-   +'<div style="margin-top:14px"><button class="primary" id="fSaveR" style="width:100%;padding:15px">Save reading</button></div><div id="fMsgR" class="msg"></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Report a problem</h2>'
-   +'<div><label>What is wrong?</label><input id="fTitle" placeholder="e.g. Shower mixer dripping"/></div>'
+  m.innerHTML='<div class="head"><div class="eyebrow">Personal</div><h1>App de campo</h1><div class="sub">Registro rápido para el equipo en sitio — funciona en el teléfono</div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Registrar una lectura</h2>'
+   +'<div class="row"><div><label>Villa</label><select id="fVilla"></select></div><div><label>Electricidad (kWh)</label><input id="fElec" inputmode="decimal"/></div><div><label>Agua (gal)</label><input id="fWater" inputmode="decimal"/></div></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="fSaveR" style="width:100%;padding:15px">Guardar lectura</button></div><div id="fMsgR" class="msg"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Reportar un problema</h2>'
+   +'<div><label>¿Qué está mal?</label><input id="fTitle" placeholder="ej. Gotea la mezcladora"/></div>'
    +'<div class="row" style="margin-top:12px"><div><label>Villa</label><select id="fVilla2"></select></div></div>'
-   +'<div style="margin-top:12px"><label>Detail</label><textarea id="fNote" placeholder="Where is it, how bad?"></textarea></div>'
-   +'<div style="margin-top:14px"><button class="primary" id="fSaveW" style="width:100%;padding:15px">Report it</button></div><div id="fMsgW" class="msg"></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Today\'s open jobs</h2><div id="fJobs"></div></div>';
+   +'<div style="margin-top:12px"><label>Detalle</label><textarea id="fNote" placeholder="¿Dónde está, qué tan grave?"></textarea></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="fSaveW" style="width:100%;padding:15px">Reportarlo</button></div><div id="fMsgW" class="msg"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px"> Trabajos abiertos</h2><div id="fJobs"></div></div>';
   fillSelect($('fVilla'), VILLAS); fillSelect($('fVilla2'), VILLAS);
   $('fSaveR').onclick=async function(){
     var msg=$('fMsgR'); msg.textContent=''; msg.className='msg';
     var p={villa:$('fVilla').value, electricity_kwh:$('fElec').value.trim(), water_gal:$('fWater').value.trim()};
-    if(!p.electricity_kwh && !p.water_gal){ msg.textContent='Enter at least one reading.'; msg.className='msg err'; return; }
+    if(!p.electricity_kwh && !p.water_gal){ msg.textContent='Ingrese al menos una lectura.'; msg.className='msg err'; return; }
     $('fSaveR').disabled=true; var r=await api('/api/readings',{method:'POST',body:JSON.stringify(p)}); $('fSaveR').disabled=false;
-    if(r.status===200){ $('fElec').value='';$('fWater').value=''; msg.textContent='Saved. Thank you.'; msg.className='msg ok'; }
-    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+    if(r.status===200){ $('fElec').value='';$('fWater').value=''; msg.textContent='Guardado. Gracias.'; msg.className='msg ok'; }
+    else { msg.textContent=(r.body&&r.body.error)||'No se pudo guardar.'; msg.className='msg err'; }
   };
   $('fSaveW').onclick=async function(){
     var msg=$('fMsgW'); msg.textContent=''; msg.className='msg';
     var p={title:$('fTitle').value.trim(), villa:$('fVilla2').value, note:$('fNote').value.trim()};
-    if(!p.title){ msg.textContent='Say what is wrong.'; msg.className='msg err'; return; }
+    if(!p.title){ msg.textContent='Indique qué está mal.'; msg.className='msg err'; return; }
     $('fSaveW').disabled=true; var r=await api('/api/workorders',{method:'POST',body:JSON.stringify(p)}); $('fSaveW').disabled=false;
-    if(r.status===200){ $('fTitle').value='';$('fNote').value=''; msg.textContent='Reported. It is now in Maintenance.'; msg.className='msg ok'; updateBadges(); loadFieldJobs(); }
-    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+    if(r.status===200){ $('fTitle').value='';$('fNote').value=''; msg.textContent='Reportado. Ya está en Mantenimiento.'; msg.className='msg ok'; updateBadges(); loadFieldJobs(); }
+    else { msg.textContent=(r.body&&r.body.error)||'No se pudo guardar.'; msg.className='msg err'; }
   };
   loadFieldJobs();
 }
@@ -551,57 +562,57 @@ async function loadFieldJobs(){
   var wrap=$('fJobs'); if(!wrap) return;
   var r=await api('/api/workorders'); var open=(r.body.workorders||[]).filter(function(x){return x.status!=='Done';});
   wrap.innerHTML = open.length ? open.slice(0,10).map(function(x){
-    return '<div class="wocard" style="margin-top:10px"><div class="top"><h3>'+esc(x.title)+'</h3><span class="stpill" style="'+stStyle(x.status)+'">'+esc(x.status)+'</span></div>'
+    return '<div class="wocard" style="margin-top:10px"><div class="top"><h3>'+esc(x.title)+'</h3><span class="stpill" style="'+stStyle(x.status)+'">'+esc(tr(L_WO,x.status))+'</span></div>'
       +'<div class="badges"><span class="badge2">'+esc(x.villa)+'</span>'+(x.scheduled_date?'<span class="badge2">'+esc(x.scheduled_date)+'</span>':'')+'</div>'
-      +'<div style="margin-top:10px"><button class="ghost" data-done="'+esc(x.id)+'">Mark done</button></div></div>';
-  }).join('') : '<div class="empty">Nothing open. Good.</div>';
+      +'<div style="margin-top:10px"><button class="ghost" data-done="'+esc(x.id)+'">Marcar terminado</button></div></div>';
+  }).join('') : '<div class="empty">Nada abierto. Todo bien.</div>';
   wrap.querySelectorAll('[data-done]').forEach(function(b){ b.onclick=async function(){ await api('/api/workorders/update',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-done'),status:'Done'})}); loadFieldJobs(); updateBadges(); }; });
 }
 
 /* ---- WORK ORDERS ---- */
 function viewWorkorders(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Maintenance</div><h1>Schedule &amp; work orders</h1><div class="sub">Maintenance across the villas <span id="woSum"></span></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">New work order</h2>'
-   +'<div class="row"><div style="flex:2"><label>Title</label><input id="wTitle" placeholder="e.g. Master bath shower mixer dripping"/></div><div><label>Villa</label><select id="wVilla"></select></div></div>'
-   +'<div class="row" style="margin-top:12px"><div><label>Vendor</label><input id="wVendor" placeholder="e.g. Clima Caribe"/></div><div><label>Est. cost (RD$)</label><input id="wCost" inputmode="decimal" placeholder="optional"/></div><div><label>Status</label><select id="wStatus"></select></div></div>'
-   +'<div style="margin-top:12px"><label>Note (optional)</label><textarea id="wNote" placeholder="Scope, parts, context"></textarea></div>'
-   +'<div style="margin-top:14px"><button class="primary" id="wSave">Create work order</button></div><div id="wMsg" class="msg"></div></div>'
+  m.innerHTML='<div class="head"><div class="eyebrow">Mantenimiento</div><h1>Programación y órdenes de trabajo</h1><div class="sub">Mantenimiento en todas las villas <span id="woSum"></span></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Nueva orden de trabajo</h2>'
+   +'<div class="row"><div style="flex:2"><label>Título</label><input id="wTitle" placeholder="ej. Gotea la mezcladora del baño principal"/></div><div><label>Villa</label><select id="wVilla"></select></div></div>'
+   +'<div class="row" style="margin-top:12px"><div><label>Proveedor</label><input id="wVendor" placeholder="ej. Clima Caribe"/></div><div><label>Costo est. (RD$)</label><input id="wCost" inputmode="decimal" placeholder="opcional"/></div><div><label>Estado</label><select id="wStatus"></select></div></div>'
+   +'<div style="margin-top:12px"><label>Nota (opcional)</label><textarea id="wNote" placeholder="Alcance, piezas, contexto"></textarea></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="wSave">Crear orden</button></div><div id="wMsg" class="msg"></div></div>'
    +'<div class="chips" id="woChips"></div>'
    +'<div id="wList"></div>';
-  fillSelect($('wVilla'), VILLAS); fillSelect($('wStatus'), STATUSES);
-  var fchips=[['open','Open'],['done','Done'],['all','All']];
+  fillSelect($('wVilla'), VILLAS); fillSelectL($('wStatus'), L_WO, STATUSES);
+  var fchips=[['open','Abiertas'],['done','Terminadas'],['all','Todas']];
   $('woChips').innerHTML = fchips.map(function(c){ return '<button class="chip" data-f="'+c[0]+'" aria-pressed="'+(WO_FILTER===c[0])+'">'+c[1]+'</button>'; }).join('');
   [].forEach.call($('woChips').children, function(b){ b.onclick=function(){ WO_FILTER=b.getAttribute('data-f'); [].forEach.call($('woChips').children,function(x){x.setAttribute('aria-pressed', x===b);}); loadWorkorders(); }; });
   $('wList').addEventListener('click', function(e){ if(e.target.closest('select,button')) return; var c=e.target.closest('.wocard[data-open]'); if(c) openWO(c.getAttribute('data-open')); });
   $('wSave').onclick = async function(){
     var msg=$('wMsg'); msg.textContent=''; msg.className='msg';
     var p={villa:$('wVilla').value, title:$('wTitle').value.trim(), vendor:$('wVendor').value.trim(), cost:$('wCost').value.trim(), status:$('wStatus').value, note:$('wNote').value.trim()};
-    if(!p.title){ msg.textContent='Give the work order a title.'; msg.className='msg err'; return; }
+    if(!p.title){ msg.textContent='Ponga un título a la orden.'; msg.className='msg err'; return; }
     $('wSave').disabled=true; var r=await api('/api/workorders',{method:'POST',body:JSON.stringify(p)}); $('wSave').disabled=false;
-    if(r.status===200){ msg.textContent='Created.'; msg.className='msg ok'; $('wTitle').value='';$('wVendor').value='';$('wCost').value='';$('wNote').value=''; loadWorkorders(); updateBadges(); }
-    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+    if(r.status===200){ msg.textContent='Creada.'; msg.className='msg ok'; $('wTitle').value='';$('wVendor').value='';$('wCost').value='';$('wNote').value=''; loadWorkorders(); updateBadges(); }
+    else { msg.textContent=(r.body&&r.body.error)||'No se pudo guardar.'; msg.className='msg err'; }
   };
   loadWorkorders();
 }
 async function loadWorkorders(){
-  var wrap=$('wList'); wrap.innerHTML='<div class="empty">Loading…</div>';
+  var wrap=$('wList'); wrap.innerHTML='<div class="empty">Cargando…</div>';
   var r=await api('/api/workorders'); var rows=r.body.workorders||[];
-  var allWo=r.body.workorders||[]; var sumEl=$('woSum'); if(sumEl){ sumEl.innerHTML='· '+allWo.filter(function(x){return x.status!=='Done';}).length+' open'+deltaInline(monthDelta(allWo,'created_ts')); }
+  var allWo=r.body.workorders||[]; var sumEl=$('woSum'); if(sumEl){ sumEl.innerHTML='· '+allWo.filter(function(x){return x.status!=='Done';}).length+' abiertas'+deltaInline(monthDelta(allWo,'created_ts')); }
   if(WO_FILTER==='open') rows=rows.filter(function(x){return x.status!=='Done';});
   else if(WO_FILTER==='done') rows=rows.filter(function(x){return x.status==='Done';});
-  if(!rows.length){ wrap.innerHTML='<div class="empty">Nothing here.</div>'; return; }
+  if(!rows.length){ wrap.innerHTML='<div class="empty">No hay nada aquí.</div>'; return; }
   wrap.innerHTML = rows.map(function(x){
     var badges=[]; if(x.villa) badges.push(x.villa); if(x.vendor) badges.push(x.vendor); if(x.cost!=null) badges.push(rd(x.cost));
-    var opts=STATUSES.map(function(s){return '<option'+(s===x.status?' selected':'')+'>'+esc(s)+'</option>';}).join('');
-    return '<div class="wocard" data-open="'+esc(x.id)+'"><div class="top"><h3>'+esc(x.title)+'</h3><span class="stpill" style="'+stStyle(x.status)+'">'+esc(x.status)+'</span></div>'
+    var opts=optsL(L_WO,STATUSES,x.status);
+    return '<div class="wocard" data-open="'+esc(x.id)+'"><div class="top"><h3>'+esc(x.title)+'</h3><span class="stpill" style="'+stStyle(x.status)+'">'+esc(tr(L_WO,x.status))+'</span></div>'
       + (x.note?'<div class="muted" style="margin-top:6px">'+esc(x.note)+'</div>':'')
       + '<div class="badges">'+badges.map(function(b){return '<span class="badge2">'+esc(b)+'</span>';}).join('')+'</div>'
       + '<div class="foot"><div class="muted">'+esc(cap(x.updated_by||x.created_by))+' · '+esc(when(x.updated_ts||x.created_ts))+'</div>'
       + '<div style="display:flex;gap:10px;align-items:center"><select class="st" data-id="'+esc(x.id)+'" style="padding:6px 10px;border-radius:8px;font-size:13px;border:1px solid var(--line)">'+opts+'</select><button class="link" data-del="'+esc(x.id)+'">Delete</button></div></div></div>';
   }).join('');
   wrap.querySelectorAll('select.st').forEach(function(s){ s.onchange=async function(){ s.disabled=true; await api('/api/workorders/update',{method:'POST',body:JSON.stringify({id:s.getAttribute('data-id'),status:s.value})}); loadWorkorders(); updateBadges(); }; });
-  wrap.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this work order?'))return; await api('/api/workorders/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-del')})}); loadWorkorders(); updateBadges(); }; });
+  wrap.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=async function(){ if(!confirm('¿Eliminar esta orden?'))return; await api('/api/workorders/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-del')})}); loadWorkorders(); updateBadges(); }; });
 }
 
 /* ---- WORK ORDER DETAIL ---- */
@@ -613,28 +624,28 @@ async function openWO(id){
 function viewWODetail(wo){
   var RECUR=['None','Weekly','Monthly','Quarterly','Semi-annual','Annually'];
   $('main').classList.remove('full');
-  var stopts=STATUSES.map(function(s){return '<option'+(s===wo.status?' selected':'')+'>'+esc(s)+'</option>';}).join('');
+  var stopts=optsL(L_WO,STATUSES,wo.status);
   var vopts=VILLAS.map(function(v){return '<option'+(v===wo.villa?' selected':'')+'>'+esc(v)+'</option>';}).join('');
-  var ropts=RECUR.map(function(v){return '<option'+((wo.recurring||'None')===v?' selected':'')+'>'+esc(v)+'</option>';}).join('');
+  var ropts=optsL(L_RECUR,RECUR,wo.recurring||'None');
   $('main').innerHTML =
-    '<button class="backlink" id="woBack">← Maintenance</button>'
-   +'<div class="head" style="margin-top:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h1>'+esc(wo.title)+'</h1><span class="stpill" id="dPill" style="'+stStyle(wo.status)+';margin-top:12px">'+esc(wo.status)+'</span></div><div class="sub">'+esc(wo.villa||'')+' · updated by '+esc(cap(wo.updated_by||wo.created_by))+' · '+esc(when(wo.updated_ts||wo.created_ts))+'</div></div>'
-   +'<div class="card"><label>Why this matters</label><textarea id="dWhy" placeholder="Why is this needed, and what happens if it waits?">'+esc(wo.why||'')+'</textarea></div>'
+    '<button class="backlink" id="woBack">← Mantenimiento</button>'
+   +'<div class="head" style="margin-top:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h1>'+esc(wo.title)+'</h1><span class="stpill" id="dPill" style="'+stStyle(wo.status)+';margin-top:12px">'+esc(tr(L_WO,wo.status))+'</span></div><div class="sub">'+esc(wo.villa||'')+' · actualizado por '+esc(cap(wo.updated_by||wo.created_by))+' · '+esc(when(wo.updated_ts||wo.created_ts))+'</div></div>'
+   +'<div class="card"><label>Por qué importa</label><textarea id="dWhy" placeholder="¿Por qué hace falta y qué pasa si se espera?">'+esc(wo.why||'')+'</textarea></div>'
    +'<div class="card"><div class="dgrid">'
-     +'<div><label>Scheduled date</label><input id="dDate" type="date" value="'+esc(wo.scheduled_date||'')+'"/></div>'
-     +'<div><label>Recurring</label><select id="dRecur">'+ropts+'</select></div>'
-     +'<div><label>Time estimate</label><input id="dTime" value="'+esc(wo.time_estimate||'')+'" placeholder="e.g. 2 h"/></div>'
-     +'<div><label>Vendor</label><input id="dVendor" value="'+esc(wo.vendor||'')+'" placeholder="e.g. Clima Caribe"/></div>'
-     +'<div><label>Est. cost (RD$)</label><input id="dCost" inputmode="decimal" value="'+(wo.cost==null?'':wo.cost)+'"/></div>'
+     +'<div><label>Fecha programada</label><input id="dDate" type="date" value="'+esc(wo.scheduled_date||'')+'"/></div>'
+     +'<div><label>Periodicidad</label><select id="dRecur">'+ropts+'</select></div>'
+     +'<div><label>Tiempo estimado</label><input id="dTime" value="'+esc(wo.time_estimate||'')+'" placeholder="ej. 2 h"/></div>'
+     +'<div><label>Proveedor</label><input id="dVendor" value="'+esc(wo.vendor||'')+'" placeholder="ej. Clima Caribe"/></div>'
+     +'<div><label>Costo est. (RD$)</label><input id="dCost" inputmode="decimal" value="'+(wo.cost==null?'':wo.cost)+'"/></div>'
      +'<div><label>Villa</label><select id="dVilla">'+vopts+'</select></div>'
-     +'<div><label>Status</label><select id="dStatus">'+stopts+'</select></div>'
+     +'<div><label>Estado</label><select id="dStatus">'+stopts+'</select></div>'
    +'</div><div id="dMsg" class="msg"></div></div>'
-   +'<div class="card"><label>Notes</label><textarea id="dNote" placeholder="Scope, parts, results">'+esc(wo.note||'')+'</textarea></div>'
-   +'<div class="card"><label>Photos</label><div id="dPhotos" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px"></div><input type="file" id="dPhotoInput" accept="image/*" style="display:none"><div style="margin-top:12px"><button class="ghost" id="dPhotoBtn">+ Add photo</button></div><div id="dPhotoMsg" class="msg"></div></div>'
-   +'<button class="btn-complete'+(wo.status==='Done'?' done':'')+'" id="dComplete">'+(wo.status==='Done'?'Completed ✓ · reopen':'Mark as complete')+'</button>'
-   +'<div style="text-align:center;margin-top:12px"><button class="link" id="dDelete">Delete work order</button></div>';
+   +'<div class="card"><label>Notas</label><textarea id="dNote" placeholder="Alcance, piezas, resultados">'+esc(wo.note||'')+'</textarea></div>'
+   +'<div class="card"><label>Fotos</label><div id="dPhotos" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px"></div><input type="file" id="dPhotoInput" accept="image/*" style="display:none"><div style="margin-top:12px"><button class="ghost" id="dPhotoBtn">+ Añadir foto</button></div><div id="dPhotoMsg" class="msg"></div></div>'
+   +'<button class="btn-complete'+(wo.status==='Done'?' done':'')+'" id="dComplete">'+(wo.status==='Done'?'Terminada ✓ · reabrir':'Marcar como terminada')+'</button>'
+   +'<div style="text-align:center;margin-top:12px"><button class="link" id="dDelete">Eliminar orden</button></div>';
   $('woBack').onclick=function(){ go('maintenance'); };
-  async function save(patch){ await api('/api/workorders/update',{method:'POST',body:JSON.stringify(Object.assign({id:wo.id},patch))}); Object.assign(wo,patch); var msg=$('dMsg'); msg.textContent='Saved.'; msg.className='msg ok'; setTimeout(function(){ if(msg) msg.textContent=''; },1200); updateBadges(); }
+  async function save(patch){ await api('/api/workorders/update',{method:'POST',body:JSON.stringify(Object.assign({id:wo.id},patch))}); Object.assign(wo,patch); var msg=$('dMsg'); msg.textContent='Guardado.'; msg.className='msg ok'; setTimeout(function(){ if(msg) msg.textContent=''; },1200); updateBadges(); }
   $('dWhy').addEventListener('change',function(){ save({why:this.value}); });
   $('dDate').addEventListener('change',function(){ save({scheduled_date:this.value}); });
   $('dRecur').addEventListener('change',function(){ save({recurring:this.value}); });
@@ -643,12 +654,12 @@ function viewWODetail(wo){
   $('dCost').addEventListener('change',function(){ save({cost:this.value.trim()}); });
   $('dVilla').addEventListener('change',function(){ save({villa:this.value}); });
   $('dNote').addEventListener('change',function(){ save({note:this.value}); });
-  $('dStatus').addEventListener('change',function(){ var v=this.value; save({status:v}); var p=$('dPill'); if(p){ p.textContent=v; p.setAttribute('style', stStyle(v)+';margin-top:12px'); } });
+  $('dStatus').addEventListener('change',function(){ var v=this.value; save({status:v}); var p=$('dPill'); if(p){ p.textContent=tr(L_WO,v); p.setAttribute('style', stStyle(v)+';margin-top:12px'); } });
   $('dComplete').onclick=async function(){ var ns = wo.status==='Done' ? 'Open' : 'Done'; await save({status:ns}); openWO(wo.id); };
-  $('dDelete').onclick=async function(){ if(!confirm('Delete this work order?'))return; await api('/api/workorders/delete',{method:'POST',body:JSON.stringify({id:wo.id})}); updateBadges(); go('maintenance'); };
-  function renderPhotos(){ var w=$('dPhotos'); w.innerHTML=(wo.photos||[]).map(function(p){ return '<div style="position:relative"><img src="/api/photo/'+esc(p.id)+'" style="width:92px;height:92px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block"><button data-delphoto="'+esc(p.id)+'" title="Remove" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line);color:#a8543a;cursor:pointer;line-height:1">×</button></div>'; }).join('') || '<span class="muted">No photos yet.</span>'; w.querySelectorAll('[data-delphoto]').forEach(function(b){ b.onclick=async function(){ var pid=b.getAttribute('data-delphoto'); await api('/api/workorders/photo/delete',{method:'POST',body:JSON.stringify({id:wo.id,photoId:pid})}); wo.photos=(wo.photos||[]).filter(function(x){return x.id!==pid;}); renderPhotos(); }; }); }
+  $('dDelete').onclick=async function(){ if(!confirm('¿Eliminar esta orden?'))return; await api('/api/workorders/delete',{method:'POST',body:JSON.stringify({id:wo.id})}); updateBadges(); go('maintenance'); };
+  function renderPhotos(){ var w=$('dPhotos'); w.innerHTML=(wo.photos||[]).map(function(p){ return '<div style="position:relative"><img src="/api/photo/'+esc(p.id)+'" style="width:92px;height:92px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block"><button data-delphoto="'+esc(p.id)+'" title="Quitar" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line);color:#a8543a;cursor:pointer;line-height:1">×</button></div>'; }).join('') || '<span class="muted">Aún no hay fotos.</span>'; w.querySelectorAll('[data-delphoto]').forEach(function(b){ b.onclick=async function(){ var pid=b.getAttribute('data-delphoto'); await api('/api/workorders/photo/delete',{method:'POST',body:JSON.stringify({id:wo.id,photoId:pid})}); wo.photos=(wo.photos||[]).filter(function(x){return x.id!==pid;}); renderPhotos(); }; }); }
   $('dPhotoBtn').onclick=function(){ $('dPhotoInput').click(); };
-  $('dPhotoInput').onchange=function(){ var f=this.files[0]; if(!f) return; var msg=$('dPhotoMsg'); msg.textContent='Uploading…'; msg.className='msg'; var inp=this; resizeImage(f,async function(dataUrl){ if(!dataUrl){ msg.textContent='Could not read image.'; msg.className='msg err'; return; } var r=await api('/api/workorders/photo',{method:'POST',body:JSON.stringify({id:wo.id,data:dataUrl})}); if(r.status===200 && r.body.photo){ wo.photos=wo.photos||[]; wo.photos.push(r.body.photo); renderPhotos(); msg.textContent=''; } else { msg.textContent=(r.body&&r.body.error)||'Upload failed.'; msg.className='msg err'; } inp.value=''; }); };
+  $('dPhotoInput').onchange=function(){ var f=this.files[0]; if(!f) return; var msg=$('dPhotoMsg'); msg.textContent='Subiendo…'; msg.className='msg'; var inp=this; resizeImage(f,async function(dataUrl){ if(!dataUrl){ msg.textContent='No se pudo leer la imagen.'; msg.className='msg err'; return; } var r=await api('/api/workorders/photo',{method:'POST',body:JSON.stringify({id:wo.id,data:dataUrl})}); if(r.status===200 && r.body.photo){ wo.photos=wo.photos||[]; wo.photos.push(r.body.photo); renderPhotos(); msg.textContent=''; } else { msg.textContent=(r.body&&r.body.error)||'Falló la subida.'; msg.className='msg err'; } inp.value=''; }); };
   renderPhotos();
 }
 
@@ -657,16 +668,16 @@ var INV_FILTER='unpaid';
 function invStyle(s){ var m={'Unpaid':['#f5efdf','#8a6a1f'],'Approved':['#e9eef2','#2f4a5a'],'Paid':['#edf0e7','#4a5a3c'],'Disputed':['#f6e9e3','#a8543a']}; var c=m[s]||['#eee7dd','#8a8378']; return 'background:'+c[0]+';color:'+c[1]; }
 function viewInvoices(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Ledger</div><h1>Payments for services &amp; products</h1><div class="sub">Vendor bills &amp; receipts <span id="invSum"></span></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">New invoice</h2>'
-   +'<div class="row"><div style="flex:2"><label>Vendor</label><input id="iVendor" placeholder="e.g. Clima Caribe"/></div><div><label>Invoice #</label><input id="iNumber" placeholder="optional"/></div><div><label>Amount (RD$)</label><input id="iAmount" inputmode="decimal" placeholder="e.g. 1980"/></div></div>'
-   +'<div class="row" style="margin-top:12px"><div><label>Villa</label><select id="iVilla"></select></div><div><label>Charged to</label><select id="iCharged"></select></div><div><label>Status</label><select id="iStatus"></select></div></div>'
-   +'<div class="row" style="margin-top:12px"><div><label>Invoice date</label><input id="iDate" type="date"/></div><div><label>Due date</label><input id="iDue" type="date"/></div><div style="flex:2"><label>Description</label><input id="iDesc" placeholder="e.g. AC coil clean, 6 units"/></div></div>'
-   +'<div style="margin-top:14px"><button class="primary" id="iSave">Add invoice</button></div><div id="iMsg" class="msg"></div></div>'
+  m.innerHTML='<div class="head"><div class="eyebrow">Libro mayor</div><h1>Pagos de servicios y productos</h1><div class="sub">Cuentas y recibos de proveedores <span id="invSum"></span></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Nueva factura</h2>'
+   +'<div class="row"><div style="flex:2"><label>Proveedor</label><input id="iVendor" placeholder="ej. Clima Caribe"/></div><div><label>Factura n.º</label><input id="iNumber" placeholder="opcional"/></div><div><label>Monto (RD$)</label><input id="iAmount" inputmode="decimal" placeholder="ej. 1980"/></div></div>'
+   +'<div class="row" style="margin-top:12px"><div><label>Villa</label><select id="iVilla"></select></div><div><label>Se cobra a</label><select id="iCharged"></select></div><div><label>Estado</label><select id="iStatus"></select></div></div>'
+   +'<div class="row" style="margin-top:12px"><div><label>Fecha de factura</label><input id="iDate" type="date"/></div><div><label>Vencimiento</label><input id="iDue" type="date"/></div><div style="flex:2"><label>Descripción</label><input id="iDesc" placeholder="ej. Limpieza de serpentines, 6 unidades"/></div></div>'
+   +'<div style="margin-top:14px"><button class="primary" id="iSave">Añadir factura</button></div><div id="iMsg" class="msg"></div></div>'
    +'<div class="chips" id="invChips"></div><div id="iList"></div>';
   var villaOpts=['All villas'].concat(VILLAS);
-  fillSelect($('iVilla'), villaOpts); fillSelect($('iCharged'), ['Owner','Absorbed','Rental']); fillSelect($('iStatus'), ['Unpaid','Approved','Paid','Disputed']);
-  var fchips=[['unpaid','Unpaid'],['paid','Paid'],['all','All']];
+  fillSelect($('iVilla'), villaOpts); fillSelectL($('iCharged'), L_CHG, ['Owner','Absorbed','Rental']); fillSelectL($('iStatus'), L_INV, ['Unpaid','Approved','Paid','Disputed']);
+  var fchips=[['unpaid','Por pagar'],['paid','Pagadas'],['all','Todas']];
   $('invChips').innerHTML=fchips.map(function(c){ return '<button class="chip" data-f="'+c[0]+'" aria-pressed="'+(INV_FILTER===c[0])+'">'+c[1]+'</button>'; }).join('');
   [].forEach.call($('invChips').children,function(b){ b.onclick=function(){ INV_FILTER=b.getAttribute('data-f'); [].forEach.call($('invChips').children,function(x){x.setAttribute('aria-pressed', x===b);}); loadInvoices(); }; });
   $('iList').addEventListener('click', function(e){ if(e.target.closest('select,button')) return; var c=e.target.closest('.wocard[data-open]'); if(c) openInv(c.getAttribute('data-open')); });
@@ -675,64 +686,64 @@ function viewInvoices(){
     var p={vendor:$('iVendor').value.trim(), number:$('iNumber').value.trim(), amount:$('iAmount').value.trim(),
            villa:$('iVilla').value, charged:$('iCharged').value, status:$('iStatus').value,
            date:$('iDate').value, due_date:$('iDue').value, description:$('iDesc').value.trim()};
-    if(!p.vendor){ msg.textContent='Enter the vendor.'; msg.className='msg err'; return; }
-    if(!p.amount){ msg.textContent='Enter the amount.'; msg.className='msg err'; return; }
+    if(!p.vendor){ msg.textContent='Ingrese el proveedor.'; msg.className='msg err'; return; }
+    if(!p.amount){ msg.textContent='Ingrese el monto.'; msg.className='msg err'; return; }
     $('iSave').disabled=true; var r=await api('/api/invoices',{method:'POST',body:JSON.stringify(p)}); $('iSave').disabled=false;
-    if(r.status===200){ msg.textContent='Invoice added.'; msg.className='msg ok'; ['iVendor','iNumber','iAmount','iDesc'].forEach(function(k){ $(k).value=''; }); loadInvoices(); updateBadges(); }
-    else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+    if(r.status===200){ msg.textContent='Factura añadida.'; msg.className='msg ok'; ['iVendor','iNumber','iAmount','iDesc'].forEach(function(k){ $(k).value=''; }); loadInvoices(); updateBadges(); }
+    else { msg.textContent=(r.body&&r.body.error)||'No se pudo guardar.'; msg.className='msg err'; }
   };
   loadInvoices();
 }
 async function loadInvoices(){
-  var wrap=$('iList'); wrap.innerHTML='<div class="empty">Loading…</div>';
+  var wrap=$('iList'); wrap.innerHTML='<div class="empty">Cargando…</div>';
   var r=await api('/api/invoices'); var all=r.body.invoices||[]; var rows=all;
   var unpaid=all.filter(function(x){ return x.status!=='Paid'; });
   var owed=unpaid.reduce(function(a,x){ return a+(Number(x.amount)||0); },0);
-  var sumEl=$('invSum'); if(sumEl) sumEl.innerHTML='· '+unpaid.length+' outstanding · '+rd(owed)+deltaInline(monthDelta(all,'created_ts'));
+  var sumEl=$('invSum'); if(sumEl) sumEl.innerHTML='· '+unpaid.length+' pendientes · '+rd(owed)+deltaInline(monthDelta(all,'created_ts'));
   if(INV_FILTER==='unpaid') rows=all.filter(function(x){ return x.status!=='Paid'; });
   else if(INV_FILTER==='paid') rows=all.filter(function(x){ return x.status==='Paid'; });
-  if(!rows.length){ wrap.innerHTML='<div class="empty">Nothing here.</div>'; return; }
+  if(!rows.length){ wrap.innerHTML='<div class="empty">No hay nada aquí.</div>'; return; }
   var statuses=r.body.statuses||['Unpaid','Approved','Paid','Disputed'];
   wrap.innerHTML=rows.map(function(x){
-    var badges=[]; if(x.villa) badges.push(x.villa); if(x.number) badges.push('#'+x.number); badges.push(x.charged||'Owner');
-    if(x.due_date) badges.push('due '+x.due_date);
-    var opts=statuses.map(function(s){ return '<option'+(s===x.status?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
-    return '<div class="wocard" data-open="'+esc(x.id)+'"><div class="top"><h3>'+esc(x.vendor)+' · '+rd(x.amount)+'</h3><span class="stpill" style="'+invStyle(x.status)+'">'+esc(x.status)+'</span></div>'
+    var badges=[]; if(x.villa) badges.push(x.villa); if(x.number) badges.push('#'+x.number); badges.push(tr(L_CHG,x.charged||'Owner'));
+    if(x.due_date) badges.push('vence '+x.due_date);
+    var opts=optsL(L_INV,statuses,x.status);
+    return '<div class="wocard" data-open="'+esc(x.id)+'"><div class="top"><h3>'+esc(x.vendor)+' · '+rd(x.amount)+'</h3><span class="stpill" style="'+invStyle(x.status)+'">'+esc(tr(L_INV,x.status))+'</span></div>'
       + (x.description?'<div class="muted" style="margin-top:6px">'+esc(x.description)+'</div>':'')
       + '<div class="badges">'+badges.map(function(b){ return '<span class="badge2">'+esc(b)+'</span>'; }).join('')+'</div>'
-      + '<div class="foot"><div class="muted">'+esc(cap(x.updated_by||x.created_by))+' · '+esc(when(x.updated_ts||x.created_ts))+((x.photos||[]).length?' · '+x.photos.length+' receipt'+(x.photos.length>1?'s':''):'')+'</div>'
-      + '<div style="display:flex;gap:10px;align-items:center"><select class="ist" data-id="'+esc(x.id)+'" style="padding:6px 10px;border-radius:8px;font-size:13px;border:1px solid var(--line)">'+opts+'</select><button class="link" data-deli="'+esc(x.id)+'">Delete</button></div></div></div>';
+      + '<div class="foot"><div class="muted">'+esc(cap(x.updated_by||x.created_by))+' · '+esc(when(x.updated_ts||x.created_ts))+((x.photos||[]).length?' · '+x.photos.length+' recibo'+(x.photos.length>1?'s':''):'')+'</div>'
+      + '<div style="display:flex;gap:10px;align-items:center"><select class="ist" data-id="'+esc(x.id)+'" style="padding:6px 10px;border-radius:8px;font-size:13px;border:1px solid var(--line)">'+opts+'</select><button class="link" data-deli="'+esc(x.id)+'">Eliminar</button></div></div></div>';
   }).join('');
   wrap.querySelectorAll('select.ist').forEach(function(s){ s.onchange=async function(){ s.disabled=true; await api('/api/invoices/update',{method:'POST',body:JSON.stringify({id:s.getAttribute('data-id'),status:s.value})}); loadInvoices(); updateBadges(); }; });
-  wrap.querySelectorAll('[data-deli]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this invoice?'))return; await api('/api/invoices/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-deli')})}); loadInvoices(); updateBadges(); }; });
+  wrap.querySelectorAll('[data-deli]').forEach(function(b){ b.onclick=async function(){ if(!confirm('¿Eliminar esta factura?'))return; await api('/api/invoices/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-deli')})}); loadInvoices(); updateBadges(); }; });
 }
 async function openInv(id){
   var r=await api('/api/invoices'); var inv=(r.body.invoices||[]).find(function(x){ return x.id===id; });
   if(!inv){ go('payments'); return; }
   VIEW='invoice'; $('main').classList.remove('full');
   var sts=['Unpaid','Approved','Paid','Disputed'], chg=['Owner','Absorbed','Rental'];
-  var stopts=sts.map(function(s){ return '<option'+(s===inv.status?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
-  var chopts=chg.map(function(s){ return '<option'+(s===(inv.charged||'Owner')?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
+  var stopts=optsL(L_INV,sts,inv.status);
+  var chopts=optsL(L_CHG,chg,inv.charged||'Owner');
   var vopts=['All villas'].concat(VILLAS).map(function(v){ return '<option'+(v===inv.villa?' selected':'')+'>'+esc(v)+'</option>'; }).join('');
   $('main').innerHTML =
-    '<button class="backlink" id="invBack">← Payments</button>'
-   +'<div class="head" style="margin-top:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h1>'+esc(inv.vendor)+' · '+rd(inv.amount)+'</h1><span class="stpill" id="iPill" style="'+invStyle(inv.status)+';margin-top:12px">'+esc(inv.status)+'</span></div><div class="sub">'+esc(inv.villa||'—')+' · logged by '+esc(cap(inv.created_by))+' · '+esc(when(inv.created_ts))+'</div></div>'
+    '<button class="backlink" id="invBack">← Pagos</button>'
+   +'<div class="head" style="margin-top:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h1>'+esc(inv.vendor)+' · '+rd(inv.amount)+'</h1><span class="stpill" id="iPill" style="'+invStyle(inv.status)+';margin-top:12px">'+esc(inv.status)+'</span></div><div class="sub">'+esc(inv.villa||'—')+' · registrada por '+esc(cap(inv.created_by))+' · '+esc(when(inv.created_ts))+'</div></div>'
    +'<div class="card"><div class="dgrid">'
-     +'<div><label>Vendor</label><input id="ivVendor" value="'+esc(inv.vendor)+'"/></div>'
-     +'<div><label>Invoice #</label><input id="ivNumber" value="'+esc(inv.number||'')+'"/></div>'
-     +'<div><label>Amount (RD$)</label><input id="ivAmount" inputmode="decimal" value="'+(inv.amount==null?'':inv.amount)+'"/></div>'
+     +'<div><label>Proveedor</label><input id="ivVendor" value="'+esc(inv.vendor)+'"/></div>'
+     +'<div><label>Factura n.º</label><input id="ivNumber" value="'+esc(inv.number||'')+'"/></div>'
+     +'<div><label>Monto (RD$)</label><input id="ivAmount" inputmode="decimal" value="'+(inv.amount==null?'':inv.amount)+'"/></div>'
      +'<div><label>Villa</label><select id="ivVilla">'+vopts+'</select></div>'
-     +'<div><label>Charged to</label><select id="ivCharged">'+chopts+'</select></div>'
-     +'<div><label>Status</label><select id="ivStatus">'+stopts+'</select></div>'
-     +'<div><label>Invoice date</label><input id="ivDate" type="date" value="'+esc(inv.date||'')+'"/></div>'
-     +'<div><label>Due date</label><input id="ivDue" type="date" value="'+esc(inv.due_date||'')+'"/></div>'
+     +'<div><label>Se cobra a</label><select id="ivCharged">'+chopts+'</select></div>'
+     +'<div><label>Estado</label><select id="ivStatus">'+stopts+'</select></div>'
+     +'<div><label>Fecha de factura</label><input id="ivDate" type="date" value="'+esc(inv.date||'')+'"/></div>'
+     +'<div><label>Vencimiento</label><input id="ivDue" type="date" value="'+esc(inv.due_date||'')+'"/></div>'
    +'</div><div id="ivMsg" class="msg"></div></div>'
-   +'<div class="card"><label>Description</label><textarea id="ivDesc">'+esc(inv.description||'')+'</textarea></div>'
-   +'<div class="card"><label>Receipt / invoice photos</label><div id="ivPhotos" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px"></div><input type="file" id="ivPhotoInput" accept="image/*" style="display:none"><div style="margin-top:12px"><button class="ghost" id="ivPhotoBtn">+ Add photo</button></div><div id="ivPhotoMsg" class="msg"></div></div>'
-   +'<button class="btn-complete'+(inv.status==='Paid'?' done':'')+'" id="ivPaid">'+(inv.status==='Paid'?'Paid ✓ · mark unpaid':'Mark as paid')+'</button>'
-   +'<div style="text-align:center;margin-top:12px"><button class="link" id="ivDelete">Delete invoice</button></div>';
+   +'<div class="card"><label>Descripción</label><textarea id="ivDesc">'+esc(inv.description||'')+'</textarea></div>'
+   +'<div class="card"><label>Fotos de recibo / factura</label><div id="ivPhotos" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px"></div><input type="file" id="ivPhotoInput" accept="image/*" style="display:none"><div style="margin-top:12px"><button class="ghost" id="ivPhotoBtn">+ Añadir foto</button></div><div id="ivPhotoMsg" class="msg"></div></div>'
+   +'<button class="btn-complete'+(inv.status==='Paid'?' done':'')+'" id="ivPaid">'+(inv.status==='Paid'?'Pagada ✓ · marcar por pagar':'Marcar como pagada')+'</button>'
+   +'<div style="text-align:center;margin-top:12px"><button class="link" id="ivDelete">Eliminar factura</button></div>';
   $('invBack').onclick=function(){ go('payments'); };
-  async function save(patch){ await api('/api/invoices/update',{method:'POST',body:JSON.stringify(Object.assign({id:inv.id},patch))}); Object.assign(inv,patch); var msg=$('ivMsg'); msg.textContent='Saved.'; msg.className='msg ok'; setTimeout(function(){ if(msg) msg.textContent=''; },1200); updateBadges(); }
+  async function save(patch){ await api('/api/invoices/update',{method:'POST',body:JSON.stringify(Object.assign({id:inv.id},patch))}); Object.assign(inv,patch); var msg=$('ivMsg'); msg.textContent='Guardado.'; msg.className='msg ok'; setTimeout(function(){ if(msg) msg.textContent=''; },1200); updateBadges(); }
   $('ivVendor').addEventListener('change',function(){ save({vendor:this.value}); });
   $('ivNumber').addEventListener('change',function(){ save({number:this.value}); });
   $('ivAmount').addEventListener('change',function(){ save({amount:this.value.trim()}); });
@@ -741,12 +752,12 @@ async function openInv(id){
   $('ivDate').addEventListener('change',function(){ save({date:this.value}); });
   $('ivDue').addEventListener('change',function(){ save({due_date:this.value}); });
   $('ivDesc').addEventListener('change',function(){ save({description:this.value}); });
-  $('ivStatus').addEventListener('change',function(){ var v=this.value; save({status:v}); var p=$('iPill'); if(p){ p.textContent=v; p.setAttribute('style', invStyle(v)+';margin-top:12px'); } });
+  $('ivStatus').addEventListener('change',function(){ var v=this.value; save({status:v}); var p=$('iPill'); if(p){ p.textContent=tr(L_INV,v); p.setAttribute('style', invStyle(v)+';margin-top:12px'); } });
   $('ivPaid').onclick=async function(){ await save({status: inv.status==='Paid'?'Unpaid':'Paid'}); openInv(inv.id); };
-  $('ivDelete').onclick=async function(){ if(!confirm('Delete this invoice?'))return; await api('/api/invoices/delete',{method:'POST',body:JSON.stringify({id:inv.id})}); updateBadges(); go('payments'); };
-  function renderIv(){ var w=$('ivPhotos'); w.innerHTML=(inv.photos||[]).map(function(p){ return '<div style="position:relative"><img src="/api/photo/'+esc(p.id)+'" style="width:110px;height:110px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block"><button data-delphoto="'+esc(p.id)+'" title="Remove" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line);color:#a8543a;cursor:pointer;line-height:1">×</button></div>'; }).join('') || '<span class="muted">No receipt attached yet.</span>'; w.querySelectorAll('[data-delphoto]').forEach(function(b){ b.onclick=async function(){ var pid=b.getAttribute('data-delphoto'); await api('/api/invoices/photo/delete',{method:'POST',body:JSON.stringify({id:inv.id,photoId:pid})}); inv.photos=(inv.photos||[]).filter(function(x){return x.id!==pid;}); renderIv(); }; }); }
+  $('ivDelete').onclick=async function(){ if(!confirm('¿Eliminar esta factura?'))return; await api('/api/invoices/delete',{method:'POST',body:JSON.stringify({id:inv.id})}); updateBadges(); go('payments'); };
+  function renderIv(){ var w=$('ivPhotos'); w.innerHTML=(inv.photos||[]).map(function(p){ return '<div style="position:relative"><img src="/api/photo/'+esc(p.id)+'" style="width:110px;height:110px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block"><button data-delphoto="'+esc(p.id)+'" title="Quitar" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line);color:#a8543a;cursor:pointer;line-height:1">×</button></div>'; }).join('') || '<span class="muted">Aún no hay recibo adjunto.</span>'; w.querySelectorAll('[data-delphoto]').forEach(function(b){ b.onclick=async function(){ var pid=b.getAttribute('data-delphoto'); await api('/api/invoices/photo/delete',{method:'POST',body:JSON.stringify({id:inv.id,photoId:pid})}); inv.photos=(inv.photos||[]).filter(function(x){return x.id!==pid;}); renderIv(); }; }); }
   $('ivPhotoBtn').onclick=function(){ $('ivPhotoInput').click(); };
-  $('ivPhotoInput').onchange=function(){ var f=this.files[0]; if(!f) return; var msg=$('ivPhotoMsg'); msg.textContent='Uploading…'; msg.className='msg'; var inp=this; resizeImage(f,async function(dataUrl){ if(!dataUrl){ msg.textContent='Could not read image.'; msg.className='msg err'; return; } var rr=await api('/api/invoices/photo',{method:'POST',body:JSON.stringify({id:inv.id,data:dataUrl})}); if(rr.status===200&&rr.body.photo){ inv.photos=inv.photos||[]; inv.photos.push(rr.body.photo); renderIv(); msg.textContent=''; } else { msg.textContent=(rr.body&&rr.body.error)||'Upload failed.'; msg.className='msg err'; } inp.value=''; }); };
+  $('ivPhotoInput').onchange=function(){ var f=this.files[0]; if(!f) return; var msg=$('ivPhotoMsg'); msg.textContent='Subiendo…'; msg.className='msg'; var inp=this; resizeImage(f,async function(dataUrl){ if(!dataUrl){ msg.textContent='No se pudo leer la imagen.'; msg.className='msg err'; return; } var rr=await api('/api/invoices/photo',{method:'POST',body:JSON.stringify({id:inv.id,data:dataUrl})}); if(rr.status===200&&rr.body.photo){ inv.photos=inv.photos||[]; inv.photos.push(rr.body.photo); renderIv(); msg.textContent=''; } else { msg.textContent=(rr.body&&rr.body.error)||'Falló la subida.'; msg.className='msg err'; } inp.value=''; }); };
   renderIv();
 }
 
@@ -754,33 +765,33 @@ async function openInv(id){
 function qaOpen(){ $('qaWrap').classList.add('open'); qaMenu(); }
 function qaClose(){ $('qaWrap').classList.remove('open'); }
 function qaMenu(){
-  $('qaTitle').textContent='Quick add'; $('qaSub').textContent='What do you want to add?';
-  var items=[['invoice','Invoice','Vendor bill or receipt'],['workorder','Work order','Maintenance job'],['reading','Meter reading','Water / electricity']];
-  if(ME&&ME.isAdmin){ items.push(['villa','Villa','New property']); items.push(['owner','Owner','Owner + login code']); }
+  $('qaTitle').textContent='Añadir rápido'; $('qaSub').textContent='¿Qué desea añadir?';
+  var items=[['invoice','Factura','Cuenta o recibo de proveedor'],['workorder','Orden de trabajo','Trabajo de mantenimiento'],['reading','Lectura de medidor','Agua / electricidad']];
+  if(ME&&ME.isAdmin){ items.push(['villa','Villa','Nueva propiedad']); items.push(['owner','Propietario','Propietario + código']); }
   $('qaBody').innerHTML='<div class="qpick">'+items.map(function(i){ return '<button data-qa="'+i[0]+'"><div class="qt">'+i[1]+'</div><div class="qd">'+i[2]+'</div></button>'; }).join('')+'</div>';
   [].forEach.call($('qaBody').querySelectorAll('[data-qa]'), function(b){ b.onclick=function(){ qaForm(b.getAttribute('data-qa')); }; });
 }
 function qaForm(kind){
   var vsel=function(id,all){ return '<label>Villa</label><select id="'+id+'">'+(all?'<option>All villas</option>':'')+VILLAS.map(function(v){ return '<option>'+esc(v)+'</option>'; }).join('')+'</select>'; };
   var F={
-    invoice:{ t:'New invoice', s:'Logged straight to Invoices', html:
+    invoice:{ t:'Nueva factura', s:'Se registra en Pagos', html:
       '<div class="row" style="margin-top:14px"><div style="flex:2"><label>Vendor</label><input id="qVendor" placeholder="e.g. Clima Caribe"/></div><div><label>Amount (RD$)</label><input id="qAmount" inputmode="decimal"/></div></div>'
      +'<div class="row" style="margin-top:12px"><div>'+vsel('qVilla',true)+'</div><div><label>Status</label><select id="qStatus"><option>Unpaid</option><option>Approved</option><option>Paid</option></select></div></div>'
      +'<div style="margin-top:12px"><label>Description</label><input id="qDesc" placeholder="optional"/></div>' },
-    workorder:{ t:'New work order', s:'Logged straight to Work orders', html:
+    workorder:{ t:'Nueva orden de trabajo', s:'Se registra en Mantenimiento', html:
       '<div style="margin-top:14px"><label>Title</label><input id="qTitle" placeholder="e.g. Shower mixer dripping"/></div>'
      +'<div class="row" style="margin-top:12px"><div>'+vsel('qVilla')+'</div><div><label>Vendor</label><input id="qVendor" placeholder="optional"/></div><div><label>Est. cost (RD$)</label><input id="qCost" inputmode="decimal" placeholder="optional"/></div></div>' },
-    reading:{ t:'New meter reading', s:'Logged straight to Meter readings', html:
+    reading:{ t:'Nueva lectura', s:'Se registra en Servicios', html:
       '<div class="row" style="margin-top:14px"><div>'+vsel('qVilla')+'</div><div><label>Electricity (kWh)</label><input id="qElec" inputmode="decimal"/></div><div><label>Water (gal)</label><input id="qWater" inputmode="decimal"/></div></div>'
      +'<div style="margin-top:12px"><label>Note</label><input id="qNote" placeholder="optional"/></div>' },
-    villa:{ t:'New villa', s:'Added to Properties', html:
+    villa:{ t:'Nueva villa', s:'Se añade a Propiedades', html:
       '<div class="row" style="margin-top:14px"><div style="flex:2"><label>Villa name</label><input id="qName" placeholder="e.g. Villa Las Palmas 9"/></div><div style="flex:2"><label>Detail</label><input id="qMeta" placeholder="e.g. 5 bed · oceanfront"/></div></div>' },
-    owner:{ t:'New owner', s:'Gets a code for the owner app', html:
+    owner:{ t:'Nuevo propietario', s:'Recibe un código para la app', html:
       '<div class="row" style="margin-top:14px"><div><label>Owner name</label><input id="qName" placeholder="e.g. Sra. Aldrich"/></div><div><label>Last name (login)</label><input id="qLast" placeholder="e.g. Aldrich"/></div></div>'
      +'<div class="row" style="margin-top:12px"><div>'+vsel('qVilla')+'</div><div><label>Login code</label><input id="qCode" placeholder="e.g. CDC-OWN-0012"/></div></div>' }
   }[kind];
   $('qaTitle').textContent=F.t; $('qaSub').textContent=F.s;
-  $('qaBody').innerHTML=F.html+'<div style="margin-top:16px;display:flex;gap:10px;align-items:center"><button class="primary" id="qSave">Save</button><button class="ghost" id="qBack">← All types</button></div><div id="qMsg" class="msg"></div>';
+  $('qaBody').innerHTML=F.html+'<div style="margin-top:16px;display:flex;gap:10px;align-items:center"><button class="primary" id="qSave">Guardar</button><button class="ghost" id="qBack">← Todos los tipos</button></div><div id="qMsg" class="msg"></div>';
   $('qBack').onclick=qaMenu;
   $('qSave').onclick=async function(){
     var msg=$('qMsg'); msg.textContent=''; msg.className='msg'; var ep, p;
@@ -789,20 +800,20 @@ function qaForm(kind){
     else if(kind==='workorder'){ ep='/api/workorders'; p={title:$('qTitle').value.trim(), villa:$('qVilla').value, vendor:$('qVendor').value.trim(), cost:$('qCost').value.trim()};
       if(!p.title){ msg.textContent='Give it a title.'; msg.className='msg err'; return; } }
     else if(kind==='reading'){ ep='/api/readings'; p={villa:$('qVilla').value, electricity_kwh:$('qElec').value.trim(), water_gal:$('qWater').value.trim(), note:$('qNote').value.trim()};
-      if(!p.electricity_kwh && !p.water_gal){ msg.textContent='Enter at least one reading.'; msg.className='msg err'; return; } }
+      if(!p.electricity_kwh && !p.water_gal){ msg.textContent='Ingrese al menos una lectura.'; msg.className='msg err'; return; } }
     else if(kind==='villa'){ ep='/api/properties'; p={name:$('qName').value.trim(), meta:$('qMeta').value.trim()};
-      if(!p.name){ msg.textContent='Enter a villa name.'; msg.className='msg err'; return; } }
+      if(!p.name){ msg.textContent='Ingrese el nombre de la villa.'; msg.className='msg err'; return; } }
     else { ep='/api/owners'; p={name:$('qName').value.trim(), lastName:$('qLast').value.trim(), villa:$('qVilla').value, code:$('qCode').value.trim()};
       if(!p.name||!p.code){ msg.textContent='Name and login code are required.'; msg.className='msg err'; return; } }
     $('qSave').disabled=true; var r=await api(ep,{method:'POST',body:JSON.stringify(p)}); $('qSave').disabled=false;
     if(r.status===200){
-      msg.textContent='Saved.'; msg.className='msg ok'; updateBadges();
+      msg.textContent='Guardado.'; msg.className='msg ok'; updateBadges();
       if(kind==='villa'||kind==='owner'){ var pr=await api('/api/properties'); VILLAS=(pr.body.properties||[]).filter(function(x){return x.active!==false;}).map(function(x){return x.name;}); }
       setTimeout(function(){ qaClose();
         var dest={invoice:'payments',workorder:'maintenance',reading:'utilities',villa:'manage',owner:'manage'}[kind];
         go(dest);
       }, 500);
-    } else { msg.textContent=(r.body&&r.body.error)||'Could not save.'; msg.className='msg err'; }
+    } else { msg.textContent=(r.body&&r.body.error)||'No se pudo guardar.'; msg.className='msg err'; }
   };
 }
 
@@ -810,7 +821,7 @@ function qaForm(kind){
 async function viewVillaProfile(name){
   var main=$('main'); main.classList.remove('full'); VIEW='villa'; main.setAttribute('data-sec','villa');
   [].forEach.call($('nav').querySelectorAll('button[data-view]'), function(b){ b.setAttribute('aria-current','false'); });
-  main.innerHTML='<div class="empty">Loading…</div>';
+  main.innerHTML='<div class="empty">Cargando…</div>';
   var pr=await api('/api/properties'); var props=pr.body.properties||[];
   var prop=props.find(function(p){ return String(p.name).toLowerCase()===name.toLowerCase(); });
   var wq=await api('/api/workorders'); var rq=await api('/api/readings');
@@ -823,51 +834,51 @@ async function viewVillaProfile(name){
   var nPhotos=(prop&&prop.photos||[]).length;
   var woDelta=monthDelta(wos,'created_ts'), rdDelta=monthDelta(reads,'ts');
   main.innerHTML =
-    '<button class="backlink" id="vpBack">← Overview</button>'
-   +'<div class="head" style="margin-top:8px"><div class="eyebrow">Property profile</div><h1>'+esc(name)+'</h1>'
+    '<button class="backlink" id="vpBack">← Resumen</button>'
+   +'<div class="head" style="margin-top:8px"><div class="eyebrow">Ficha de la propiedad</div><h1>'+esc(name)+'</h1>'
      +'<div class="chips" style="margin-top:10px"><span class="chip" style="cursor:default">📍 '+esc(area)+'</span>'
        + detailChips.map(function(c){ return '<span class="chip" style="cursor:default">'+esc(c)+'</span>'; }).join('')
      +'</div></div>'
    +'<div class="stats" style="margin-top:16px">'
-     +'<div class="stat"><div class="k">Open work orders</div><div class="v">'+openWos.length+'</div><div style="margin-top:5px">'+deltaHtml(woDelta)+'</div></div>'
-     +'<div class="stat"><div class="k">Readings logged</div><div class="v">'+reads.length+'</div><div style="margin-top:5px">'+deltaHtml(rdDelta)+'</div></div>'
-     +'<div class="stat"><div class="k">Photos</div><div class="v">'+nPhotos+'</div></div>'
+     +'<div class="stat"><div class="k">Órdenes abiertas</div><div class="v">'+openWos.length+'</div><div style="margin-top:5px">'+deltaHtml(woDelta)+'</div></div>'
+     +'<div class="stat"><div class="k">Lecturas registradas</div><div class="v">'+reads.length+'</div><div style="margin-top:5px">'+deltaHtml(rdDelta)+'</div></div>'
+     +'<div class="stat"><div class="k">Fotos</div><div class="v">'+nPhotos+'</div></div>'
    +'</div>'
-   +'<div class="card"><label>Photos</label><div id="vpPhotos" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px"></div>'
-     + (prop?'<input type="file" id="vpPhotoInput" accept="image/*" style="display:none"><div style="margin-top:12px"><button class="ghost" id="vpPhotoBtn">+ Add photo</button></div><div id="vpPhotoMsg" class="msg"></div>':'')
+   +'<div class="card"><label>Fotos</label><div id="vpPhotos" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px"></div>'
+     + (prop?'<input type="file" id="vpPhotoInput" accept="image/*" style="display:none"><div style="margin-top:12px"><button class="ghost" id="vpPhotoBtn">+ Añadir foto</button></div><div id="vpPhotoMsg" class="msg"></div>':'')
    +'</div>'
-   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Work orders</h2><div id="vpWo"></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Recent meter readings</h2><div id="vpRd"></div></div>';
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px"> Órdenes de trabajo</h2><div id="vpWo"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px"> Lecturas recientes</h2><div id="vpRd"></div></div>';
   $('vpBack').onclick=function(){ go('overview'); };
   $('vpWo').innerHTML = wos.length ? wos.slice(0,8).map(function(x){
-    return '<div class="wocard" data-open="'+esc(x.id)+'" style="margin-top:10px"><div class="top"><h3>'+esc(x.title)+'</h3><span class="stpill" style="'+stStyle(x.status)+'">'+esc(x.status)+'</span></div>'
+    return '<div class="wocard" data-open="'+esc(x.id)+'" style="margin-top:10px"><div class="top"><h3>'+esc(x.title)+'</h3><span class="stpill" style="'+stStyle(x.status)+'">'+esc(tr(L_WO,x.status))+'</span></div>'
       +'<div class="foot"><div class="muted">'+esc(cap(x.updated_by||x.created_by))+' · '+esc(when(x.updated_ts||x.created_ts))+'</div><div class="muted">'+(x.cost!=null?rd(x.cost):'')+'</div></div></div>';
-  }).join('') : '<div class="empty">No work orders for this villa.</div>';
+  }).join('') : '<div class="empty">No hay órdenes para esta villa.</div>';
   $('vpWo').addEventListener('click', function(e){ var c=e.target.closest('.wocard[data-open]'); if(c) openWO(c.getAttribute('data-open')); });
-  $('vpRd').innerHTML = reads.length ? '<table><thead><tr><th style="text-align:right">Electricity</th><th style="text-align:right">Water</th><th>Note</th><th>When</th></tr></thead><tbody>'+reads.slice(0,8).map(function(x){ return '<tr><td class="num">'+(x.electricity_kwh==null?'—':nfmt(x.electricity_kwh)+' <span style="color:#a09a8f">kWh</span>')+'</td><td class="num">'+(x.water_gal==null?'—':nfmt(x.water_gal)+' <span style="color:#a09a8f">gal</span>')+'</td><td>'+esc(x.note||'')+'</td><td class="muted">'+esc(when(x.ts))+'</td></tr>'; }).join('')+'</tbody></table>' : '<div class="empty">No readings for this villa.</div>';
+  $('vpRd').innerHTML = reads.length ? '<table><thead><tr><th style="text-align:right">Electricidad</th><th style="text-align:right">Agua</th><th>Nota</th><th>Cuándo</th></tr></thead><tbody>'+reads.slice(0,8).map(function(x){ return '<tr><td class="num">'+(x.electricity_kwh==null?'—':nfmt(x.electricity_kwh)+' <span style="color:#a09a8f">kWh</span>')+'</td><td class="num">'+(x.water_gal==null?'—':nfmt(x.water_gal)+' <span style="color:#a09a8f">gal</span>')+'</td><td>'+esc(x.note||'')+'</td><td class="muted">'+esc(when(x.ts))+'</td></tr>'; }).join('')+'</tbody></table>' : '<div class="empty">No hay lecturas para esta villa.</div>';
   if(prop){
-    function renderVp(){ var w=$('vpPhotos'); w.innerHTML=(prop.photos||[]).map(function(p){ return '<div style="position:relative"><img src="/api/photo/'+esc(p.id)+'" style="width:110px;height:110px;object-fit:cover;border-radius:12px;border:1px solid var(--line);display:block"><button data-delphoto="'+esc(p.id)+'" title="Remove" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line);color:#a8543a;cursor:pointer;line-height:1">×</button></div>'; }).join('') || '<span class="muted">No photos yet.</span>'; w.querySelectorAll('[data-delphoto]').forEach(function(b){ b.onclick=async function(){ var pid=b.getAttribute('data-delphoto'); await api('/api/properties/photo/delete',{method:'POST',body:JSON.stringify({id:prop.id,photoId:pid})}); prop.photos=(prop.photos||[]).filter(function(x){return x.id!==pid;}); renderVp(); }; }); }
+    function renderVp(){ var w=$('vpPhotos'); w.innerHTML=(prop.photos||[]).map(function(p){ return '<div style="position:relative"><img src="/api/photo/'+esc(p.id)+'" style="width:110px;height:110px;object-fit:cover;border-radius:12px;border:1px solid var(--line);display:block"><button data-delphoto="'+esc(p.id)+'" title="Quitar" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line);color:#a8543a;cursor:pointer;line-height:1">×</button></div>'; }).join('') || '<span class="muted">Aún no hay fotos.</span>'; w.querySelectorAll('[data-delphoto]').forEach(function(b){ b.onclick=async function(){ var pid=b.getAttribute('data-delphoto'); await api('/api/properties/photo/delete',{method:'POST',body:JSON.stringify({id:prop.id,photoId:pid})}); prop.photos=(prop.photos||[]).filter(function(x){return x.id!==pid;}); renderVp(); }; }); }
     $('vpPhotoBtn').onclick=function(){ $('vpPhotoInput').click(); };
-    $('vpPhotoInput').onchange=function(){ var f=this.files[0]; if(!f) return; var msg=$('vpPhotoMsg'); msg.textContent='Uploading…'; msg.className='msg'; var inp=this; resizeImage(f,async function(dataUrl){ if(!dataUrl){ msg.textContent='Could not read image.'; msg.className='msg err'; return; } var r=await api('/api/properties/photo',{method:'POST',body:JSON.stringify({id:prop.id,data:dataUrl})}); if(r.status===200 && r.body.photo){ prop.photos=prop.photos||[]; prop.photos.push(r.body.photo); renderVp(); msg.textContent=''; } else { msg.textContent=(r.body&&r.body.error)||'Upload failed.'; msg.className='msg err'; } inp.value=''; }); };
+    $('vpPhotoInput').onchange=function(){ var f=this.files[0]; if(!f) return; var msg=$('vpPhotoMsg'); msg.textContent='Subiendo…'; msg.className='msg'; var inp=this; resizeImage(f,async function(dataUrl){ if(!dataUrl){ msg.textContent='No se pudo leer la imagen.'; msg.className='msg err'; return; } var r=await api('/api/properties/photo',{method:'POST',body:JSON.stringify({id:prop.id,data:dataUrl})}); if(r.status===200 && r.body.photo){ prop.photos=prop.photos||[]; prop.photos.push(r.body.photo); renderVp(); msg.textContent=''; } else { msg.textContent=(r.body&&r.body.error)||'Falló la subida.'; msg.className='msg err'; } inp.value=''; }); };
     renderVp();
-  } else { $('vpPhotos').innerHTML='<span class="muted">This villa isn\'t in the properties list yet — photos unavailable.</span>'; }
+  } else { $('vpPhotos').innerHTML='<span class="muted">This villa no está aún en la lista de propiedades — fotos no disponibles.</span>'; }
 }
 
 /* ---- MANAGE (admin) ---- */
 function viewManage(){
   var m=$('main');
-  m.innerHTML='<div class="head"><div class="eyebrow">Caribbean Paradise Homes</div><h1>Manage</h1><div class="sub">Properties &amp; owners · Jan only</div></div>'
-   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Properties (villas)</h2>'
-   +'<div class="row"><div style="flex:2"><label>Villa name</label><input id="pName" placeholder="e.g. Villa Las Palmas 9"/></div><div style="flex:2"><label>Detail (optional)</label><input id="pMeta" placeholder="e.g. 5 bed · oceanfront"/></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="pAdd">Add villa</button></div></div>'
+  m.innerHTML='<div class="head"><div class="eyebrow">Administración</div><h1>Gestionar</h1><div class="sub">Propiedades y propietarios · solo Jan</div></div>'
+   +'<div class="card"><h2 style="margin:0 0 12px;font-size:19px">Propiedades (villas)</h2>'
+   +'<div class="row"><div style="flex:2"><label>Nombre de la villa</label><input id="pName" placeholder="ej. Villa Las Palmas 9"/></div><div style="flex:2"><label>Detalle (opcional)</label><input id="pMeta" placeholder="ej. 5 hab · frente al mar"/></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="pAdd">Añadir villa</button></div></div>'
    +'<div id="pMsg" class="msg"></div><div id="pList"></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Owners</h2><div class="sub" style="margin-bottom:10px">Each owner gets a code to log into the owner app at <b>/owner</b> (code + last name).</div>'
-   +'<div class="row"><div><label>Owner name</label><input id="oName" placeholder="e.g. Sra. Aldrich"/></div><div><label>Last name (login)</label><input id="oLast" placeholder="e.g. Aldrich"/></div><div><label>Villa</label><select id="oVilla"></select></div></div>'
-   +'<div class="row" style="margin-top:12px"><div><label>Email</label><input id="oEmail" placeholder="owner@email.com"/></div><div><label>Login code</label><input id="oCode" placeholder="e.g. CDC-OWN-0012"/></div><div><label>Language</label><select id="oLang"><option value="es">Spanish</option><option value="en">English</option></select></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="oAdd">Add owner</button></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Propietarios</h2><div class="sub" style="margin-bottom:10px">Cada propietario recibe un código para entrar a la app en <b>/owner</b> (código + apellido).</div>'
+   +'<div class="row"><div><label>Nombre del propietario</label><input id="oName" placeholder="ej. Sra. Aldrich"/></div><div><label>Apellido (acceso)</label><input id="oLast" placeholder="ej. Aldrich"/></div><div><label>Villa</label><select id="oVilla"></select></div></div>'
+   +'<div class="row" style="margin-top:12px"><div><label>Correo</label><input id="oEmail" placeholder="propietario@correo.com"/></div><div><label>Código de acceso</label><input id="oCode" placeholder="ej. CDC-OWN-0012"/></div><div><label>Idioma</label><select id="oLang"><option value="es">Español</option><option value="en">Inglés</option></select></div><div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="oAdd">Añadir propietario</button></div></div>'
    +'<div id="oMsg" class="msg"></div><div id="oList"></div></div>'
-   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Backup</h2>'
-   +'<div class="sub" style="margin-bottom:12px">Download every villa, owner, reading, work order and invoice as one JSON file. Keep a copy — restoring puts it all back.</div>'
-   +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="primary" id="bkDown">Download backup</button>'
-   +'<input type="file" id="bkFile" accept="application/json,.json" style="display:none"><button class="ghost" id="bkUp">Restore from file…</button></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Respaldo</h2>'
+   +'<div class="sub" style="margin-bottom:12px">Descargue todas las villas, propietarios, lecturas, órdenes y facturas en un archivo JSON. Guarde una copia — al restaurar se recupera todo.</div>'
+   +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="primary" id="bkDown">Descargar respaldo</button>'
+   +'<input type="file" id="bkFile" accept="application/json,.json" style="display:none"><button class="ghost" id="bkUp">Restaurar desde archivo…</button></div>'
    +'<div id="bkMsg" class="msg"></div></div>';
   loadProps(); loadOwners();
   $('bkDown').onclick=function(){ window.location.href='/api/backup'; };
@@ -876,46 +887,46 @@ function viewManage(){
     var f=this.files[0]; if(!f) return; var msg=$('bkMsg'); var inp=this;
     var rd=new FileReader();
     rd.onload=async function(){
-      var data; try{ data=JSON.parse(rd.result); }catch(e){ msg.textContent='That file is not valid JSON.'; msg.className='msg err'; inp.value=''; return; }
+      var data; try{ data=JSON.parse(rd.result); }catch(e){ msg.textContent='Ese archivo no es JSON válido.'; msg.className='msg err'; inp.value=''; return; }
       var counts=['properties','owners','readings','workorders','invoices'].filter(function(k){return Array.isArray(data[k]);})
         .map(function(k){ return data[k].length+' '+k; }).join(', ');
-      if(!counts){ msg.textContent='No console data found in that file.'; msg.className='msg err'; inp.value=''; return; }
-      if(!confirm('Restore '+counts+'?\n\nThis REPLACES the current data in those sections.')){ inp.value=''; return; }
-      msg.textContent='Restoring…'; msg.className='msg';
+      if(!counts){ msg.textContent='No se encontraron datos de la consola en ese archivo.'; msg.className='msg err'; inp.value=''; return; }
+      if(!confirm('¿Restaurar '+counts+'?\n\nEsto REEMPLAZA los datos actuales de esas secciones.')){ inp.value=''; return; }
+      msg.textContent='Restaurando…'; msg.className='msg';
       var r=await api('/api/restore',{method:'POST',body:JSON.stringify(data)});
-      if(r.status===200){ msg.textContent='Restored: '+(r.body.restored||[]).join(', '); msg.className='msg ok'; loadProps(); loadOwners(); updateBadges(); }
-      else { msg.textContent=(r.body&&r.body.error)||'Restore failed.'; msg.className='msg err'; }
+      if(r.status===200){ msg.textContent='Restaurado: '+(r.body.restored||[]).join(', '); msg.className='msg ok'; loadProps(); loadOwners(); updateBadges(); }
+      else { msg.textContent=(r.body&&r.body.error)||'Falló la restauración.'; msg.className='msg err'; }
       inp.value='';
     };
     rd.readAsText(f);
   };
-  $('pAdd').onclick = async function(){ var msg=$('pMsg'); msg.textContent=''; msg.className='msg'; var name=$('pName').value.trim(); if(!name){ msg.textContent='Enter a villa name.'; msg.className='msg err'; return; } var r=await api('/api/properties',{method:'POST',body:JSON.stringify({name:name,meta:$('pMeta').value.trim()})}); if(r.status===200){ $('pName').value='';$('pMeta').value=''; msg.textContent='Villa added.'; msg.className='msg ok'; loadProps(); } else { msg.textContent=(r.body&&r.body.error)||'Could not add.'; msg.className='msg err'; } };
-  $('oAdd').onclick = async function(){ var msg=$('oMsg'); msg.textContent=''; msg.className='msg'; var p={name:$('oName').value.trim(),lastName:$('oLast').value.trim(),villa:$('oVilla').value,email:$('oEmail').value.trim(),code:$('oCode').value.trim(),lang:$('oLang').value}; if(!p.name){ msg.textContent='Enter the owner name.'; msg.className='msg err'; return; } if(!p.code){ msg.textContent='Enter a login code.'; msg.className='msg err'; return; } var r=await api('/api/owners',{method:'POST',body:JSON.stringify(p)}); if(r.status===200){ $('oName').value='';$('oLast').value='';$('oEmail').value='';$('oCode').value=''; msg.textContent='Owner added.'; msg.className='msg ok'; loadOwners(); } else { msg.textContent=(r.body&&r.body.error)||'Could not add.'; msg.className='msg err'; } };
+  $('pAdd').onclick = async function(){ var msg=$('pMsg'); msg.textContent=''; msg.className='msg'; var name=$('pName').value.trim(); if(!name){ msg.textContent='Ingrese el nombre de la villa.'; msg.className='msg err'; return; } var r=await api('/api/properties',{method:'POST',body:JSON.stringify({name:name,meta:$('pMeta').value.trim()})}); if(r.status===200){ $('pName').value='';$('pMeta').value=''; msg.textContent='Villa añadida.'; msg.className='msg ok'; loadProps(); } else { msg.textContent=(r.body&&r.body.error)||'No se pudo añadir.'; msg.className='msg err'; } };
+  $('oAdd').onclick = async function(){ var msg=$('oMsg'); msg.textContent=''; msg.className='msg'; var p={name:$('oName').value.trim(),lastName:$('oLast').value.trim(),villa:$('oVilla').value,email:$('oEmail').value.trim(),code:$('oCode').value.trim(),lang:$('oLang').value}; if(!p.name){ msg.textContent='Ingrese el nombre del propietario.'; msg.className='msg err'; return; } if(!p.code){ msg.textContent='Ingrese un código de acceso.'; msg.className='msg err'; return; } var r=await api('/api/owners',{method:'POST',body:JSON.stringify(p)}); if(r.status===200){ $('oName').value='';$('oLast').value='';$('oEmail').value='';$('oCode').value=''; msg.textContent='Propietario añadido.'; msg.className='msg ok'; loadOwners(); } else { msg.textContent=(r.body&&r.body.error)||'No se pudo añadir.'; msg.className='msg err'; } };
 }
 async function loadProps(){
   var r=await api('/api/properties'); var rows=r.body.properties||[];
   VILLAS = rows.filter(function(p){return p.active!==false;}).map(function(p){return p.name;});
   if($('oVilla')) fillSelect($('oVilla'), VILLAS);
-  $('pList').innerHTML='<table><thead><tr><th>Villa</th><th>Detail</th><th>Status</th><th></th></tr></thead><tbody>'
-    +rows.map(function(p){ return '<tr><td style="font-weight:500">'+esc(p.name)+'</td><td class="muted">'+esc(p.meta||'')+'</td><td><button class="ghost" data-toggle="'+esc(p.id)+'" data-active="'+(p.active!==false)+'">'+(p.active!==false?'<span class="pill">Active</span>':'<span class="pill off">Hidden</span>')+'</button></td><td><button class="link" data-delp="'+esc(p.id)+'">Delete</button></td></tr>'; }).join('')+'</tbody></table>';
+  $('pList').innerHTML='<table><thead><tr><th>Villa</th><th>Detalle</th><th>Estado</th><th></th></tr></thead><tbody>'
+    +rows.map(function(p){ return '<tr><td style="font-weight:500">'+esc(p.name)+'</td><td class="muted">'+esc(p.meta||'')+'</td><td><button class="ghost" data-toggle="'+esc(p.id)+'" data-active="'+(p.active!==false)+'">'+(p.active!==false?'<span class="pill">Activa</span>':'<span class="pill off">Oculta</span>')+'</button></td><td><button class="link" data-delp="'+esc(p.id)+'">Delete</button></td></tr>'; }).join('')+'</tbody></table>';
   $('pList').querySelectorAll('[data-toggle]').forEach(function(b){ b.onclick=async function(){ await api('/api/properties/update',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-toggle'),active:!(b.getAttribute('data-active')==='true')})}); loadProps(); }; });
-  $('pList').querySelectorAll('[data-delp]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this villa?'))return; await api('/api/properties/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delp')})}); loadProps(); }; });
+  $('pList').querySelectorAll('[data-delp]').forEach(function(b){ b.onclick=async function(){ if(!confirm('¿Eliminar esta villa?'))return; await api('/api/properties/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delp')})}); loadProps(); }; });
 }
 async function loadOwners(){
   var r=await api('/api/owners'); var rows=r.body.owners||[];
-  $('oList').innerHTML='<table><thead><tr><th>Owner</th><th>Villa</th><th>Login code</th><th>Email</th><th></th></tr></thead><tbody>'
-    +(rows.length?'':'<tr><td colspan="5" class="empty">No owners yet.</td></tr>')
-    +rows.map(function(o){ return '<tr><td style="font-weight:500">'+esc(o.name)+'<div class="muted">'+esc(o.lang==='en'?'English':'Spanish')+'</div></td><td>'+esc(o.villa||'—')+'</td><td><code class="tag">'+esc(o.code||'')+'</code></td><td class="muted">'+esc(o.email||'')+'</td><td><button class="link" data-delo="'+esc(o.id)+'">Delete</button></td></tr>'; }).join('')+'</tbody></table>';
-  $('oList').querySelectorAll('[data-delo]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this owner?'))return; await api('/api/owners/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delo')})}); loadOwners(); }; });
+  $('oList').innerHTML='<table><thead><tr><th>Propietario</th><th>Villa</th><th>Código</th><th>Correo</th><th></th></tr></thead><tbody>'
+    +(rows.length?'':'<tr><td colspan="5" class="empty">Aún no hay propietarios.</td></tr>')
+    +rows.map(function(o){ return '<tr><td style="font-weight:500">'+esc(o.name)+'<div class="muted">'+esc(o.lang==='en'?'Inglés':'Español')+'</div></td><td>'+esc(o.villa||'—')+'</td><td><code class="tag">'+esc(o.code||'')+'</code></td><td class="muted">'+esc(o.email||'')+'</td><td><button class="link" data-delo="'+esc(o.id)+'">Delete</button></td></tr>'; }).join('')+'</tbody></table>';
+  $('oList').querySelectorAll('[data-delo]').forEach(function(b){ b.onclick=async function(){ if(!confirm('¿Eliminar este propietario?'))return; await api('/api/owners/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-delo')})}); loadOwners(); }; });
 }
 
 /* ---- login handlers ---- */
 $('loginBtn').onclick = async function(){
   var msg=$('loginMsg'); msg.textContent=''; msg.className='msg';
   var name=$('loginName').value, code=$('loginCode').value;
-  if(!name||!code){ msg.textContent='Choose your name and enter your code.'; msg.className='msg err'; return; }
+  if(!name||!code){ msg.textContent='Elija su nombre e ingrese su código.'; msg.className='msg err'; return; }
   $('loginBtn').disabled=true; var r=await api('/api/login',{method:'POST',body:JSON.stringify({name:name,code:code})}); $('loginBtn').disabled=false;
-  if(r.status===200){ $('loginCode').value=''; boot(); } else { msg.textContent=(r.body&&r.body.error)||'Sign-in failed.'; msg.className='msg err'; }
+  if(r.status===200){ $('loginCode').value=''; boot(); } else { msg.textContent=(r.body&&r.body.error)||'Error al iniciar sesión.'; msg.className='msg err'; }
 };
 $('loginCode').addEventListener('keydown',function(e){ if(e.key==='Enter') $('loginBtn').click(); });
 $('logout').onclick = async function(){ await api('/api/logout',{method:'POST'}); ME=null; document.body.classList.add('login-mode'); };
