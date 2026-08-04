@@ -3,18 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Meter readings · Caribbean Paradise Homes</title>
+<title>Work orders · Caribbean Paradise Homes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&display=swap" rel="stylesheet" />
 <style>
   :root{ --ink:#2b2723; --soft:#6e6862; --faint:#a09a8f; --line:#e7e1d8; --bg:#f3efe9;
-         --card:#ffffff; --green:#4a5a3c; --greenbg:#edf0e7; --red:#a8543a; --redbg:#f6e9e3; }
+         --card:#ffffff; --green:#4a5a3c; --greenbg:#edf0e7; --red:#a8543a; --redbg:#f6e9e3;
+         --amber:#8a6a1f; --amberbg:#f5efdf; --blue:#2f4a5a; --bluebg:#e9eef2; }
   *{ box-sizing:border-box; }
   body{ margin:0; background:var(--bg); color:var(--ink);
         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
   h1,h2,.serif{ font-family:Newsreader,Georgia,serif; font-weight:400; }
-  .wrap{ max-width:900px; margin:0 auto; padding:26px 20px 60px; }
+  .wrap{ max-width:1000px; margin:0 auto; padding:26px 20px 60px; }
   .brand{ letter-spacing:.22em; font-size:12px; color:var(--soft); text-transform:uppercase; }
   h1{ font-size:30px; margin:6px 0 2px; }
   .sub{ color:var(--soft); font-size:14px; }
@@ -28,21 +29,21 @@
   button{ background:var(--ink); color:#fff; border:0; border-radius:10px; padding:12px 18px;
         font-size:15px; cursor:pointer; font-family:inherit; }
   button.ghost{ background:transparent; color:var(--soft); border:1px solid var(--line); padding:7px 12px; font-size:13px; }
+  button.link{ background:none; border:0; color:var(--red); padding:4px; font-size:13px; cursor:pointer; }
   button:disabled{ opacity:.5; cursor:default; }
   .top{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
   .who{ text-align:right; font-size:13px; color:var(--soft); }
-  .msg{ margin-top:12px; font-size:14px; }
-  .msg.ok{ color:var(--green); }
-  .msg.err{ color:var(--red); }
+  .msg{ margin-top:12px; font-size:14px; } .msg.ok{ color:var(--green); } .msg.err{ color:var(--red); }
   table{ width:100%; border-collapse:collapse; margin-top:6px; font-size:14px; }
   th{ text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint);
-      border-bottom:1px solid var(--line); padding:8px 8px; font-weight:400; }
-  td{ padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+      border-bottom:1px solid var(--line); padding:8px; font-weight:400; }
+  td{ padding:12px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
   td.num{ text-align:right; font-variant-numeric:tabular-nums; }
-  .pill{ display:inline-block; font-size:11px; padding:2px 8px; border-radius:20px; background:var(--greenbg); color:var(--green); }
   .empty{ color:var(--faint); padding:16px 8px; }
   .hidden{ display:none; }
-  a.navlink{ color:var(--green); text-decoration:none; font-size:13px; }
+  .st{ padding:5px 9px; border-radius:8px; font-size:13px; border:1px solid var(--line); background:#fff; }
+  .nav a{ color:var(--green); text-decoration:none; font-size:13px; margin-right:16px; }
+  .muted{ color:var(--faint); font-size:12px; margin-top:3px; }
 </style>
 </head>
 <body>
@@ -50,8 +51,8 @@
   <div class="top">
     <div>
       <div class="brand">Caribbean Paradise Homes · Property Management</div>
-      <h1>Meter readings</h1>
-      <div class="sub">Casa de Campo · water &amp; electricity per villa</div>
+      <h1>Work orders</h1>
+      <div class="sub">Maintenance across the six villas</div>
     </div>
     <div class="who">
       <div id="whoName"></div>
@@ -84,105 +85,120 @@
   <!-- APP -->
   <div id="app" class="hidden">
     <div class="card">
-      <h2 style="margin:0 0 12px; font-size:19px;">Submit a reading</h2>
+      <h2 style="margin:0 0 12px; font-size:19px;">New work order</h2>
       <div class="row">
+        <div style="flex:2;">
+          <label>Title</label>
+          <input id="title" placeholder="e.g. Master bath shower mixer dripping" />
+        </div>
         <div>
           <label>Villa</label>
           <select id="villa"></select>
         </div>
+      </div>
+      <div class="row" style="margin-top:12px;">
         <div>
-          <label>Electricity (kWh)</label>
-          <input id="elec" inputmode="decimal" placeholder="e.g. 9120" />
+          <label>Vendor</label>
+          <input id="vendor" placeholder="e.g. Clima Caribe" />
         </div>
         <div>
-          <label>Water (gallons)</label>
-          <input id="water" inputmode="decimal" placeholder="e.g. 31400" />
+          <label>Est. cost (RD$)</label>
+          <input id="cost" inputmode="decimal" placeholder="optional" />
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="status"></select>
         </div>
       </div>
       <div style="margin-top:12px;">
         <label>Note (optional)</label>
-        <textarea id="note" placeholder="Anything worth flagging"></textarea>
+        <textarea id="note" placeholder="Scope, parts, context"></textarea>
       </div>
-      <div style="margin-top:14px;"><button id="saveBtn">Save reading</button></div>
+      <div style="margin-top:14px;"><button id="saveBtn">Create work order</button></div>
       <div id="saveMsg" class="msg"></div>
     </div>
 
     <div class="card">
-      <h2 style="margin:0 0 4px; font-size:19px;">Reading log</h2>
-      <div class="sub" style="margin-bottom:6px;">Shared across Ivonna, Jan and Maria</div>
-      <div id="logWrap"></div>
+      <h2 style="margin:0 0 4px; font-size:19px;">Open &amp; recent</h2>
+      <div class="sub" style="margin-bottom:6px;">Shared across Ivonna, Jan and Maria · change status inline</div>
+      <div id="listWrap"></div>
     </div>
 
-    <div style="margin-top:16px;">
-      <a class="navlink" href="/property-console" style="margin-right:16px;">← Operations console</a>
-      <a class="navlink" href="/work-orders">Work orders</a>
+    <div class="nav" style="margin-top:16px;">
+      <a href="/property-console">← Operations console</a>
+      <a href="/readings">Meter readings</a>
     </div>
   </div>
 </div>
 
 <script>
   var $ = function(id){ return document.getElementById(id); };
-  var VILLAS = [];
+  var VILLAS = [], STATUSES = [];
 
-  function fmt(n){ return n==null ? '—' : Number(n).toLocaleString('en-US'); }
+  function fmt(n){ return n==null ? '—' : 'RD$' + Number(n).toLocaleString('en-US'); }
   function when(iso){ try{ return new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return iso; } }
   function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 
   async function api(path, opts){
     var r = await fetch(path, Object.assign({ headers:{'Content-Type':'application/json'} }, opts||{}));
     var body = {}; try{ body = await r.json(); }catch(e){}
     return { status:r.status, body:body };
   }
-
   function show(el, on){ el.classList[on?'remove':'add']('hidden'); }
 
   async function boot(){
     var me = await api('/api/me');
     if(me.status === 200){
-      VILLAS = me.body.villas || [];
+      VILLAS = me.body.villas || []; STATUSES = me.body.wo_statuses || [];
       $('whoName').textContent = 'Signed in as ' + cap(me.body.user);
-      show($('logout'), true);
-      show($('loginCard'), false);
-      show($('app'), true);
-      var sel = $('villa'); sel.innerHTML='';
-      VILLAS.forEach(function(v){ var o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
-      loadLog();
+      show($('logout'), true); show($('loginCard'), false); show($('app'), true);
+      fillSelect($('villa'), VILLAS); fillSelect($('status'), STATUSES);
+      loadList();
     } else {
-      show($('loginCard'), true);
-      show($('app'), false);
-      show($('logout'), false);
+      show($('loginCard'), true); show($('app'), false); show($('logout'), false);
       $('whoName').textContent = '';
     }
   }
+  function fillSelect(sel, arr){ sel.innerHTML=''; arr.forEach(function(v){ var o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); }); }
 
-  async function loadLog(){
-    var wrap = $('logWrap');
-    wrap.innerHTML = '<div class="empty">Loading…</div>';
-    var r = await api('/api/readings');
+  async function loadList(){
+    var wrap = $('listWrap'); wrap.innerHTML = '<div class="empty">Loading…</div>';
+    var r = await api('/api/workorders');
     if(r.status !== 200){ wrap.innerHTML = '<div class="empty">Could not load.</div>'; return; }
-    var rows = r.body.readings || [];
-    if(!rows.length){ wrap.innerHTML = '<div class="empty">No readings yet. Add the first one above.</div>'; return; }
-    var html = '<table><thead><tr><th>Villa</th><th style="text-align:right">Electricity</th><th style="text-align:right">Water</th><th>Note</th><th>By</th><th>When</th><th></th></tr></thead><tbody>';
+    var rows = r.body.workorders || [];
+    if(!rows.length){ wrap.innerHTML = '<div class="empty">No work orders yet. Create the first one above.</div>'; return; }
+    var html = '<table><thead><tr><th>Work order</th><th>Villa</th><th style="text-align:right">Cost</th><th>Status</th><th>Updated</th><th></th></tr></thead><tbody>';
     rows.forEach(function(x){
-      html += '<tr><td>'+esc(x.villa)+'</td>'
-           + '<td class="num">'+(x.electricity_kwh==null?'—':fmt(x.electricity_kwh)+' <span style="color:#a09a8f">kWh</span>')+'</td>'
-           + '<td class="num">'+(x.water_gal==null?'—':fmt(x.water_gal)+' <span style="color:#a09a8f">gal</span>')+'</td>'
-           + '<td>'+esc(x.note||'')+'</td>'
-           + '<td><span class="pill">'+esc(cap(x.user))+'</span></td>'
-           + '<td style="color:#6e6862">'+esc(when(x.ts))+'</td>'
-           + '<td><button class="del" data-del="'+esc(x.id)+'" title="Delete" style="background:none;border:0;color:#a8543a;cursor:pointer;font-size:13px;padding:4px;">Delete</button></td></tr>';
+      var opts = STATUSES.map(function(s){ return '<option'+(s===x.status?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
+      html += '<tr>'
+        + '<td><div style="font-weight:500">'+esc(x.title)+'</div>'
+          + (x.vendor?'<div class="muted">'+esc(x.vendor)+'</div>':'')
+          + (x.note?'<div class="muted">'+esc(x.note)+'</div>':'')+'</td>'
+        + '<td>'+esc(x.villa)+'</td>'
+        + '<td class="num">'+(x.cost==null?'—':fmt(x.cost))+'</td>'
+        + '<td><select class="st" data-id="'+esc(x.id)+'">'+opts+'</select></td>'
+        + '<td style="color:#6e6862">'+esc(cap(x.updated_by||x.created_by))+'<div class="muted">'+esc(when(x.updated_ts||x.created_ts))+'</div></td>'
+        + '<td><button class="link" data-del="'+esc(x.id)+'">Delete</button></td>'
+        + '</tr>';
     });
     html += '</tbody></table>';
     wrap.innerHTML = html;
+    wrap.querySelectorAll('select.st').forEach(function(sel){
+      sel.addEventListener('change', async function(){
+        sel.disabled = true;
+        await api('/api/workorders/update', { method:'POST', body: JSON.stringify({ id: sel.getAttribute('data-id'), status: sel.value }) });
+        loadList();
+      });
+    });
     wrap.querySelectorAll('button[data-del]').forEach(function(btn){
       btn.addEventListener('click', async function(){
-        if(!confirm('Delete this reading?')) return;
-        await api('/api/readings/delete', { method:'POST', body: JSON.stringify({ id: btn.getAttribute('data-del') }) });
-        loadLog();
+        if(!confirm('Delete this work order?')) return;
+        await api('/api/workorders/delete', { method:'POST', body: JSON.stringify({ id: btn.getAttribute('data-del') }) });
+        loadList();
       });
     });
   }
-  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 
   $('loginBtn').onclick = async function(){
     var msg = $('loginMsg'); msg.textContent=''; msg.className='msg';
@@ -195,23 +211,18 @@
     else { msg.textContent = (r.body && r.body.error) || 'Sign-in failed.'; msg.className='msg err'; }
   };
   $('loginCode').addEventListener('keydown', function(e){ if(e.key==='Enter') $('loginBtn').click(); });
-
   $('logout').onclick = async function(){ await api('/api/logout',{method:'POST'}); boot(); };
 
   $('saveBtn').onclick = async function(){
     var msg = $('saveMsg'); msg.textContent=''; msg.className='msg';
-    var payload = { villa:$('villa').value, electricity_kwh:$('elec').value.trim(), water_gal:$('water').value.trim(), note:$('note').value.trim() };
-    if(!payload.electricity_kwh && !payload.water_gal){ msg.textContent='Enter at least one reading.'; msg.className='msg err'; return; }
+    var payload = { villa:$('villa').value, title:$('title').value.trim(), vendor:$('vendor').value.trim(),
+                    cost:$('cost').value.trim(), status:$('status').value, note:$('note').value.trim() };
+    if(!payload.title){ msg.textContent='Give the work order a title.'; msg.className='msg err'; return; }
     $('saveBtn').disabled = true;
-    var r = await api('/api/readings', { method:'POST', body: JSON.stringify(payload) });
+    var r = await api('/api/workorders', { method:'POST', body: JSON.stringify(payload) });
     $('saveBtn').disabled = false;
-    if(r.status === 200){
-      msg.textContent = 'Saved.'; msg.className='msg ok';
-      $('elec').value=''; $('water').value=''; $('note').value='';
-      loadLog();
-    } else {
-      msg.textContent = (r.body && r.body.error) || 'Could not save.'; msg.className='msg err';
-    }
+    if(r.status === 200){ msg.textContent='Created.'; msg.className='msg ok'; $('title').value=''; $('vendor').value=''; $('cost').value=''; $('note').value=''; loadList(); }
+    else { msg.textContent = (r.body && r.body.error) || 'Could not save.'; msg.className='msg err'; }
   };
 
   boot();
