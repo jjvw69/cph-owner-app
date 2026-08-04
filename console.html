@@ -169,7 +169,8 @@ async function updateBadges(){
 }
 
 /* ---- nav ---- */
-$('nav').addEventListener('click', function(e){ var b=e.target.closest('button[data-view]'); if(b) go(b.getAttribute('data-view')); });
+$('nav').addEventListener('mousedown', function(e){ var b=e.target.closest('button[data-view]'); if(b){ e.preventDefault(); go(b.getAttribute('data-view')); } });
+function resizeImage(file, cb){ var img=new Image(), url=URL.createObjectURL(file); img.onload=function(){ URL.revokeObjectURL(url); var max=1100,w=img.width,h=img.height; if(w>h&&w>max){h=Math.round(h*max/w);w=max;} else if(h>max){w=Math.round(w*max/h);h=max;} var c=document.createElement('canvas'); c.width=w;c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); cb(c.toDataURL('image/jpeg',0.6)); }; img.onerror=function(){ cb(null); }; img.src=url; }
 function go(view){
   if(view==='manage' && (!ME || !ME.isAdmin)) view='dashboard';
   VIEW = view;
@@ -293,6 +294,7 @@ function viewWODetail(wo){
      +'<div><label>Status</label><select id="dStatus">'+stopts+'</select></div>'
    +'</div><div id="dMsg" class="msg"></div></div>'
    +'<div class="card"><label>Notes</label><textarea id="dNote" placeholder="Scope, parts, results">'+esc(wo.note||'')+'</textarea></div>'
+   +'<div class="card"><label>Photos</label><div id="dPhotos" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px"></div><input type="file" id="dPhotoInput" accept="image/*" style="display:none"><div style="margin-top:12px"><button class="ghost" id="dPhotoBtn">+ Add photo</button></div><div id="dPhotoMsg" class="msg"></div></div>'
    +'<button class="btn-complete'+(wo.status==='Done'?' done':'')+'" id="dComplete">'+(wo.status==='Done'?'Completed ✓ · reopen':'Mark as complete')+'</button>'
    +'<div style="text-align:center;margin-top:12px"><button class="link" id="dDelete">Delete work order</button></div>';
   $('woBack').onclick=function(){ go('workorders'); };
@@ -308,6 +310,10 @@ function viewWODetail(wo){
   $('dStatus').addEventListener('change',function(){ var v=this.value; save({status:v}); var p=$('dPill'); if(p){ p.textContent=v; p.setAttribute('style', stStyle(v)+';margin-top:12px'); } });
   $('dComplete').onclick=async function(){ var ns = wo.status==='Done' ? 'Open' : 'Done'; await save({status:ns}); openWO(wo.id); };
   $('dDelete').onclick=async function(){ if(!confirm('Delete this work order?'))return; await api('/api/workorders/delete',{method:'POST',body:JSON.stringify({id:wo.id})}); updateBadges(); go('workorders'); };
+  function renderPhotos(){ var w=$('dPhotos'); w.innerHTML=(wo.photos||[]).map(function(p){ return '<div style="position:relative"><img src="/api/photo/'+esc(p.id)+'" style="width:92px;height:92px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block"><button data-delphoto="'+esc(p.id)+'" title="Remove" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line);color:#a8543a;cursor:pointer;line-height:1">×</button></div>'; }).join('') || '<span class="muted">No photos yet.</span>'; w.querySelectorAll('[data-delphoto]').forEach(function(b){ b.onclick=async function(){ var pid=b.getAttribute('data-delphoto'); await api('/api/workorders/photo/delete',{method:'POST',body:JSON.stringify({id:wo.id,photoId:pid})}); wo.photos=(wo.photos||[]).filter(function(x){return x.id!==pid;}); renderPhotos(); }; }); }
+  $('dPhotoBtn').onclick=function(){ $('dPhotoInput').click(); };
+  $('dPhotoInput').onchange=function(){ var f=this.files[0]; if(!f) return; var msg=$('dPhotoMsg'); msg.textContent='Uploading…'; msg.className='msg'; var inp=this; resizeImage(f,async function(dataUrl){ if(!dataUrl){ msg.textContent='Could not read image.'; msg.className='msg err'; return; } var r=await api('/api/workorders/photo',{method:'POST',body:JSON.stringify({id:wo.id,data:dataUrl})}); if(r.status===200 && r.body.photo){ wo.photos=wo.photos||[]; wo.photos.push(r.body.photo); renderPhotos(); msg.textContent=''; } else { msg.textContent=(r.body&&r.body.error)||'Upload failed.'; msg.className='msg err'; } inp.value=''; }); };
+  renderPhotos();
 }
 
 /* ---- MANAGE (admin) ---- */

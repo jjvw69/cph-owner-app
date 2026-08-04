@@ -55,6 +55,8 @@ const DATA_DIR = process.env.DATA_DIR || '/var/data';
 let BASE_DIR = DATA_DIR;
 try { fs.mkdirSync(DATA_DIR, { recursive: true }); }
 catch(e) { BASE_DIR = __dirname; }
+const PHOTO_DIR = path.join(BASE_DIR, 'photos');
+try { fs.mkdirSync(PHOTO_DIR, { recursive: true }); } catch(e){}
 function storePath(name){ return path.join(BASE_DIR, name + '.json'); }
 function loadStore(name){ try { return JSON.parse(fs.readFileSync(storePath(name), 'utf8')); } catch(e){ return null; } }
 function saveStore(name, arr){ try { fs.writeFileSync(storePath(name), JSON.stringify(arr, null, 2)); return true; } catch(e){ return false; } }
@@ -108,7 +110,7 @@ function sendJSON(res, code, obj, headers){
 }
 function readBody(req){
   return new Promise((resolve) => {
-    let b=''; req.on('data', c => { b+=c; if(b.length>1e6) req.destroy(); });
+    let b=''; req.on('data', c => { b+=c; if(b.length>5e6) req.destroy(); });
     req.on('end', () => { try{ resolve(JSON.parse(b||'{}')); }catch(e){ resolve({}); } });
   });
 }
@@ -163,6 +165,38 @@ http.createServer(async (req, res) => {
   if(isApi && !user) return sendJSON(res, 401, { error:'not signed in' });
   const admin = isAdmin(user);
   const needAdmin = () => { sendJSON(res, 403, { error:'admin only' }); return true; };
+
+  // ---- photo serving (auth) ----
+  if(url.indexOf('/api/photo/') === 0 && method === 'GET'){
+    const pid = url.slice('/api/photo/'.length).replace(/[^a-z0-9]/gi,'');
+    return fs.readFile(path.join(PHOTO_DIR, pid + '.jpg'), (e,buf)=>{
+      if(e){ res.writeHead(404); return res.end('no'); }
+      res.writeHead(200, {'Content-Type':'image/jpeg','Cache-Control':'private, max-age=86400'}); res.end(buf);
+    });
+  }
+  if(url === '/api/workorders/photo' && method === 'POST'){
+    const b = await readBody(req);
+    const rows = loadStore('workorders')||[]; const wo = rows.find(x=>x.id===b.id);
+    if(!wo) return sendJSON(res, 404, { error:'not found' });
+    const m = /^data:image\/[a-z+]+;base64,(.+)$/i.exec(String(b.data||''));
+    if(!m) return sendJSON(res, 400, { error:'invalid image' });
+    const buf = Buffer.from(m[1], 'base64');
+    if(buf.length > 4*1024*1024) return sendJSON(res, 400, { error:'image too large' });
+    const pid = newId();
+    try { fs.writeFileSync(path.join(PHOTO_DIR, pid + '.jpg'), buf); } catch(e){ return sendJSON(res, 500, { error:'could not save image' }); }
+    const photo = { id:pid, by:user, ts:new Date().toISOString() };
+    wo.photos = wo.photos || []; wo.photos.push(photo);
+    wo.updated_by = user; wo.updated_ts = new Date().toISOString();
+    return sendJSON(res, saveStore('workorders',rows)?200:500, { ok:true, photo });
+  }
+  if(url === '/api/workorders/photo/delete' && method === 'POST'){
+    const b = await readBody(req);
+    const rows = loadStore('workorders')||[]; const wo = rows.find(x=>x.id===b.id);
+    if(!wo) return sendJSON(res, 404, { error:'not found' });
+    wo.photos = (wo.photos||[]).filter(p=>p.id!==b.photoId);
+    try { fs.unlinkSync(path.join(PHOTO_DIR, String(b.photoId||'').replace(/[^a-z0-9]/gi,'') + '.jpg')); } catch(e){}
+    return sendJSON(res, saveStore('workorders',rows)?200:500, { ok:true });
+  }
 
   // ---- meter readings ----
   if(url === '/api/readings' && method === 'GET'){ return sendJSON(res, 200, { readings: loadStore('readings')||[] }); }
