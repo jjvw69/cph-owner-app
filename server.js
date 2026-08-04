@@ -197,6 +197,29 @@ http.createServer(async (req, res) => {
     try { fs.unlinkSync(path.join(PHOTO_DIR, String(b.photoId||'').replace(/[^a-z0-9]/gi,'') + '.jpg')); } catch(e){}
     return sendJSON(res, saveStore('workorders',rows)?200:500, { ok:true });
   }
+  // ---- property photos (any signed-in staff) ----
+  if(url === '/api/properties/photo' && method === 'POST'){
+    const b = await readBody(req);
+    const rows = loadProperties(); const p = rows.find(x=>x.id===b.id);
+    if(!p) return sendJSON(res, 404, { error:'not found' });
+    const m = /^data:image\/[a-z+]+;base64,(.+)$/i.exec(String(b.data||''));
+    if(!m) return sendJSON(res, 400, { error:'invalid image' });
+    const buf = Buffer.from(m[1], 'base64');
+    if(buf.length > 4*1024*1024) return sendJSON(res, 400, { error:'image too large' });
+    const pid = newId();
+    try { fs.writeFileSync(path.join(PHOTO_DIR, pid + '.jpg'), buf); } catch(e){ return sendJSON(res, 500, { error:'could not save image' }); }
+    const photo = { id:pid, by:user, ts:new Date().toISOString() };
+    p.photos = p.photos || []; p.photos.push(photo);
+    return sendJSON(res, saveStore('properties',rows)?200:500, { ok:true, photo });
+  }
+  if(url === '/api/properties/photo/delete' && method === 'POST'){
+    const b = await readBody(req);
+    const rows = loadProperties(); const p = rows.find(x=>x.id===b.id);
+    if(!p) return sendJSON(res, 404, { error:'not found' });
+    p.photos = (p.photos||[]).filter(ph=>ph.id!==b.photoId);
+    try { fs.unlinkSync(path.join(PHOTO_DIR, String(b.photoId||'').replace(/[^a-z0-9]/gi,'') + '.jpg')); } catch(e){}
+    return sendJSON(res, saveStore('properties',rows)?200:500, { ok:true });
+  }
 
   // ---- meter readings ----
   if(url === '/api/readings' && method === 'GET'){ return sendJSON(res, 200, { readings: loadStore('readings')||[] }); }
@@ -267,7 +290,7 @@ http.createServer(async (req, res) => {
     if(!name) return sendJSON(res, 400, { error:'villa name required' });
     const rows = loadProperties();
     if(rows.some(p => p.name.toLowerCase() === name.toLowerCase())) return sendJSON(res, 400, { error:'villa already exists' });
-    const entry = { id:newId(), name, meta:str(b.meta,120), active:true };
+    const entry = { id:newId(), name, meta:str(b.meta,120), area:str(b.area,120), active:true };
     rows.push(entry);
     return sendJSON(res, saveStore('properties',rows)?200:500, { ok:true, entry });
   }
@@ -278,6 +301,7 @@ http.createServer(async (req, res) => {
     if(!p) return sendJSON(res, 404, { error:'not found' });
     if(b.name != null && String(b.name).trim()) p.name = String(b.name).trim();
     if(b.meta != null) p.meta = str(b.meta,120);
+    if(b.area != null) p.area = str(b.area,120);
     if(b.active != null) p.active = !!b.active;
     return sendJSON(res, saveStore('properties',rows)?200:500, { ok:true, entry:p });
   }

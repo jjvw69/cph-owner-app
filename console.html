@@ -188,6 +188,10 @@ document.addEventListener('mousedown', function(e){
   var db=t.closest && t.closest('#dashSub button[data-dash]'); if(db){ e.preventDefault(); openDash(db.getAttribute('data-dash')); return; }
   var nb=t.closest && t.closest('.nav > button[data-view]'); if(nb){ e.preventDefault(); go(nb.getAttribute('data-view')); return; }
 }, true);
+/* villa clicked inside the dashboard iframe → open its profile */
+window.addEventListener('message', function(e){
+  var d=e.data; if(d && d.type==='cph-open-villa' && d.villa){ viewVillaProfile(String(d.villa)); }
+});
 function openDash(section){
   DASH_SECTION=section;
   var sub=$('dashSub'); if(sub){ [].forEach.call(sub.children,function(x){ x.setAttribute('aria-current', x.getAttribute('data-dash')===section?'true':'false'); }); }
@@ -341,6 +345,52 @@ function viewWODetail(wo){
   $('dPhotoBtn').onclick=function(){ $('dPhotoInput').click(); };
   $('dPhotoInput').onchange=function(){ var f=this.files[0]; if(!f) return; var msg=$('dPhotoMsg'); msg.textContent='Uploading…'; msg.className='msg'; var inp=this; resizeImage(f,async function(dataUrl){ if(!dataUrl){ msg.textContent='Could not read image.'; msg.className='msg err'; return; } var r=await api('/api/workorders/photo',{method:'POST',body:JSON.stringify({id:wo.id,data:dataUrl})}); if(r.status===200 && r.body.photo){ wo.photos=wo.photos||[]; wo.photos.push(r.body.photo); renderPhotos(); msg.textContent=''; } else { msg.textContent=(r.body&&r.body.error)||'Upload failed.'; msg.className='msg err'; } inp.value=''; }); };
   renderPhotos();
+}
+
+/* ---- VILLA PROFILE (opened from the dashboard villa table) ---- */
+async function viewVillaProfile(name){
+  var main=$('main'); main.classList.remove('full');
+  var sub=$('dashSub'); if(sub) sub.classList.remove('open');
+  main.innerHTML='<div class="empty">Loading…</div>';
+  var pr=await api('/api/properties'); var props=pr.body.properties||[];
+  var prop=props.find(function(p){ return String(p.name).toLowerCase()===name.toLowerCase(); });
+  var wq=await api('/api/workorders'); var rq=await api('/api/readings');
+  var wos=(wq.body.workorders||[]).filter(function(x){ return x.villa===name; });
+  var reads=(rq.body.readings||[]).filter(function(x){ return x.villa===name; });
+  var meta=(prop&&prop.meta)||'';
+  var detailChips=meta.split('·').map(function(s){ return s.trim(); }).filter(Boolean);
+  var area=(prop&&prop.area) || (function(){ var s=name.replace(/^villa\s+/i,'').replace(/\s+\d+\s*$/,'').trim(); return s?s+' · Casa de Campo':'Casa de Campo'; })();
+  var openWos=wos.filter(function(x){ return x.status!=='Done'; });
+  var nPhotos=(prop&&prop.photos||[]).length;
+  main.innerHTML =
+    '<button class="backlink" id="vpBack">← Dashboard</button>'
+   +'<div class="head" style="margin-top:8px"><div class="eyebrow">Property profile</div><h1>'+esc(name)+'</h1>'
+     +'<div class="chips" style="margin-top:10px"><span class="chip" style="cursor:default">📍 '+esc(area)+'</span>'
+       + detailChips.map(function(c){ return '<span class="chip" style="cursor:default">'+esc(c)+'</span>'; }).join('')
+     +'</div></div>'
+   +'<div class="stats" style="margin-top:16px">'
+     +'<div class="stat"><div class="k">Open work orders</div><div class="v">'+openWos.length+'</div></div>'
+     +'<div class="stat"><div class="k">Readings logged</div><div class="v">'+reads.length+'</div></div>'
+     +'<div class="stat"><div class="k">Photos</div><div class="v">'+nPhotos+'</div></div>'
+   +'</div>'
+   +'<div class="card"><label>Photos</label><div id="vpPhotos" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px"></div>'
+     + (prop?'<input type="file" id="vpPhotoInput" accept="image/*" style="display:none"><div style="margin-top:12px"><button class="ghost" id="vpPhotoBtn">+ Add photo</button></div><div id="vpPhotoMsg" class="msg"></div>':'')
+   +'</div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Work orders</h2><div id="vpWo"></div></div>'
+   +'<div class="card"><h2 style="margin:0 0 4px;font-size:19px">Recent meter readings</h2><div id="vpRd"></div></div>';
+  $('vpBack').onclick=function(){ go('dashboard'); };
+  $('vpWo').innerHTML = wos.length ? wos.slice(0,8).map(function(x){
+    return '<div class="wocard" data-open="'+esc(x.id)+'" style="margin-top:10px"><div class="top"><h3>'+esc(x.title)+'</h3><span class="stpill" style="'+stStyle(x.status)+'">'+esc(x.status)+'</span></div>'
+      +'<div class="foot"><div class="muted">'+esc(cap(x.updated_by||x.created_by))+' · '+esc(when(x.updated_ts||x.created_ts))+'</div><div class="muted">'+(x.cost!=null?rd(x.cost):'')+'</div></div></div>';
+  }).join('') : '<div class="empty">No work orders for this villa.</div>';
+  $('vpWo').addEventListener('click', function(e){ var c=e.target.closest('.wocard[data-open]'); if(c) openWO(c.getAttribute('data-open')); });
+  $('vpRd').innerHTML = reads.length ? '<table><thead><tr><th style="text-align:right">Electricity</th><th style="text-align:right">Water</th><th>Note</th><th>When</th></tr></thead><tbody>'+reads.slice(0,8).map(function(x){ return '<tr><td class="num">'+(x.electricity_kwh==null?'—':nfmt(x.electricity_kwh)+' <span style="color:#a09a8f">kWh</span>')+'</td><td class="num">'+(x.water_gal==null?'—':nfmt(x.water_gal)+' <span style="color:#a09a8f">gal</span>')+'</td><td>'+esc(x.note||'')+'</td><td class="muted">'+esc(when(x.ts))+'</td></tr>'; }).join('')+'</tbody></table>' : '<div class="empty">No readings for this villa.</div>';
+  if(prop){
+    function renderVp(){ var w=$('vpPhotos'); w.innerHTML=(prop.photos||[]).map(function(p){ return '<div style="position:relative"><img src="/api/photo/'+esc(p.id)+'" style="width:110px;height:110px;object-fit:cover;border-radius:12px;border:1px solid var(--line);display:block"><button data-delphoto="'+esc(p.id)+'" title="Remove" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line);color:#a8543a;cursor:pointer;line-height:1">×</button></div>'; }).join('') || '<span class="muted">No photos yet.</span>'; w.querySelectorAll('[data-delphoto]').forEach(function(b){ b.onclick=async function(){ var pid=b.getAttribute('data-delphoto'); await api('/api/properties/photo/delete',{method:'POST',body:JSON.stringify({id:prop.id,photoId:pid})}); prop.photos=(prop.photos||[]).filter(function(x){return x.id!==pid;}); renderVp(); }; }); }
+    $('vpPhotoBtn').onclick=function(){ $('vpPhotoInput').click(); };
+    $('vpPhotoInput').onchange=function(){ var f=this.files[0]; if(!f) return; var msg=$('vpPhotoMsg'); msg.textContent='Uploading…'; msg.className='msg'; var inp=this; resizeImage(f,async function(dataUrl){ if(!dataUrl){ msg.textContent='Could not read image.'; msg.className='msg err'; return; } var r=await api('/api/properties/photo',{method:'POST',body:JSON.stringify({id:prop.id,data:dataUrl})}); if(r.status===200 && r.body.photo){ prop.photos=prop.photos||[]; prop.photos.push(r.body.photo); renderVp(); msg.textContent=''; } else { msg.textContent=(r.body&&r.body.error)||'Upload failed.'; msg.className='msg err'; } inp.value=''; }); };
+    renderVp();
+  } else { $('vpPhotos').innerHTML='<span class="muted">This villa isn\'t in the properties list yet — photos unavailable.</span>'; }
 }
 
 /* ---- MANAGE (admin) ---- */

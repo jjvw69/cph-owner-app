@@ -953,6 +953,32 @@ class Component extends DCLogic {
   if(window.self!==window.top){ var st=document.createElement("style"); st.textContent="aside{display:none!important}"; document.documentElement.appendChild(st); }
   window.addEventListener("hashchange", apply);
   setTimeout(apply,700); setTimeout(apply,1500);
+
+  /* When embedded in the Property Console, a click on a villa row in the
+     "Consumption & cost by villa" table opens that villa's profile in the
+     parent instead of the in-report utilities view. Capture phase runs
+     before React's own onClick, so we can intercept it. */
+  function villaRowName(t){
+    var el=t;
+    while(el && el!==document.body){
+      var gtc=(el.style && el.style.gridTemplateColumns) || '';
+      if(gtc.indexOf('2.1fr')>=0){
+        var first=el.firstElementChild;
+        if(first && first.tagName==='DIV' && first.firstElementChild){
+          var name=(first.firstElementChild.textContent||'').trim();
+          if(/^Villa\s+.+/.test(name)) return name;
+        }
+        return null;
+      }
+      el=el.parentElement;
+    }
+    return null;
+  }
+  document.addEventListener('click', function(e){
+    if(window.self===window.top) return;
+    var name=villaRowName(e.target);
+    if(name){ e.preventDefault(); e.stopPropagation(); try{ window.parent.postMessage({type:'cph-open-villa', villa:name}, '*'); }catch(err){} }
+  }, true);
 })();
 </script>
 </body>
