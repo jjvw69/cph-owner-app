@@ -87,6 +87,11 @@
   .badge2{ background:#f4f0e8; color:#6e6862; border-radius:8px; padding:3px 10px; font-size:12.5px; }
   .stpill{ font-size:12px; padding:4px 11px; border-radius:20px; white-space:nowrap; }
   .wocard .foot{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:12px; flex-wrap:wrap; }
+  .wocard[data-open]{ cursor:pointer; } .wocard[data-open]:hover{ border-color:#d9d1c4; }
+  .dgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; }
+  .btn-complete{ width:100%; background:#2f7d4f; color:#fff; border:0; border-radius:12px; padding:14px; font-size:16px; cursor:pointer; margin-top:16px; }
+  .btn-complete.done{ background:#eee7dd; color:#8a8378; }
+  .backlink{ background:none; border:0; color:var(--soft); font:inherit; font-size:14px; cursor:pointer; padding:0; }
   @media (max-width:760px){ .shell{ flex-direction:column; } .sidebar{ width:auto; flex:none; flex-direction:row; flex-wrap:wrap; align-items:center; } .nav{ flex-direction:row; flex-wrap:wrap; margin-top:10px; } .sidefoot{ margin:0 0 0 auto; } .main{ padding:20px; } }
 </style>
 </head>
@@ -232,6 +237,7 @@ function viewWorkorders(){
   var fchips=[['open','Open'],['done','Done'],['all','All']];
   $('woChips').innerHTML = fchips.map(function(c){ return '<button class="chip" data-f="'+c[0]+'" aria-pressed="'+(WO_FILTER===c[0])+'">'+c[1]+'</button>'; }).join('');
   [].forEach.call($('woChips').children, function(b){ b.onclick=function(){ WO_FILTER=b.getAttribute('data-f'); [].forEach.call($('woChips').children,function(x){x.setAttribute('aria-pressed', x===b);}); loadWorkorders(); }; });
+  $('wList').addEventListener('click', function(e){ if(e.target.closest('select,button')) return; var c=e.target.closest('.wocard[data-open]'); if(c) openWO(c.getAttribute('data-open')); });
   $('wSave').onclick = async function(){
     var msg=$('wMsg'); msg.textContent=''; msg.className='msg';
     var p={villa:$('wVilla').value, title:$('wTitle').value.trim(), vendor:$('wVendor').value.trim(), cost:$('wCost').value.trim(), status:$('wStatus').value, note:$('wNote').value.trim()};
@@ -251,7 +257,7 @@ async function loadWorkorders(){
   wrap.innerHTML = rows.map(function(x){
     var badges=[]; if(x.villa) badges.push(x.villa); if(x.vendor) badges.push(x.vendor); if(x.cost!=null) badges.push(rd(x.cost));
     var opts=STATUSES.map(function(s){return '<option'+(s===x.status?' selected':'')+'>'+esc(s)+'</option>';}).join('');
-    return '<div class="wocard"><div class="top"><h3>'+esc(x.title)+'</h3><span class="stpill" style="'+stStyle(x.status)+'">'+esc(x.status)+'</span></div>'
+    return '<div class="wocard" data-open="'+esc(x.id)+'"><div class="top"><h3>'+esc(x.title)+'</h3><span class="stpill" style="'+stStyle(x.status)+'">'+esc(x.status)+'</span></div>'
       + (x.note?'<div class="muted" style="margin-top:6px">'+esc(x.note)+'</div>':'')
       + '<div class="badges">'+badges.map(function(b){return '<span class="badge2">'+esc(b)+'</span>';}).join('')+'</div>'
       + '<div class="foot"><div class="muted">'+esc(cap(x.updated_by||x.created_by))+' · '+esc(when(x.updated_ts||x.created_ts))+'</div>'
@@ -259,6 +265,49 @@ async function loadWorkorders(){
   }).join('');
   wrap.querySelectorAll('select.st').forEach(function(s){ s.onchange=async function(){ s.disabled=true; await api('/api/workorders/update',{method:'POST',body:JSON.stringify({id:s.getAttribute('data-id'),status:s.value})}); loadWorkorders(); updateBadges(); }; });
   wrap.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Delete this work order?'))return; await api('/api/workorders/delete',{method:'POST',body:JSON.stringify({id:b.getAttribute('data-del')})}); loadWorkorders(); updateBadges(); }; });
+}
+
+/* ---- WORK ORDER DETAIL ---- */
+async function openWO(id){
+  var r = await api('/api/workorders'); var wo=(r.body.workorders||[]).find(function(x){return x.id===id;});
+  if(!wo){ go('workorders'); return; }
+  viewWODetail(wo);
+}
+function viewWODetail(wo){
+  var RECUR=['None','Weekly','Monthly','Quarterly','Semi-annual','Annually'];
+  $('main').classList.remove('full');
+  var stopts=STATUSES.map(function(s){return '<option'+(s===wo.status?' selected':'')+'>'+esc(s)+'</option>';}).join('');
+  var vopts=VILLAS.map(function(v){return '<option'+(v===wo.villa?' selected':'')+'>'+esc(v)+'</option>';}).join('');
+  var ropts=RECUR.map(function(v){return '<option'+((wo.recurring||'None')===v?' selected':'')+'>'+esc(v)+'</option>';}).join('');
+  $('main').innerHTML =
+    '<button class="backlink" id="woBack">← Work orders</button>'
+   +'<div class="head" style="margin-top:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h1>'+esc(wo.title)+'</h1><span class="stpill" id="dPill" style="'+stStyle(wo.status)+';margin-top:12px">'+esc(wo.status)+'</span></div><div class="sub">'+esc(wo.villa||'')+' · updated by '+esc(cap(wo.updated_by||wo.created_by))+' · '+esc(when(wo.updated_ts||wo.created_ts))+'</div></div>'
+   +'<div class="card"><label>Why this matters</label><textarea id="dWhy" placeholder="Why is this needed, and what happens if it waits?">'+esc(wo.why||'')+'</textarea></div>'
+   +'<div class="card"><div class="dgrid">'
+     +'<div><label>Scheduled date</label><input id="dDate" type="date" value="'+esc(wo.scheduled_date||'')+'"/></div>'
+     +'<div><label>Recurring</label><select id="dRecur">'+ropts+'</select></div>'
+     +'<div><label>Time estimate</label><input id="dTime" value="'+esc(wo.time_estimate||'')+'" placeholder="e.g. 2 h"/></div>'
+     +'<div><label>Vendor</label><input id="dVendor" value="'+esc(wo.vendor||'')+'" placeholder="e.g. Clima Caribe"/></div>'
+     +'<div><label>Est. cost (RD$)</label><input id="dCost" inputmode="decimal" value="'+(wo.cost==null?'':wo.cost)+'"/></div>'
+     +'<div><label>Villa</label><select id="dVilla">'+vopts+'</select></div>'
+     +'<div><label>Status</label><select id="dStatus">'+stopts+'</select></div>'
+   +'</div><div id="dMsg" class="msg"></div></div>'
+   +'<div class="card"><label>Notes</label><textarea id="dNote" placeholder="Scope, parts, results">'+esc(wo.note||'')+'</textarea></div>'
+   +'<button class="btn-complete'+(wo.status==='Done'?' done':'')+'" id="dComplete">'+(wo.status==='Done'?'Completed ✓ · reopen':'Mark as complete')+'</button>'
+   +'<div style="text-align:center;margin-top:12px"><button class="link" id="dDelete">Delete work order</button></div>';
+  $('woBack').onclick=function(){ go('workorders'); };
+  async function save(patch){ await api('/api/workorders/update',{method:'POST',body:JSON.stringify(Object.assign({id:wo.id},patch))}); Object.assign(wo,patch); var msg=$('dMsg'); msg.textContent='Saved.'; msg.className='msg ok'; setTimeout(function(){ if(msg) msg.textContent=''; },1200); updateBadges(); }
+  $('dWhy').addEventListener('change',function(){ save({why:this.value}); });
+  $('dDate').addEventListener('change',function(){ save({scheduled_date:this.value}); });
+  $('dRecur').addEventListener('change',function(){ save({recurring:this.value}); });
+  $('dTime').addEventListener('change',function(){ save({time_estimate:this.value}); });
+  $('dVendor').addEventListener('change',function(){ save({vendor:this.value}); });
+  $('dCost').addEventListener('change',function(){ save({cost:this.value.trim()}); });
+  $('dVilla').addEventListener('change',function(){ save({villa:this.value}); });
+  $('dNote').addEventListener('change',function(){ save({note:this.value}); });
+  $('dStatus').addEventListener('change',function(){ var v=this.value; save({status:v}); var p=$('dPill'); if(p){ p.textContent=v; p.setAttribute('style', stStyle(v)+';margin-top:12px'); } });
+  $('dComplete').onclick=async function(){ var ns = wo.status==='Done' ? 'Open' : 'Done'; await save({status:ns}); openWO(wo.id); };
+  $('dDelete').onclick=async function(){ if(!confirm('Delete this work order?'))return; await api('/api/workorders/delete',{method:'POST',body:JSON.stringify({id:wo.id})}); updateBadges(); go('workorders'); };
 }
 
 /* ---- MANAGE (admin) ---- */

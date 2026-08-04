@@ -196,6 +196,7 @@ http.createServer(async (req, res) => {
     const status = WO_STATUSES.indexOf(b.status) >= 0 ? b.status : 'Open';
     const rows = loadStore('workorders')||[];
     const entry = { id:newId(), villa, title, vendor:str(b.vendor,120), cost, status, note:str(b.note,400),
+      why:str(b.why,800), scheduled_date:str(b.scheduled_date,20), recurring:str(b.recurring,20), time_estimate:str(b.time_estimate,40),
       created_by:user, created_ts:new Date().toISOString(), updated_by:user, updated_ts:new Date().toISOString() };
     rows.unshift(entry);
     return sendJSON(res, saveStore('workorders',rows)?200:500, { ok:true, entry });
@@ -207,6 +208,13 @@ http.createServer(async (req, res) => {
     if(!wo) return sendJSON(res, 404, { error:'not found' });
     if(b.status != null){ if(WO_STATUSES.indexOf(b.status) < 0) return sendJSON(res,400,{error:'unknown status'}); wo.status = b.status; }
     if(b.note != null) wo.note = str(b.note,400);
+    if(b.why != null) wo.why = str(b.why,800);
+    if(b.scheduled_date != null) wo.scheduled_date = str(b.scheduled_date,20);
+    if(b.recurring != null) wo.recurring = str(b.recurring,20);
+    if(b.time_estimate != null) wo.time_estimate = str(b.time_estimate,40);
+    if(b.vendor != null) wo.vendor = str(b.vendor,120);
+    if(b.title != null && String(b.title).trim()) wo.title = String(b.title).trim();
+    if(b.villa != null && villaNames().indexOf(String(b.villa).trim()) >= 0) wo.villa = String(b.villa).trim();
     if(b.cost !== undefined){ const c=num(b.cost); if(c!=null && !isFinite(c)) return sendJSON(res,400,{error:'cost must be a number'}); wo.cost=c; }
     wo.updated_by = user; wo.updated_ts = new Date().toISOString();
     return sendJSON(res, saveStore('workorders',rows)?200:500, { ok:true, entry:wo });
